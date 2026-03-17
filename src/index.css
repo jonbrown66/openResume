@@ -1,0 +1,369 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800;900&family=JetBrains+Mono:wght@400;500&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap');
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+@import "@fontsource-variable/geist";
+/* 
+   ---break---
+*/
+@custom-variant dark (&:is(.dark *));
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  --font-serif: "Playfair Display", ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+}
+
+/* 
+   Explicit Dark/Light Logic 
+   Tailwind 4 uses @variant for selector-based dark mode
+*/
+@variant dark (&:where(.dark, .dark *, [data-theme="dark"], [data-theme="dark"] *));
+
+:root {
+  color-scheme: light dark; /* Signal dual support */ --background: oklch(1 0 0); --foreground: oklch(0.145 0 0); --card: oklch(1 0 0); --card-foreground: oklch(0.145 0 0); --popover: oklch(1 0 0); --popover-foreground: oklch(0.145 0 0); --primary: oklch(0.205 0 0); --primary-foreground: oklch(0.985 0 0); --secondary: oklch(0.97 0 0); --secondary-foreground: oklch(0.205 0 0); --muted: oklch(0.97 0 0); --muted-foreground: oklch(0.556 0 0); --accent: oklch(0.97 0 0); --accent-foreground: oklch(0.205 0 0); --destructive: oklch(0.577 0.245 27.325); --border: oklch(0.922 0 0); --input: oklch(0.922 0 0); --ring: oklch(0.708 0 0); --chart-1: oklch(0.809 0.105 251.813); --chart-2: oklch(0.623 0.214 259.815); --chart-3: oklch(0.546 0.245 262.881); --chart-4: oklch(0.488 0.243 264.376); --chart-5: oklch(0.424 0.199 265.638); --radius: 0.625rem; --sidebar: oklch(0.985 0 0); --sidebar-foreground: oklch(0.145 0 0); --sidebar-primary: oklch(0.205 0 0); --sidebar-primary-foreground: oklch(0.985 0 0); --sidebar-accent: oklch(0.97 0 0); --sidebar-accent-foreground: oklch(0.205 0 0); --sidebar-border: oklch(0.922 0 0); --sidebar-ring: oklch(0.708 0 0);
+}
+
+/* Force light by default */
+:root, [data-theme="light"] {
+  color-scheme: light;
+  --app-bg: #e8e6e1;
+}
+
+/* Force dark when explicitly requested */
+.dark, [data-theme="dark"] {
+  color-scheme: dark;
+  --app-bg: var(--color-gray-950);
+}
+
+/* Base Body Stability */
+html, body {
+  @apply transition-colors duration-300 antialiased;
+  background-color: var(--app-bg);
+}
+
+/* Global hover feedback standardization */
+@layer base {
+  button {
+    @apply transition-all duration-200;
+  }
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
+  }
+}
+
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 0;
+  }
+
+  html, body {
+    background: #fff;
+  }
+
+  body * {
+    visibility: hidden;
+  }
+  .resume-paper, .resume-paper * {
+    visibility: visible;
+  }
+  .resume-paper {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 210mm;
+    min-height: 297mm;
+    box-shadow: none !important;
+    border: none !important;
+    margin: 0;
+    padding: 0;
+    transform: scale(1) !important;
+  }
+}
+
+/* Custom Scrollbar */
+.custom-scrollbar {
+  overflow-y: overlay;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(156, 163, 175, 0.4) transparent;
+}
+
+.dark .custom-scrollbar {
+  scrollbar-color: rgba(75, 85, 99, 0.5) transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: rgba(156, 163, 175, 0.4);
+  border-radius: 20px;
+}
+.dark .custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: rgba(75, 85, 99, 0.6);
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(156, 163, 175, 0.7);
+}
+.dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(107, 114, 128, 0.8);
+}
+
+/* Base Resume Content Styling */
+.resume-content h2 {
+  font-size: 1.125rem;
+  font-weight: 800;
+  color: #111827;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  border-bottom: 2px solid #D1D5DB;
+  padding-bottom: 0.5rem;
+  margin-top: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.resume-h3-split {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-top: 1.25rem;
+  margin-bottom: 0.25rem;
+}
+
+.resume-h3-split h3 {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #111827;
+}
+
+.resume-h3-split span {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #4B5563;
+}
+
+.resume-content h3 {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #111827;
+  margin-top: 1.25rem;
+  margin-bottom: 0.25rem;
+}
+
+.resume-content p {
+  margin-bottom: 0.5rem;
+  color: #374151;
+  line-height: 1.6;
+}
+
+.resume-content p strong {
+  color: #111827;
+}
+
+.resume-content ul,
+.resume-content ol,
+.resume-content p,
+.resume-h3-split {
+  break-inside: avoid;
+}
+
+.resume-list {
+  list-style-type: disc;
+  padding-left: 1.25rem;
+  margin-bottom: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.resume-list li {
+  color: #374151;
+  line-height: 1.5;
+}
+
+.skills-list {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem 2rem;
+  list-style-type: disc;
+  padding-left: 1.25rem;
+  margin-bottom: 1rem;
+}
+
+.skills-list li {
+  color: #374151;
+}
+
+/* Remove margin from empty p tags used for spacing */
+.resume-content p:empty {
+  display: none;
+}
+
+/* -----------------------------------------
+   Minimal Template Overrides
+----------------------------------------- */
+.template-minimal .resume-content h2 {
+  font-family: var(--font-serif);
+  text-align: center;
+  border-bottom: 1px solid #E5E7EB;
+  color: #000;
+  letter-spacing: 0.2em;
+  font-weight: 600;
+}
+.template-minimal .resume-h3-split h3,
+.template-minimal .resume-content h3 {
+  font-family: var(--font-serif);
+  color: #000;
+}
+.template-minimal .resume-h3-split span {
+  font-family: var(--font-serif);
+  color: #000;
+}
+
+/* -----------------------------------------
+   Standard Template Overrides (Emma Sanchez)
+----------------------------------------- */
+.template-standard .resume-content h2 {
+  color: #000;
+  border-bottom: none;
+  font-weight: 800;
+  font-size: 1rem;
+  margin-top: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+.template-standard .resume-h3-split h3,
+.template-standard .resume-content h3 {
+  color: #000;
+}
+.template-standard .resume-h3-split span {
+  color: #000;
+}
+
+/* -----------------------------------------
+   Sidebar Template Overrides (Estelle Darcy)
+----------------------------------------- */
+.template-sidebar .sidebar-section {
+  display: flex;
+  margin-bottom: 1.5rem;
+}
+.template-sidebar .sidebar-title {
+  width: 25%;
+  flex-shrink: 0;
+  border-right: 1px solid #000;
+  padding-right: 1.5rem;
+  text-align: left;
+}
+.template-sidebar .sidebar-title h2 {
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 800;
+  color: #000;
+  border: none;
+  margin: 0;
+  padding: 0;
+}
+.template-sidebar .sidebar-content {
+  width: 75%;
+  padding-left: 1.5rem;
+}
+.template-sidebar .resume-h3-split {
+  margin-top: 0;
+}
+.template-sidebar .resume-h3-split h3,
+.template-sidebar .resume-content h3 {
+  color: #000;
+}
+.template-sidebar .resume-h3-split span {
+  color: #000;
+}
+/* 
+   ---break---
+*/
+.dark {
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.205 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.922 0 0);
+  --primary-foreground: oklch(0.205 0 0);
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.269 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.556 0 0);
+  --chart-1: oklch(0.809 0.105 251.813);
+  --chart-2: oklch(0.623 0.214 259.815);
+  --chart-3: oklch(0.546 0.245 262.881);
+  --chart-4: oklch(0.488 0.243 264.376);
+  --chart-5: oklch(0.424 0.199 265.638);
+  --sidebar: oklch(0.205 0 0);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.488 0.243 264.376);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.556 0 0);
+}
+/* 
+   ---break---
+*/
+@theme inline {
+  --font-sans: 'Geist Variable', sans-serif;
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-foreground: var(--foreground);
+  --color-background: var(--background);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
