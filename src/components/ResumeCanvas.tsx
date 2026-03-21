@@ -1,11 +1,18 @@
-import type { PropsWithChildren, RefObject } from 'react';
+import { memo, useEffect, useState, type PropsWithChildren, type RefObject } from 'react';
 
 interface ResumeCanvasProps extends PropsWithChildren {
   canvasRef?: RefObject<HTMLDivElement | null>;
   scale: number;
 }
 
-export function ResumeCanvas({ canvasRef, children, scale }: ResumeCanvasProps) {
+export const ResumeCanvas = memo(function ResumeCanvas({ canvasRef, children, scale }: ResumeCanvasProps) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setMounted(true), 150);
+    return () => clearTimeout(timer);
+  }, []);
+
   return (
     <div
       ref={canvasRef}
@@ -13,12 +20,13 @@ export function ResumeCanvas({ canvasRef, children, scale }: ResumeCanvasProps) 
       style={{
         width: '210mm',
         minHeight: '297mm',
+        height: 'auto',
         transform: `scale(${scale})`,
         marginBottom: `calc(297mm * ${scale - 1})`,
-        transition: 'transform 200ms ease-out, box-shadow 300ms',
+        transition: mounted ? 'transform 200ms ease-out, box-shadow 300ms' : 'none',
       }}
     >
       {children}
     </div>
   );
-}
+});

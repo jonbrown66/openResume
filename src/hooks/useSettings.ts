@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { type AppSettings, DEFAULT_SETTINGS } from '../config/settings';
+import { type AppSettings, type ApiProviderId, DEFAULT_SETTINGS } from '../config/settings';
 
 const SETTINGS_KEY = 'myresume-settings-v1';
 
@@ -8,7 +8,15 @@ export function useSettings() {
     const saved = localStorage.getItem(SETTINGS_KEY);
     if (saved) {
       try {
-        return JSON.parse(saved);
+        const parsed = JSON.parse(saved);
+        return {
+          ...DEFAULT_SETTINGS,
+          ...parsed,
+          providers: {
+            ...DEFAULT_SETTINGS.providers,
+            ...(parsed.providers || {}),
+          },
+        };
       } catch (e) {
         console.error('Failed to parse settings', e);
       }
@@ -20,13 +28,17 @@ export function useSettings() {
     localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
   }, [settings]);
 
-  const updateProvider = (providerId: string, updates: Partial<AppSettings['providers'][keyof AppSettings['providers']]>) => {
+  const updateSettings = (updates: Partial<AppSettings>) => {
+    setSettings(prev => ({ ...prev, ...updates }));
+  };
+
+  const updateProvider = (providerId: ApiProviderId, updates: Partial<AppSettings['providers'][keyof AppSettings['providers']]>) => {
     setSettings(prev => ({
       ...prev,
       providers: {
         ...prev.providers,
         [providerId]: {
-          ...prev.providers[providerId as keyof AppSettings['providers']],
+          ...prev.providers[providerId],
           ...updates,
         },
       },
@@ -37,9 +49,20 @@ export function useSettings() {
     setSettings(prev => ({ ...prev, activeProvider }));
   };
 
+  const setTheme = (theme: AppSettings['theme']) => {
+    setSettings(prev => ({ ...prev, theme }));
+  };
+
+  const setLanguage = (language: AppSettings['language']) => {
+    setSettings(prev => ({ ...prev, language }));
+  };
+
   return {
     settings,
+    updateSettings,
     updateProvider,
     setActiveProvider,
+    setTheme,
+    setLanguage,
   };
 }

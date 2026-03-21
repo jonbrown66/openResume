@@ -6,3 +6,14 @@ coverage/
 *.log
 .env*
 !.env.example
+
+# next.js
+/.next/
+/out/
+
+# build artifacts
+tsconfig.tsbuildinfo
+*.txt
+filelist.txt
+.playwright-mcp/
+nul

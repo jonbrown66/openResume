@@ -1,0 +1,389 @@
+@import url('https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Long+Cang&family=Noto+Mono:wght@400;700&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@400;700&family=Shippori+Mincho:wght@400;700&family=ZCOOL+QingKe+HuangYou&display=swap');
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "@fontsource-variable/geist";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme {
+  /* 使用 Geist 字体，禁止 Inter - taste-skill Rule 7 */
+  --font-sans: "Geist Variable", "Geist", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  --font-serif: "Playfair Display", ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+  --font-cursive: "Dancing Script", cursive;
+}
+
+/* 
+   Claude/Linear 风格配色系统
+   基于 taste-skill DESIGN_VARIANCE: 6 / MOTION_INTENSITY: 5
+*/
+@variant dark (&:where(.dark, .dark *, [data-theme="dark"], [data-theme="dark"] *));
+
+:root {
+  color-scheme: light dark;
+  
+  /* Light Mode - 基于 Claude/Linear 风格 */
+  --background: #ffffff;
+  --foreground: #171717;
+  --card: #fafafa;
+  --card-foreground: #171717;
+  --popover: #ffffff;
+  --popover-foreground: #171717;
+  --primary: #171717;
+  --primary-foreground: #fafafa;
+  --secondary: #f4f4f5;
+  --secondary-foreground: #18181b;
+  --muted: #f4f4f5;
+  --muted-foreground: #71717a;
+  --accent: #2563eb;
+  --accent-foreground: #ffffff;
+  --destructive: #dc2626;
+  --border: #e4e4e7;
+  --input: #e4e4e7;
+  --ring: #171717;
+  --radius: 0.75rem;
+  
+  /* App 特定 - 避免纯黑 */
+  --app-bg: #f4f4f5;
+  --chart-1: oklch(0.809 0.105 251.813);
+  --chart-2: oklch(0.623 0.214 259.815);
+  --chart-3: oklch(0.546 0.245 262.881);
+  --chart-4: oklch(0.488 0.243 264.376);
+  --chart-5: oklch(0.424 0.199 265.638);
+}
+
+/* Dark Mode - 避免纯黑 #000000 */
+.dark, [data-theme="dark"] {
+  color-scheme: dark;
+  --background: #09090b;
+  --foreground: #fafafa;
+  --card: #18181b;
+  --card-foreground: #fafafa;
+  --popover: #18181b;
+  --popover-foreground: #fafafa;
+  --primary: #fafafa;
+  --primary-foreground: #18181b;
+  --secondary: #27272a;
+  --secondary-foreground: #fafafa;
+  --muted: #27272a;
+  --muted-foreground: #a1a1aa;
+  --accent: #3b82f6;
+  --accent-foreground: #ffffff;
+  --destructive: #ef4444;
+  --border: #27272a;
+  --input: #27272a;
+  --ring: #fafafa;
+  
+  --app-bg: #09090b;
+}
+
+/* Base Body Stability */
+html, body {
+  @apply transition-colors duration-200 antialiased;
+  background-color: var(--app-bg);
+}
+
+@layer base {
+  button {
+    @apply transition-all duration-150;
+  }
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
+  }
+}
+
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 0;
+  }
+
+  html, body {
+    background: #fff;
+  }
+
+  body * {
+    visibility: hidden;
+  }
+  .resume-paper, .resume-paper * {
+    visibility: visible;
+  }
+  .resume-paper {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 210mm;
+    min-height: 297mm;
+    height: auto;
+    box-shadow: none !important;
+    border: none !important;
+    margin: 0;
+    padding: 0;
+    transform: scale(1) !important;
+    page-break-after: always;
+  }
+}
+
+/* Custom Scrollbar */
+.custom-scrollbar {
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(156, 163, 175, 0.4) transparent;
+}
+
+.dark .custom-scrollbar {
+  scrollbar-color: rgba(75, 85, 99, 0.5) transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: rgba(156, 163, 175, 0.4);
+  border-radius: 20px;
+}
+.dark .custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: rgba(75, 85, 99, 0.6);
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(156, 163, 175, 0.7);
+}
+.dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(107, 114, 128, 0.8);
+}
+
+/* Base Resume Content Styling */
+.resume-content {
+  font-family: var(--font-family, 'Inter', sans-serif);
+  font-size: var(--font-size, 10pt);
+  line-height: var(--line-height, 1.5);
+}
+
+.resume-content h2 {
+  font-size: 1.125rem;
+  font-weight: 800;
+  color: var(--primary-color, #111827);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  border-bottom: 2px solid var(--primary-color, #D1D5DB);
+  padding-bottom: 0.5rem;
+  margin-top: var(--section-spacing, 1rem);
+  margin-bottom: 0.75rem;
+}
+
+.resume-content > div:first-child > h2 {
+  margin-top: 0;
+}
+
+.resume-h3-split {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-top: 1rem;
+  margin-bottom: 0.25rem;
+}
+
+.resume-h3-split h3 {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--secondary-color, #111827);
+}
+
+.resume-h3-split span {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #4B5563;
+}
+
+.resume-content h3 {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--secondary-color, #111827);
+  margin-top: 1rem;
+  margin-bottom: 0.25rem;
+}
+
+.resume-content p {
+  margin-bottom: 0.5rem;
+  color: #374151;
+}
+
+.resume-content p strong {
+  color: var(--secondary-color, #111827);
+}
+
+.resume-content ul,
+.resume-content ol,
+.resume-content p,
+.resume-h3-split {
+  break-inside: avoid;
+}
+
+.resume-list {
+  list-style-type: disc;
+  padding-left: 1.25rem;
+  margin-bottom: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.resume-list li {
+  color: #374151;
+}
+
+.skills-list {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem 2rem;
+  list-style-type: disc;
+  padding-left: 1.25rem;
+  margin-bottom: 0.75rem;
+}
+
+.skills-list li {
+  color: #374151;
+}
+
+/* Remove margin from empty p tags used for spacing */
+.resume-content p:empty {
+  display: none;
+}
+
+/* -----------------------------------------
+   Minimal Template Overrides
+----------------------------------------- */
+.template-minimal .resume-content h2 {
+  font-family: var(--font-serif);
+  text-align: center;
+  border-bottom: 1px solid var(--primary-color, #E5E7EB);
+  color: var(--primary-color, #000);
+  letter-spacing: 0.2em;
+  font-weight: 600;
+}
+.template-minimal .resume-h3-split h3,
+.template-minimal .resume-content h3 {
+  font-family: var(--font-serif);
+  color: var(--secondary-color, #000);
+}
+.template-minimal .resume-h3-split span {
+  font-family: var(--font-serif);
+  color: var(--secondary-color, #000);
+}
+
+/* -----------------------------------------
+   Standard Template Overrides (Emma Sanchez)
+----------------------------------------- */
+.template-standard .resume-content h2 {
+  color: var(--primary-color, #000);
+  border-bottom: none;
+  font-weight: 800;
+  font-size: 1rem;
+  margin-top: var(--section-spacing, 1rem);
+  margin-bottom: 0.5rem;
+}
+.template-standard .resume-h3-split h3,
+.template-standard .resume-content h3 {
+  color: var(--secondary-color, #000);
+}
+.template-standard .resume-h3-split span {
+  color: var(--secondary-color, #000);
+}
+
+/* -----------------------------------------
+   Sidebar Template Overrides (Estelle Darcy)
+----------------------------------------- */
+.template-sidebar .sidebar-section {
+  display: flex;
+  margin-bottom: var(--section-spacing, 1.25rem);
+}
+.template-sidebar .sidebar-title {
+  width: 25%;
+  flex-shrink: 0;
+  border-right: 1px solid var(--primary-color, #000);
+  padding-right: 1.5rem;
+  text-align: left;
+}
+.template-sidebar .sidebar-title h2 {
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 800;
+  color: var(--primary-color, #000);
+  border: none;
+  margin: 0;
+  padding: 0;
+}
+.template-sidebar .sidebar-content {
+  width: 75%;
+  padding-left: 1.5rem;
+}
+.template-sidebar .resume-h3-split {
+  margin-top: 0;
+}
+.template-sidebar .resume-h3-split h3,
+.template-sidebar .resume-content h3 {
+  color: var(--secondary-color, #000);
+}
+.template-sidebar .resume-h3-split span {
+  color: var(--secondary-color, #000);
+}
+
+@theme inline {
+  --font-sans: 'Geist Variable', sans-serif;
+  --dialog-content-classes: "fixed top-1/2 left-1/2 z-50 grid w-full max-w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 gap-4 rounded-2xl bg-background/90 backdrop-blur-xl p-4 text-sm shadow-2xl shadow-black/10 dark:shadow-black/40 ring-1 ring-black/5 dark:ring-white/10 outline-none sm:max-w-sm data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] duration-200 ease-out";
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-foreground: var(--foreground);
+  --color-background: var(--background);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+
+  /* Dialog 稳定动画定义 - 解决闪屏 */
+  @keyframes dialog-zoom-in {
+    from { opacity: 0; transform: translate(-50%, -48%) scale(0.95); }
+    to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  }
+  @keyframes dialog-zoom-out {
+    from { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+    to { opacity: 0; transform: translate(-50%, -48%) scale(0.95); }
+  }
+
+  --dialog-content-anim: {
+    &[data-state="open"] { animation: dialog-zoom-in 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+    &[data-state="closed"] { animation: dialog-zoom-out 0.15s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+  };
+}

@@ -2,7 +2,11 @@ import { startTransition, useRef, useState } from 'react';
 
 import type { AppLanguage } from '../config/ui';
 import type { AppSettings } from '../config/settings';
-import { prepareImportedResume } from '../utils/resumeImport';
+import { extractTextFromFile } from '../utils/fileExtractor';
+import { aiFormatResume } from '../utils/aiFormatter';
+import { autoFormatResume } from '../utils/resumeParser';
+
+type ImportStep = 'idle' | 'extracting' | 'parsing' | 'formatting' | 'done';
 
 interface UseResumeImportOptions {
   lang: AppLanguage;
@@ -13,6 +17,7 @@ interface UseResumeImportOptions {
 export function useResumeImport({ lang, settings, onImportComplete }: UseResumeImportOptions) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isImporting, setIsImporting] = useState(false);
+  const [importStep, setImportStep] = useState<ImportStep>('idle');
   const [importError, setImportError] = useState('');
   const [importNotice, setImportNotice] = useState<'' | 'missing-api-key'>('');
 
@@ -27,13 +32,45 @@ export function useResumeImport({ lang, settings, onImportComplete }: UseResumeI
     try {
       setIsImporting(true);
       setImportError('');
-      const result = await prepareImportedResume(file, lang, { settings });
-      setImportNotice(result.notice);
-      startTransition(() => {
-        onImportComplete(result.markdown);
-      });
+      setImportStep('extracting');
+
+      const rawText = await extractTextFromFile(file);
+      
+      const provider = settings.providers[settings.activeProvider];
+      
+      if (!provider.apiKey) {
+        setImportStep('parsing');
+        const formatted = autoFormatResume(rawText, lang);
+        setImportStep('done');
+        setImportNotice('');
+        startTransition(() => {
+          onImportComplete(formatted);
+        });
+        return;
+      }
+
+      setImportStep('formatting');
+      try {
+        const formatted = await aiFormatResume(rawText, lang, settings);
+        setImportStep('done');
+        setImportNotice('');
+        startTransition(() => {
+          onImportComplete(formatted);
+        });
+      } catch (aiError) {
+        console.warn('[AI Format Failed, falling back to auto-parse]', aiError);
+        setImportStep('parsing');
+        const formatted = autoFormatResume(rawText, lang);
+        setImportStep('done');
+        setImportNotice('');
+        startTransition(() => {
+          onImportComplete(formatted);
+        });
+      }
     } catch (error) {
-      setImportError(error instanceof Error ? error.message : 'import-failed');
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      setImportError(errorMessage);
+      setImportStep('idle');
     } finally {
       setIsImporting(false);
       if (fileInputRef.current) {
@@ -48,6 +85,7 @@ export function useResumeImport({ lang, settings, onImportComplete }: UseResumeI
     importError,
     importNotice,
     isImporting,
+    importStep,
     setImportNotice,
     triggerImport,
   };

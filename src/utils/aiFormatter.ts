@@ -1,5 +1,39 @@
-import type { AppLanguage } from '../config/ui';
-import type { AppSettings } from '../config/settings';
+import type { AppLanguage } from '@/config/ui';
+import type { AppSettings } from '@/config/settings';
+
+const REQUEST_TIMEOUT = 60000;
+
+class ApiError extends Error {
+  constructor(message: string, public statusCode?: number) {
+    super(message);
+    this.name = 'ApiError';
+  }
+}
+
+async function fetchWithTimeout(
+  url: string,
+  options: RequestInit & { timeout?: number }
+): Promise<Response> {
+  const { timeout = REQUEST_TIMEOUT, signal: existingSignal, ...fetchOptions } = options;
+  
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeout);
+  
+  try {
+    const response = await fetch(url, {
+      ...fetchOptions,
+      signal: existingSignal || controller.signal,
+    });
+    clearTimeout(timeoutId);
+    return response;
+  } catch (error) {
+    clearTimeout(timeoutId);
+    if (error instanceof Error && error.name === 'AbortError') {
+      throw new ApiError(`Request timed out after ${timeout}ms`);
+    }
+    throw error;
+  }
+}
 
 export async function aiFormatResume(
   rawText: string,
@@ -12,29 +46,93 @@ export async function aiFormatResume(
     throw new Error('missing-api-key');
   }
 
-  if (provider.id === 'gemini') {
-    const { GoogleGenAI } = await import('@google/genai');
-    const ai = new GoogleGenAI({ apiKey: provider.apiKey });
-    
-    const prompt = getFormatPrompt(lang, rawText);
-    const response = await ai.models.generateContent({
-      model: provider.model || 'gemini-1.5-flash',
-      contents: prompt,
-    });
+  const prompt = getFormatPrompt(lang, rawText);
 
-    return cleanMarkdown(response.text || '');
-  } 
-  
-  if (provider.id === 'openai') {
-    const prompt = getFormatPrompt(lang, rawText);
-    const response = await fetch(`${provider.baseUrl || 'https://api.openai.com/v1'}/chat/completions`, {
+  if (provider.id === 'anthropic') {
+    const endpoint = provider.baseUrl?.endsWith('/') 
+      ? provider.baseUrl 
+      : `${provider.baseUrl || 'https://api.anthropic.com/v1'}/`;
+       
+    const response = await fetchWithTimeout(`${endpoint}messages`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${provider.apiKey}`,
+        'x-api-key': provider.apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true',
       },
       body: JSON.stringify({
-        model: provider.model || 'gpt-4o',
+        model: provider.model || 'claude-3-7-sonnet-20250219',
+        system: 'You are an expert resume formatter.',
+        messages: [{ role: 'user', content: prompt }],
+        max_tokens: 4096,
+        temperature: 0.2,
+      }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      throw new ApiError(error.error?.message || 'Anthropic API Error', response.status);
+    }
+
+    const data = await response.json();
+    return cleanMarkdown(data.content[0]?.text || '');
+  }
+
+  if (provider.id === 'gemini') {
+    const baseUrl = provider.baseUrl || 'https://generativelanguage.googleapis.com/v1beta';
+    const model = provider.model || 'gemini-3-pro-preview';
+    const endpoint = `${baseUrl.replace(/\/$/, '')}/models/${model}:generateContent?key=${provider.apiKey}`;
+
+    const response = await fetchWithTimeout(endpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: {
+          temperature: 0.2,
+          maxOutputTokens: 4096,
+        },
+      }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      throw new ApiError(error.error?.message || 'Gemini API Error', response.status);
+    }
+
+    const data = await response.json();
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    return cleanMarkdown(text);
+  }
+
+  if (['openai', 'deepseek', 'openrouter'].includes(provider.id)) {
+    let baseUrl = provider.baseUrl || 'https://api.openai.com/v1';
+    
+    if (!baseUrl.includes('/v1') && !baseUrl.includes('/chat/completions')) {
+      baseUrl = baseUrl.endsWith('/') ? `${baseUrl}v1` : `${baseUrl}/v1`;
+    }
+    const endpoint = baseUrl.endsWith('/chat/completions') 
+      ? baseUrl 
+      : `${baseUrl.replace(/\/$/, '')}/chat/completions`;
+
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${provider.apiKey}`,
+    };
+
+    if (provider.id === 'openrouter') {
+      headers['HTTP-Referer'] = window.location.origin;
+      headers['X-Title'] = 'Resume Studio';
+    }
+
+    const response = await fetchWithTimeout(endpoint, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        model: provider.model,
         messages: [
           { role: 'system', content: 'You are an expert resume formatter.' },
           { role: 'user', content: prompt }
@@ -44,8 +142,8 @@ export async function aiFormatResume(
     });
 
     if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error?.message || 'OpenAI API Error');
+      const error = await response.json().catch(() => ({}));
+      throw new ApiError(error.error?.message || `${provider.name} API Error`, response.status);
     }
 
     const data = await response.json();
