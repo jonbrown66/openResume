@@ -100,6 +100,7 @@ export const translations = {
     aiConnectionFailed: 'Connection test failed',
     aiConnectionMissingApiKey: 'Please enter an API key before testing the model.',
     aiConnectionMissingModel: 'Please enter a model name before testing the connection.',
+    githubProject: 'Open GitHub Project',
     // LLM Config
     llmConfigTitle: 'AI Engine Configuration',
     llmConfigDesc: 'Manage your AI interface credentials',
@@ -217,6 +218,7 @@ export const translations = {
     aiConnectionFailed: '连通性测试失败',
     aiConnectionMissingApiKey: '请先填写 API Key 再测试模型。',
     aiConnectionMissingModel: '请先填写模型名称再测试连通性。',
+    githubProject: '打开 GitHub 项目',
     // LLM Config
     llmConfigTitle: '智能引擎配置',
     llmConfigDesc: '管理您的 AI 接口凭证',

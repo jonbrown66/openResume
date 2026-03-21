@@ -11,6 +11,7 @@ import {
   Upload,
   ChevronDown,
   Palette,
+  Github,
 } from 'lucide-react';
 
 import type { AppLanguage, AppTheme, TranslationSet, ResumeTemplate } from '@/config/ui';
@@ -23,6 +24,8 @@ import { ProjectSelector } from './ProjectSelector';
 import type { ResumeThemeConfig } from '@/types/theme';
 import { ThemeEditorPanel } from './ThemeEditorPanel';
 import { buttonHoverVariants, springTransition } from '@/lib/motion';
+
+const PROJECT_GITHUB_URL = 'https://github.com/jonbrown66/openResume';
 
 interface AppHeaderProps {
   fileInputRef: RefObject<HTMLInputElement | null>;
@@ -202,6 +205,19 @@ export const AppHeader = memo(function AppHeader({
         >
           <Settings size={16} />
         </motion.button>
+
+        <motion.a
+          href={PROJECT_GITHUB_URL}
+          target="_blank"
+          rel="noreferrer"
+          className="p-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-500 dark:text-zinc-400 transition-colors flex items-center justify-center"
+          title={t.githubProject}
+          aria-label={t.githubProject}
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.95 }}
+        >
+          <Github size={16} />
+        </motion.a>
         
         <div className="hidden sm:block w-px h-4 bg-zinc-200 dark:bg-zinc-700 mx-1 sm:mx-2"></div>
 
