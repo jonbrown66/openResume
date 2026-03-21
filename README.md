@@ -2,6 +2,9 @@
 
 一个本地优先的简历工作台，支持 Markdown 编辑、区块编辑、A4 实时预览，以及导出 PDF / Word / HTML。
 
+语言版本：
+[中文](./README.md) | [English](./README.en.md)
+
 仓库地址：
 [https://github.com/jonbrown66/openResume](https://github.com/jonbrown66/openResume)
 

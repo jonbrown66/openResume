@@ -2,6 +2,9 @@
 
 A local-first resume workspace with Markdown editing, block editing, real-time A4 preview, and export to PDF, Word, and HTML.
 
+Languages:
+[中文](./README.md) | [English](./README.en.md)
+
 Repository:
 [https://github.com/jonbrown66/openResume](https://github.com/jonbrown66/openResume)
 
