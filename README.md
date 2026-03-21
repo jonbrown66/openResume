@@ -5,8 +5,13 @@
 语言版本：
 [中文](./README.md) | [English](./README.en.md)
 
+在线演示：
+[https://open-resume-dun.vercel.app/](https://open-resume-dun.vercel.app/)
+
 仓库地址：
 [https://github.com/jonbrown66/openResume](https://github.com/jonbrown66/openResume)
+
+![openResume 预览](./.github/assets/openresume.png)
 
 ## 功能特性
 
