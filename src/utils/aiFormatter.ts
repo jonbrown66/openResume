@@ -46,6 +46,11 @@ export async function aiFormatResume(
     throw new Error('missing-api-key');
   }
 
+  const model = provider.model?.trim();
+  if (!model) {
+    throw new Error('missing-model');
+  }
+
   const prompt = getFormatPrompt(lang, rawText);
 
   if (provider.id === 'anthropic') {
@@ -62,7 +67,7 @@ export async function aiFormatResume(
         'anthropic-dangerous-direct-browser-access': 'true',
       },
       body: JSON.stringify({
-        model: provider.model || 'claude-3-7-sonnet-20250219',
+        model,
         system: 'You are an expert resume formatter.',
         messages: [{ role: 'user', content: prompt }],
         max_tokens: 4096,
@@ -81,7 +86,6 @@ export async function aiFormatResume(
 
   if (provider.id === 'gemini') {
     const baseUrl = provider.baseUrl || 'https://generativelanguage.googleapis.com/v1beta';
-    const model = provider.model || 'gemini-3-pro-preview';
     const endpoint = `${baseUrl.replace(/\/$/, '')}/models/${model}:generateContent?key=${provider.apiKey}`;
 
     const response = await fetchWithTimeout(endpoint, {
@@ -132,7 +136,7 @@ export async function aiFormatResume(
       method: 'POST',
       headers,
       body: JSON.stringify({
-        model: provider.model,
+        model,
         messages: [
           { role: 'system', content: 'You are an expert resume formatter.' },
           { role: 'user', content: prompt }

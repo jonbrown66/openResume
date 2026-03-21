@@ -12,7 +12,10 @@ import {
 } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
+import { useToast } from '@/components/ui/Toast';
 import { cn } from '@/lib/utils';
+import { testAiProviderConnection } from '@/utils/aiConnection';
 
 interface AiSettingsProps {
   settings: AppSettings;
@@ -44,15 +47,74 @@ const ENDPOINT_PLACEHOLDERS: Record<ApiProviderId, string> = {
   openrouter: 'https://openrouter.ai/api/v1',
 };
 
+const CUSTOM_MODEL_VALUE = '__custom_model__';
+
 export function AiSettings({ settings, onUpdateProvider, onSetActiveProvider }: AiSettingsProps) {
   const [showKey, setShowKey] = useState(false);
+  const [testingProviderId, setTestingProviderId] = useState<ApiProviderId | null>(null);
+  const [customModelModes, setCustomModelModes] = useState<Partial<Record<ApiProviderId, boolean>>>({});
   const currentProviderId = settings.activeProvider;
   const currentProvider = settings.providers[currentProviderId];
   const t = translations[settings.language];
+  const { addToast } = useToast();
 
   const availableModels = useMemo(() => {
     return Array.from(new Set(DEFAULT_MODELS[currentProviderId] || []));
   }, [currentProviderId]);
+
+  const isStoredCustomModel = Boolean(
+    currentProvider.model && !availableModels.includes(currentProvider.model),
+  );
+  const isCustomModel = customModelModes[currentProviderId] ?? isStoredCustomModel;
+  const selectedModelValue = isCustomModel ? CUSTOM_MODEL_VALUE : currentProvider.model || '';
+  const isTestingCurrentProvider = testingProviderId === currentProviderId;
+
+  const handleModelChange = (value: string | null) => {
+    if (!value) {
+      setCustomModelModes((prev) => ({ ...prev, [currentProviderId]: false }));
+      onUpdateProvider(currentProviderId, { model: undefined });
+      return;
+    }
+
+    if (value === CUSTOM_MODEL_VALUE) {
+      setCustomModelModes((prev) => ({ ...prev, [currentProviderId]: true }));
+      return;
+    }
+
+    setCustomModelModes((prev) => ({ ...prev, [currentProviderId]: false }));
+    onUpdateProvider(currentProviderId, { model: value || undefined });
+  };
+
+  const handleConnectionTest = async () => {
+    const providerSnapshot = {
+      ...currentProvider,
+      apiKey: currentProvider.apiKey.trim(),
+      model: currentProvider.model.trim(),
+      baseUrl: currentProvider.baseUrl?.trim(),
+    };
+
+    if (!providerSnapshot.apiKey) {
+      addToast(t.aiConnectionMissingApiKey, 'warning');
+      return;
+    }
+
+    if (!providerSnapshot.model) {
+      addToast(t.aiConnectionMissingModel, 'warning');
+      return;
+    }
+
+    setTestingProviderId(currentProviderId);
+
+    try {
+      await testAiProviderConnection(providerSnapshot);
+      addToast(t.aiConnectionSuccess, 'success');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      addToast(`${t.aiConnectionFailed}: ${message}`, 'error');
+    } finally {
+      setTestingProviderId((prev) => (prev === currentProviderId ? null : prev));
+    }
+  };
 
   return (
     <motion.div
@@ -126,8 +188,8 @@ export function AiSettings({ settings, onUpdateProvider, onSetActiveProvider }: 
           {t.aiModel}
         </Label>
         <Select 
-          value={currentProvider.model || ''} 
-          onValueChange={(val) => onUpdateProvider(currentProviderId, { model: val || undefined })}
+          value={selectedModelValue}
+          onValueChange={handleModelChange}
         >
           <SelectTrigger className="w-full h-12 rounded-lg border-zinc-200/80 dark:border-zinc-800/80 bg-white/50 dark:bg-zinc-950/50 px-4 focus:ring-1 focus:ring-zinc-900/10 dark:focus:ring-zinc-100/10">
             <SelectValue />
@@ -136,8 +198,35 @@ export function AiSettings({ settings, onUpdateProvider, onSetActiveProvider }: 
             {availableModels.map(m => (
               <SelectItem key={m} value={m} className="rounded-lg">{m}</SelectItem>
             ))}
+            <SelectItem value={CUSTOM_MODEL_VALUE} className="rounded-lg">
+              {t.aiModelCustomOption}
+            </SelectItem>
           </SelectContent>
         </Select>
+        {isCustomModel ? (
+          <Input
+            value={currentProvider.model || ''}
+            onChange={(e) => {
+              setCustomModelModes((prev) => ({ ...prev, [currentProviderId]: true }));
+              onUpdateProvider(currentProviderId, { model: e.target.value });
+            }}
+            placeholder={t.aiModelCustomPlaceholder}
+            className="w-full h-12 rounded-lg border-zinc-200/80 dark:border-zinc-800/80 bg-white/50 dark:bg-zinc-950/50 px-4 focus:ring-1 focus:ring-zinc-900/10 dark:focus:ring-zinc-100/10"
+          />
+        ) : null}
+        <div className="flex justify-end">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="rounded-lg border-zinc-200/80 bg-white/70 dark:border-zinc-800/80 dark:bg-zinc-950/50"
+            onClick={handleConnectionTest}
+            disabled={isTestingCurrentProvider}
+          >
+            <Wand2 size={14} />
+            {isTestingCurrentProvider ? t.aiTestingConnection : t.aiTestConnection}
+          </Button>
+        </div>
       </div>
     </motion.div>
   );

@@ -29,7 +29,8 @@ interface AppContextValue {
   
   isImporting: boolean;
   importError: string;
-  importNotice: '' | 'missing-api-key';
+  importNotice: '' | 'missing-api-key' | 'missing-model' | 'ai-format-fallback';
+  importNoticeDetail: string;
   triggerImport: () => void;
 }
 
@@ -51,6 +52,7 @@ export function AppProvider({ children, value }: AppProviderProps) {
     value.isImporting,
     value.importError,
     value.importNotice,
+    value.importNoticeDetail,
   ]);
   
   return (

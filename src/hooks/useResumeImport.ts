@@ -7,6 +7,7 @@ import { aiFormatResume } from '../utils/aiFormatter';
 import { autoFormatResume } from '../utils/resumeParser';
 
 type ImportStep = 'idle' | 'extracting' | 'parsing' | 'formatting' | 'done';
+type ImportNotice = '' | 'missing-api-key' | 'missing-model' | 'ai-format-fallback';
 
 interface UseResumeImportOptions {
   lang: AppLanguage;
@@ -19,7 +20,8 @@ export function useResumeImport({ lang, settings, onImportComplete }: UseResumeI
   const [isImporting, setIsImporting] = useState(false);
   const [importStep, setImportStep] = useState<ImportStep>('idle');
   const [importError, setImportError] = useState('');
-  const [importNotice, setImportNotice] = useState<'' | 'missing-api-key'>('');
+  const [importNotice, setImportNotice] = useState<ImportNotice>('');
+  const [importNoticeDetail, setImportNoticeDetail] = useState('');
 
   const triggerImport = () => fileInputRef.current?.click();
 
@@ -32,6 +34,8 @@ export function useResumeImport({ lang, settings, onImportComplete }: UseResumeI
     try {
       setIsImporting(true);
       setImportError('');
+      setImportNotice('');
+      setImportNoticeDetail('');
       setImportStep('extracting');
 
       const rawText = await extractTextFromFile(file);
@@ -42,7 +46,7 @@ export function useResumeImport({ lang, settings, onImportComplete }: UseResumeI
         setImportStep('parsing');
         const formatted = autoFormatResume(rawText, lang);
         setImportStep('done');
-        setImportNotice('');
+        setImportNotice('missing-api-key');
         startTransition(() => {
           onImportComplete(formatted);
         });
@@ -62,7 +66,19 @@ export function useResumeImport({ lang, settings, onImportComplete }: UseResumeI
         setImportStep('parsing');
         const formatted = autoFormatResume(rawText, lang);
         setImportStep('done');
-        setImportNotice('');
+
+        const errorMessage = aiError instanceof Error ? aiError.message : String(aiError);
+        if (errorMessage === 'missing-api-key') {
+          setImportNotice('missing-api-key');
+          setImportNoticeDetail('');
+        } else if (errorMessage === 'missing-model') {
+          setImportNotice('missing-model');
+          setImportNoticeDetail('');
+        } else {
+          setImportNotice('ai-format-fallback');
+          setImportNoticeDetail(errorMessage.trim());
+        }
+
         startTransition(() => {
           onImportComplete(formatted);
         });
@@ -84,6 +100,7 @@ export function useResumeImport({ lang, settings, onImportComplete }: UseResumeI
     handleFileChange,
     importError,
     importNotice,
+    importNoticeDetail,
     isImporting,
     importStep,
     setImportNotice,

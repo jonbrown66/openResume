@@ -71,6 +71,7 @@ export default function App() {
     handleFileChange,
     importError,
     importNotice,
+    importNoticeDetail,
     isImporting,
     importStep,
     triggerImport,
@@ -154,6 +155,12 @@ export default function App() {
     ? t.importFailed
     : importNotice === 'missing-api-key'
       ? t.importNoApiKey
+      : importNotice === 'missing-model'
+        ? t.importMissingModel
+        : importNotice === 'ai-format-fallback'
+          ? importNoticeDetail
+            ? `${t.importAiFallback} ${importNoticeDetail}`
+            : t.importAiFallback
       : '';
 
   return (
