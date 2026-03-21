@@ -1,28 +1,27 @@
 # openResume
 
-A local-first resume workspace with Markdown editing, block editing, real-time A4 preview, and export to PDF, Word, and HTML.
+A local-first resume workspace with Markdown editing, block editing, A4 live preview, an AI resume assistant, and export to PDF / Word / HTML.
 
-Languages:
 [中文](./README.md) | [English](./README.en.md)
 
-Live Demo:
-[https://open-resume-dun.vercel.app/](https://open-resume-dun.vercel.app/)
+Live Demo: [https://open-resume-dun.vercel.app/](https://open-resume-dun.vercel.app/)
 
-Repository:
-[https://github.com/jonbrown66/openResume](https://github.com/jonbrown66/openResume)
+GitHub: [https://github.com/jonbrown66/openResume](https://github.com/jonbrown66/openResume)
 
 ![openResume preview](./.github/assets/openresume.png)
 
 ## Features
 
 - Dual editing modes: Markdown and block editor
-- Unified A4-sized canvas for both editor and preview
-- Zoomable preview with template switching
+- Unified A4 canvas for both editing and preview
+- Zoomable preview with template switching and style controls
 - Import support for `md / txt / pdf / docx`
-- AI-assisted resume formatting for imported content
+- Local fallback parsing when no API key is configured
+- AI-assisted resume editing with before/after diff preview
+- Project-scoped assistant memory with a default limit of 20 recent messages
 - Export to `PDF / DOCX / HTML`
-- Theme, color, and appearance settings
-- Local resume project management
+- Local multi-project resume management
+- Support for OpenAI, Anthropic, Gemini, DeepSeek, and OpenRouter
 
 ## Tech Stack
 
@@ -30,9 +29,12 @@ Repository:
 - React 19
 - TypeScript
 - Tailwind CSS 4
+- Framer Motion
 - Vitest
+- `pdfjs-dist`
+- `mammoth`
+- `docx`
 - Puppeteer / Chromium
-- `pdfjs-dist` / `mammoth`
 
 ## Local Development
 
@@ -43,18 +45,16 @@ pnpm install
 pnpm dev
 ```
 
-You can also use `npm`:
+Or with `npm`:
 
 ```bash
 npm install
 npm run dev
 ```
 
-Open:
+Open: [http://localhost:3000](http://localhost:3000)
 
-[http://localhost:3000](http://localhost:3000)
-
-## Build and Test
+## Test and Build
 
 ```bash
 pnpm test
@@ -62,7 +62,7 @@ pnpm build
 pnpm start
 ```
 
-Or with `npm`:
+Or:
 
 ```bash
 npm test
@@ -72,7 +72,7 @@ npm run start
 
 ## AI Configuration
 
-The current version mainly manages AI settings through the in-app settings panel. Configuration is stored in local browser storage.
+AI settings are managed from the in-app settings panel and stored in browser local storage.
 
 Supported providers:
 
@@ -82,18 +82,23 @@ Supported providers:
 - DeepSeek
 - OpenRouter
 
-You can configure the following in the settings panel:
+Configurable fields:
 
 - Active provider
 - API key
 - Base URL
-- Model name
+- Default model
+- Custom model
 
-`.env.example` is kept as a minimal example for compatibility and local extension, but it is not the primary configuration entry point for the current app.
+Notes:
+
+- Import first tries AI formatting and falls back to local parsing when needed
+- The assistant includes a model connectivity test
+- Missing API keys or models are surfaced with explicit UI messages
 
 ## Export
 
-- PDF: rendered and exported through the server-side export pipeline
+- PDF: generated through the server-side export pipeline
 - Word: generated with `docx`
 - HTML: exports the current resume page as HTML
 
@@ -106,30 +111,30 @@ Export endpoints:
 ## Project Structure
 
 ```text
-app/                    Next.js App Router entry and export APIs
-src/components/         editor and page components
-src/components/settings settings panels
-src/components/ui/      shared UI components
-src/config/             UI copy and default settings
-src/contexts/           global contexts
-src/hooks/              custom hooks
-src/lib/                runtime utilities
-src/test/               component and utility tests
-src/types/              type definitions
-src/utils/              resume parsing, AI formatting, export utilities
-docs/plans/             design and planning documents
+app/                         Next.js App Router and export APIs
+src/components/              page, editor, preview, and assistant components
+src/components/assistant/    assistant subcomponents
+src/components/settings/     settings panels
+src/components/ui/           shared UI components
+src/config/                  UI copy and default config
+src/config/translations/     localized copy
+src/hooks/                   custom hooks
+src/lib/                     runtime utilities
+src/test/                    tests
+src/types/                   type definitions
+src/utils/                   resume parsing, AI, import, and export utilities
 ```
 
-## Current Direction
+## Product Direction
 
-This project is positioned as a local resume workspace rather than only a Markdown-to-PDF utility. The current goals are:
+`openResume` is not just a Markdown-to-PDF converter. It is a local resume workspace designed for continuous editing and iteration. The current focus is:
 
-- keep resume content editable over time
-- keep preview output as close as possible to final export output
-- leave room for future theme, template, and project-management expansion
+- keeping resume content editable over time
+- keeping preview output close to the final export result
+- leaving clean extension points for future templates, themes, and richer block editing
 
 ## Notes
 
-- The first PDF export can be slightly slower while related dependencies initialize
-- Import still works without an AI key, but imported content will not be auto-formatted
-- This repository now includes Next.js server-side export capabilities, so it is no longer a purely static frontend app
+- The first PDF export can be slower while browser-side dependencies initialize
+- Scanned PDFs may still have limited text extraction quality
+- Assistant changes are applied only after a manual confirmation click

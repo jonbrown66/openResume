@@ -128,14 +128,9 @@ export const AppHeader = memo(function AppHeader({
   return (
     <header className="px-4 sm:px-6 py-3 sm:py-4 bg-white dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 flex justify-between items-center shrink-0 z-20 transition-colors duration-200 print:hidden">
       <div className="flex items-center gap-1 sm:gap-3">
-        <ProjectSelector
-          projects={projects}
-          currentProject={currentProject}
-          onSwitch={onProjectSwitch}
-          onCreate={onProjectCreate}
-          onRename={onProjectRename}
-          onDelete={onProjectDelete}
-        />
+        <span className="text-[10px] sm:text-sm font-semibold text-zinc-500 dark:text-zinc-400 tracking-wider sm:tracking-wide truncate max-w-[100px] sm:max-w-none">
+          OpenResume
+        </span>
         <div className="hidden sm:flex items-center gap-2 mr-2">
           <motion.div 
             className="w-3 h-3 rounded-lg bg-red-400 dark:bg-red-500"
@@ -153,7 +148,14 @@ export const AppHeader = memo(function AppHeader({
             transition={springTransition}
           />
         </div>
-        <span className="text-[10px] sm:text-sm font-semibold text-zinc-500 dark:text-zinc-400 tracking-wider sm:tracking-wide uppercase truncate max-w-[80px] sm:max-w-none">{t.editor}</span>
+        <ProjectSelector
+          projects={projects}
+          currentProject={currentProject}
+          onSwitch={onProjectSwitch}
+          onCreate={onProjectCreate}
+          onRename={onProjectRename}
+          onDelete={onProjectDelete}
+        />
       </div>
 
       <div className="flex items-center gap-1 sm:gap-2">

@@ -113,7 +113,7 @@ export async function testAiProviderConnection(provider: ApiProvider): Promise<v
 
     if (provider.id === 'openrouter') {
       headers['HTTP-Referer'] = window.location.origin;
-      headers['X-Title'] = 'Resume Studio';
+      headers['X-OpenRouter-Title'] = 'Resume Studio';
     }
 
     const response = await fetchWithTimeout(endpoint, {

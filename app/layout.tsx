@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Resume Studio",
-  description: "本地简历工作台 - Markdown 编辑，多模板预览，PDF 导出",
+  title: "openResume",
+  description: "本地优先的简历工作台，支持 Markdown 编辑、A4 预览与多格式导出。",
 };
 
 export default function RootLayout({

@@ -4,7 +4,6 @@ import { STORAGE_KEY, generateId } from '@/types/resumeProject';
 import { parseMarkdownToResumeDraft } from '@/utils/resumeDocument';
 import { defaultMarkdownZh } from '@/constants';
 import type { ResumeDraft } from '@/types/resume';
-import type { ResumeTemplate } from '@/config/ui';
 import { DEFAULT_THEME_CONFIG } from '@/types/theme';
 
 const DEFAULT_DRAFT: ResumeDraft = parseMarkdownToResumeDraft(defaultMarkdownZh);
@@ -47,6 +46,14 @@ function saveToStorage(data: StorageSchema): void {
   } catch (e) {
     console.error('Failed to save to localStorage:', e);
   }
+}
+
+function isSameProjectValue<T>(currentValue: T, nextValue: T) {
+  if (typeof currentValue === 'object' && currentValue !== null) {
+    return JSON.stringify(currentValue) === JSON.stringify(nextValue);
+  }
+
+  return currentValue === nextValue;
 }
 
 export function useResumeProjects() {
@@ -131,12 +138,27 @@ export function useResumeProjects() {
 
   const updateProject = useCallback((id: string, updates: Partial<Omit<ResumeProject, 'id' | 'createdAt'>>) => {
     setStorageData(prev => {
-      const newProjects = prev.projects.map(p =>
-        p.id === id
-          ? { ...p, ...updates, updatedAt: Date.now() }
-          : p
-      );
-      return { ...prev, projects: newProjects };
+      let hasChanges = false;
+
+      const newProjects = prev.projects.map(p => {
+        if (p.id !== id) {
+          return p;
+        }
+
+        const changedEntries = Object.entries(updates).filter(([key, value]) => {
+          const projectKey = key as keyof typeof updates & keyof ResumeProject;
+          return !isSameProjectValue(p[projectKey], value as ResumeProject[typeof projectKey]);
+        });
+
+        if (changedEntries.length === 0) {
+          return p;
+        }
+
+        hasChanges = true;
+        return { ...p, ...updates, updatedAt: Date.now() };
+      });
+
+      return hasChanges ? { ...prev, projects: newProjects } : prev;
     });
   }, []);
 

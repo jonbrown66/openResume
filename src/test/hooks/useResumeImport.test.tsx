@@ -33,6 +33,7 @@ function createSettings(overrides?: Partial<AppSettings>): AppSettings {
 describe('useResumeImport', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
     vi.mocked(extractTextFromFile).mockResolvedValue('raw resume');
     vi.mocked(autoFormatResume).mockReturnValue('parsed markdown');
   });

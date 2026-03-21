@@ -28,10 +28,6 @@ interface ResumeDraft {
   sections: ResumeSection[];
 }
 
-function escapeText(text: string): string {
-  return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-}
-
 function isChineseText(value: string): boolean {
   return /[\u4e00-\u9fa5]/.test(value);
 }

@@ -1,179 +1,310 @@
-import type { ResumeDraft, ResumeSection, ResumeEntry, ResumeFrontmatter } from '@/types/resume';
+import type { ResumeDraft, ResumeEntry, ResumeFrontmatter, ResumeSection } from '@/types/resume';
+
+type SupportedLanguage = 'zh' | 'en';
 
 const EMAIL_REGEX = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/;
-const PHONE_REGEX = /[\+]?[(]?[0-9]{1,3}[)]?[-\s\.]?[(]?[0-9]{1,4}[)]?[-\s\.]?[0-9]{1,4}[-\s\.]?[0-9]{1,9}/g;
-const DATE_RANGE_REGEX = /(\d{4}[年/-]\d{1,2}|\d{4}[年/-]?(至今|现在|Present|Current|present))|(\d{4}[年/-]\d{1,2}[日/-]\d{1,2})/g;
+const PHONE_REGEX = /(?:\+?\d[\d\s\-().]{6,}\d)/g;
+const DATE_RANGE_REGEX =
+  /((?:19|20)\d{2}(?:[./-]\d{1,2}(?:[./-]\d{1,2})?)?(?:\s*[—–-]\s*(?:至今|现在|Present|Current|current|至今|今))?)/i;
+const ADDRESS_HINT_REGEX = /(北京市|上海市|深圳市|广州市|杭州|成都|区|市|Road|Street|Avenue|Location|Address)/i;
 
-const SECTION_PATTERNS: { pattern: RegExp; title: string }[] = [
-  { pattern: /工作经[历驗]|工作经历|职业经历|职业履历|experience|work\s*experience/i, title: 'WORK EXPERIENCE' },
-  { pattern: /教育[背景历程]|学历|education|academic/i, title: 'EDUCATION' },
-  { pattern: /项目[经历经验]|项目经验|项目经历|projects?|portfolio/i, title: 'PROJECTS' },
-  { pattern: /技能|专业技能|技术技能|技术栈|skills?|tech(?:nical)?\s*(?:skills?|stack)/i, title: 'SKILLS' },
-  { pattern: /证书|认证|资格证书|certificates?|certifications?/i, title: 'CERTIFICATIONS' },
-  { pattern: /语言|语言能力|languages?/i, title: 'LANGUAGES' },
-  { pattern: /兴趣爱好?|个人爱好|兴趣|interests?|hobbies?/i, title: 'INTERESTS' },
-  { pattern: /奖项|荣誉|获奖|awards?|honors?|achievements?/i, title: 'AWARDS' },
-  { pattern: /实习| Internship/i, title: 'INTERNSHIP' },
-];
+const SUMMARY_TITLES = {
+  zh: '个人简介',
+  en: 'PROFESSIONAL SUMMARY',
+} as const;
 
-const JOB_TITLE_PATTERNS = [
-  /([\u4e00-\u9fa5]{2,10}(经理|总监|主管|专员|助理|工程师|设计师|顾问|Coordinator|Manager|Director|Engineer|Designer|Consultant|Specialist|Assistant|Associate))/g,
-];
+const OTHER_TITLES = {
+  zh: '其他',
+  en: 'OTHER',
+} as const;
 
-function extractEmail(text: string): string | null {
-  const match = text.match(EMAIL_REGEX);
-  return match ? match[0] : null;
+const DEFAULT_NAME = {
+  zh: '姓名',
+  en: 'Name',
+} as const;
+
+const DEFAULT_TITLE = {
+  zh: '职位',
+  en: 'Title',
+} as const;
+
+const SECTION_DEFINITIONS = [
+  {
+    key: 'summary',
+    pattern: /^(个人简介|个人总结|职业概述|简介|summary|professional summary|profile)$/i,
+    title: SUMMARY_TITLES,
+  },
+  {
+    key: 'work',
+    pattern: /^(工作经历|工作经验|职业经历|职业经验|实习经历|experience|work experience|employment)$/i,
+    title: { zh: '工作经历', en: 'WORK EXPERIENCE' },
+  },
+  {
+    key: 'education',
+    pattern: /^(教育背景|教育经历|学历|education|academic background)$/i,
+    title: { zh: '教育背景', en: 'EDUCATION' },
+  },
+  {
+    key: 'projects',
+    pattern: /^(项目经历|项目经验|项目|projects?|portfolio)$/i,
+    title: { zh: '项目经历', en: 'PROJECTS' },
+  },
+  {
+    key: 'skills',
+    pattern: /^(技能|专业技能|技能清单|技能概览|skills?|technical skills|tech stack)$/i,
+    title: { zh: '技能', en: 'SKILLS' },
+  },
+  {
+    key: 'certifications',
+    pattern: /^(证书|认证|资格证书|certificates?|certifications?)$/i,
+    title: { zh: '证书认证', en: 'CERTIFICATIONS' },
+  },
+  {
+    key: 'languages',
+    pattern: /^(语言能力|语言|languages?)$/i,
+    title: { zh: '语言能力', en: 'LANGUAGES' },
+  },
+  {
+    key: 'awards',
+    pattern: /^(获奖经历|奖项|荣誉|awards?|honors?|achievements?)$/i,
+    title: { zh: '奖项荣誉', en: 'AWARDS' },
+  },
+  {
+    key: 'interests',
+    pattern: /^(兴趣爱好|个人爱好|兴趣|interests?|hobbies?)$/i,
+    title: { zh: '兴趣爱好', en: 'INTERESTS' },
+  },
+] as const;
+
+function normalizeLine(line: string) {
+  return line.replace(/\u00a0/g, ' ').trim();
 }
 
-function extractPhone(text: string): string | null {
-  const matches = text.match(PHONE_REGEX);
-  if (!matches) return null;
-  const phone = matches.find(m => m.replace(/\D/g, '').length >= 7);
-  return phone || null;
+function stripMarkdownDecorators(line: string) {
+  return normalizeLine(line).replace(/^#{1,3}\s*/, '').replace(/^\*\*|\*\*$/g, '').trim();
 }
 
-function extractName(text: string): string {
-  const lines = text.split('\n').filter(l => l.trim());
-  
-  for (const line of lines.slice(0, 5)) {
-    const cleaned = line.trim().replace(/[📧📱☎️电话邮箱地址]/g, '').trim();
-    if (cleaned.length >= 2 && cleaned.length <= 20 && /^[a-zA-Z\u4e00-\u9fa5\s·\.]+$/.test(cleaned)) {
-      const hasOnlyLetters = /^[a-zA-Z\s·.]+$/.test(cleaned);
-      const hasOnlyChinese = /^[\u4e00-\u9fa5\s·]+$/.test(cleaned);
-      if (hasOnlyLetters || hasOnlyChinese) {
-        return cleaned.replace(/[·.]/g, ' ').trim();
-      }
+function isBulletLine(line: string) {
+  return /^[-*•●▪]\s*/.test(normalizeLine(line));
+}
+
+function normalizeBullet(line: string) {
+  return `- ${normalizeLine(line).replace(/^[-*•●▪]\s*/, '').trim()}`;
+}
+
+function isLikelyContactLine(line: string) {
+  const trimmed = normalizeLine(line);
+  return EMAIL_REGEX.test(trimmed) || Boolean(trimmed.match(PHONE_REGEX)) || ADDRESS_HINT_REGEX.test(trimmed);
+}
+
+function isLikelySectionHeading(line: string) {
+  const trimmed = normalizeLine(line);
+  const candidate = trimmed.replace(/^#{1,3}\s*/, '');
+  return SECTION_DEFINITIONS.some((definition) => definition.pattern.test(candidate));
+}
+
+function getSectionDefinition(line: string) {
+  const candidate = normalizeLine(line).replace(/^#{1,3}\s*/, '');
+  return SECTION_DEFINITIONS.find((definition) => definition.pattern.test(candidate)) ?? null;
+}
+
+function extractEmail(text: string) {
+  return text.match(EMAIL_REGEX)?.[0] ?? '';
+}
+
+function extractPhone(text: string) {
+  const matches = text.match(PHONE_REGEX) ?? [];
+  return matches.find((match) => match.replace(/\D/g, '').length >= 7) ?? '';
+}
+
+function extractAddress(lines: string[]) {
+  return lines.find((line) => ADDRESS_HINT_REGEX.test(line) && !EMAIL_REGEX.test(line)) ?? '';
+}
+
+function extractName(lines: string[]) {
+  for (const line of lines.slice(0, 6)) {
+    const trimmed = normalizeLine(line);
+    if (!trimmed || isLikelyContactLine(trimmed) || isLikelySectionHeading(trimmed)) {
+      continue;
+    }
+
+    if (trimmed.length <= 24 && /^[a-zA-Z\u4e00-\u9fa5\s·.]+$/.test(trimmed)) {
+      return trimmed;
     }
   }
-  
+
   return '';
 }
 
-function extractTitle(text: string): string {
-  const titlePatterns = [
-    /[\u4e00-\u9fa5]{2,10}(经理|总监|主管|专员|助理|工程师|设计师|顾问|Coordinator|Manager|Director|Engineer|Designer|Consultant|Specialist)/,
-    /(Senior|Junior|Lead|Principal|Staff|Associate)\s+(?:[\w\s]+(?:Engineer|Designer|Manager|Developer|Architect|Analyst))/i,
-    /([A-Z][a-z]+\s+[A-Z][a-z]+)/,
-  ];
-  
-  for (const pattern of titlePatterns) {
-    const match = text.match(pattern);
-    if (match) {
-      return match[1] || match[0];
+function extractTitle(lines: string[], name: string) {
+  for (const line of lines.slice(0, 8)) {
+    const trimmed = normalizeLine(line);
+    if (!trimmed || trimmed === name || isLikelyContactLine(trimmed) || isLikelySectionHeading(trimmed)) {
+      continue;
+    }
+
+    if (trimmed.length <= 40) {
+      return trimmed;
     }
   }
-  
+
   return '';
 }
 
-function detectSection(text: string): string | null {
-  for (const { pattern, title } of SECTION_PATTERNS) {
-    if (pattern.test(text)) {
-      return title;
-    }
-  }
-  return null;
+function buildContact(lines: string[]) {
+  const email = extractEmail(lines.join('\n'));
+  const phone = extractPhone(lines.join('\n'));
+  const address = extractAddress(lines.slice(0, 10));
+  return [phone, email, address].filter(Boolean).join(' | ');
 }
 
-function isJobEntry(text: string): boolean {
-  const indicators = [
-    /\d{4}[年/-]\d{1,2}/,
-    /(公司|企业|集团|Inc|LLC|Corp|Ltd|Co\.)/,
-    /责任|负责|完成|推动|提升|增加|管理|带领|协调|主导/g,
-  ];
-  return indicators.some(p => p.test(text));
+function getSummary(lines: string[], firstSectionIndex: number) {
+  const contentBeforeSections = lines
+    .slice(0, firstSectionIndex === -1 ? lines.length : firstSectionIndex)
+    .filter((line) => !isLikelyContactLine(line) && !isLikelySectionHeading(line));
+
+  const paragraphs = contentBeforeSections
+    .join('\n')
+    .split(/\n\s*\n/)
+    .map((paragraph) => paragraph.trim())
+    .filter(Boolean);
+
+  return paragraphs.find((paragraph) => paragraph.length >= 30) ?? '';
 }
 
-function isEducationEntry(text: string): boolean {
-  const indicators = [
-    /(大学|学院|学校|University|College|Institute|School)/,
-    /[\u4e00-\u9fa5]{2,10}(学士|硕士|博士|本科|大专)|(Bachelor|Master|PhD|B\.?S\.?|M\.?S\.?|B\.?A\.?|M\.?A\.?)/i,
-    /GPA|学分|排名|排名|成绩/,
-  ];
-  return indicators.some(p => p.test(text));
-}
+function splitSections(lines: string[], lang: SupportedLanguage) {
+  const sections: Array<{ title: string; key: string; lines: string[] }> = [];
+  let current: { title: string; key: string; lines: string[] } | null = null;
 
-function parseJobEntry(lines: string[]): ResumeEntry | null {
-  if (lines.length < 2) return null;
-  
-  const firstLine = lines[0].trim();
-  let heading = '';
-  let meta = '';
-  
-  const dateMatch = firstLine.match(/(\d{4}[年/-]\d{1,2}|[^\d\n]{2,20})\s*[-–]\s*(\d{4}[年/-]\d{1,2}|至今|现在|Present|Current)/);
-  if (dateMatch) {
-    const titlePart = firstLine.replace(dateMatch[0], '').trim();
-    heading = titlePart || firstLine;
-    meta = `${dateMatch[1]} - ${dateMatch[2]}`;
-  } else {
-    heading = firstLine;
-  }
-  
-  let organization = '';
-  const contentLines: string[] = [];
-  let foundOrg = false;
-  
-  for (const line of lines.slice(1)) {
-    const trimmed = line.trim();
-    if (!trimmed) continue;
-    
-    if (!foundOrg && /^\*\*[^*]+\*\*$/.test(trimmed)) {
-      organization = trimmed.replace(/^\*\*|\*\*$/g, '');
-      foundOrg = true;
-    } else if (!foundOrg && /[\u4e00-\u9fa5]{3,20}(公司|集团|科技|网络|信息|有限公司)|(Inc|LLC|Corp|Ltd)\.?$/i.test(trimmed)) {
-      organization = trimmed.replace(/^\*\*|\*\*$/g, '');
-      foundOrg = true;
-    } else {
-      if (trimmed.startsWith('-') || trimmed.startsWith('•') || trimmed.startsWith('*')) {
-        contentLines.push(trimmed);
-      } else if (contentLines.length > 0 || /^[a-zA-Z\u4e00-\u9fa5]/.test(trimmed)) {
-        contentLines.push('- ' + trimmed);
+  for (const rawLine of lines) {
+    const line = normalizeLine(rawLine);
+    if (!line) {
+      if (current) {
+        current.lines.push('');
       }
+      continue;
+    }
+
+    const definition = getSectionDefinition(line);
+    if (definition) {
+      if (current) {
+        sections.push(current);
+      }
+
+      current = {
+        key: definition.key,
+        title: definition.title[lang],
+        lines: [],
+      };
+      continue;
+    }
+
+    if (current) {
+      current.lines.push(line);
     }
   }
-  
-  if (!heading && !contentLines.length) return null;
-  
+
+  if (current) {
+    sections.push(current);
+  }
+
+  return sections;
+}
+
+function looksLikeEntryHeading(line: string) {
+  const trimmed = stripMarkdownDecorators(line);
+  if (!trimmed || isLikelySectionHeading(trimmed) || isBulletLine(trimmed)) {
+    return false;
+  }
+
+  return trimmed.includes('|') || DATE_RANGE_REGEX.test(trimmed) || trimmed.length <= 40;
+}
+
+function buildEntryBlocks(lines: string[]) {
+  const blocks: string[][] = [];
+  let current: string[] = [];
+
+  for (const rawLine of lines) {
+    const line = normalizeLine(rawLine);
+    if (!line) {
+      if (current.length > 0) {
+        blocks.push(current);
+        current = [];
+      }
+      continue;
+    }
+
+    if (current.length === 0) {
+      current.push(line);
+      continue;
+    }
+
+    const hasBullets = current.some(isBulletLine);
+    if (looksLikeEntryHeading(line) && hasBullets) {
+      blocks.push(current);
+      current = [line];
+      continue;
+    }
+
+    current.push(line);
+  }
+
+  if (current.length > 0) {
+    blocks.push(current);
+  }
+
+  return blocks;
+}
+
+function splitHeadingAndMeta(line: string) {
+  const cleaned = stripMarkdownDecorators(line);
+  const parts = cleaned.split(/\s*[|｜]\s*/);
+
+  if (parts.length >= 2) {
+    return {
+      heading: parts[0].trim(),
+      meta: parts.slice(1).join(' | ').trim(),
+    };
+  }
+
+  const dateIndex = cleaned.search(/(?:19|20)\d{2}/);
+  if (dateIndex > 0) {
+    return {
+      heading: cleaned.slice(0, dateIndex).replace(/[-—–|｜\s]+$/, '').trim(),
+      meta: cleaned.slice(dateIndex).trim(),
+    };
+  }
+
   return {
-    heading: heading.replace(/^###\s*/, '').trim(),
-    meta,
-    organization,
-    content: contentLines.join('\n'),
+    heading: cleaned,
+    meta: '',
   };
 }
 
-function parseEducationEntry(lines: string[]): ResumeEntry | null {
-  if (lines.length < 1) return null;
-  
-  const firstLine = lines[0].trim();
-  let heading = '';
-  let meta = '';
+function parseEntryBlock(block: string[]): ResumeEntry | null {
+  const meaningfulLines = block.map(stripMarkdownDecorators).filter(Boolean);
+  if (meaningfulLines.length === 0) {
+    return null;
+  }
+
+  const { heading, meta } = splitHeadingAndMeta(meaningfulLines[0]);
   let organization = '';
-  
-  const degreeMatch = firstLine.match(/([\u4e00-\u9fa5]{2,8}(学士|硕士|博士|本科|大专|研究生)|(Bachelor|Master|PhD|B\.?S\.?|M\.?S\.?|B\.?A\.?|M\.?A\.?|Associate))/i);
-  if (degreeMatch) {
-    heading = degreeMatch[0];
-  } else {
-    heading = firstLine.replace(/^###\s*/, '').trim();
+  const contentLines: string[] = [];
+
+  for (const line of meaningfulLines.slice(1)) {
+    if (isBulletLine(line)) {
+      contentLines.push(normalizeBullet(line));
+      continue;
+    }
+
+    if (!organization && line.length <= 60 && !DATE_RANGE_REGEX.test(line)) {
+      organization = line;
+      continue;
+    }
+
+    contentLines.push(`- ${line}`);
   }
-  
-  const schoolMatch = lines.find(l => 
-    /[\u4e00-\u9fa5]{2,10}(大学|学院|学校)|(University|College|Institute|School)/i.test(l)
-  );
-  if (schoolMatch) {
-    organization = schoolMatch.trim().replace(/^\*\*|\*\*$/g, '');
-  }
-  
-  const dateMatch = firstLine.match(/(\d{4}[年/-]\d{1,2})\s*[-–]\s*(\d{4}[年/-]\d{1,2}|至今|现在|Present)/);
-  if (dateMatch) {
-    meta = `${dateMatch[1]} - ${dateMatch[2]}`;
-  }
-  
-  const contentLines = lines.slice(1).filter(l => {
-    const trimmed = l.trim();
-    return trimmed && !/[\u4e00-\u9fa5]{2,10}(大学|学院|学校)|(University|College|Institute|School)/i.test(trimmed);
-  }).map(l => l.trim());
-  
+
   return {
     heading,
     meta,
@@ -182,265 +313,158 @@ function parseEducationEntry(lines: string[]): ResumeEntry | null {
   };
 }
 
-function parseSkillSection(lines: string[]): ResumeEntry[] {
-  const skills: string[] = [];
-  
-  for (const line of lines) {
-    const trimmed = line.trim();
-    const items = trimmed.split(/[,，、|]/).map(s => s.trim()).filter(s => s.length > 0 && s.length < 30);
-    skills.push(...items);
+function parseSkillSection(lines: string[], lang: SupportedLanguage): ResumeEntry[] {
+  const items = lines
+    .flatMap((line) =>
+      normalizeLine(line)
+        .replace(/^[-*•●▪]\s*/, '')
+        .split(/[、,，/]/),
+    )
+    .map((item) => item.trim())
+    .filter(Boolean);
+
+  if (items.length === 0) {
+    return [];
   }
-  
-  if (skills.length === 0) {
-    return [{
-      heading: 'Skills',
+
+  return [
+    {
+      heading: lang === 'zh' ? '技能概览' : 'Skills',
       meta: '',
       organization: '',
-      content: lines.join('\n'),
-    }];
-  }
-  
-  return [{
-    heading: 'Skills',
-    meta: '',
-    organization: '',
-    content: skills.map(s => `- ${s}`).join('\n'),
-  }];
+      content: items.map((item) => `- ${item}`).join('\n'),
+    },
+  ];
 }
 
-function parseSectionLines(lines: string[]): ResumeSection {
-  if (lines.length === 0) {
-    return { title: 'OTHER', content: '', entries: [] };
+function parseSection(
+  section: { title: string; key: string; lines: string[] },
+  lang: SupportedLanguage,
+): ResumeSection {
+  const trimmedLines = section.lines.map(normalizeLine).filter((line) => line !== '');
+
+  if (section.key === 'summary') {
+    return {
+      title: section.title,
+      content: trimmedLines.join('\n'),
+      entries: [],
+    };
   }
-  
-  const sectionTitle = detectSection(lines[0]) || 'OTHER';
-  const contentLines = lines.slice(1).filter(l => l.trim());
-  
-  const entries: ResumeEntry[] = [];
-  let currentEntryLines: string[] = [];
-  
-  for (const line of contentLines) {
-    const trimmed = line.trim();
-    
-    if (trimmed.startsWith('###') || trimmed.startsWith('##')) {
-      if (currentEntryLines.length > 0) {
-        const entry = isEducationEntry(currentEntryLines.join('\n')) 
-          ? parseEducationEntry(currentEntryLines)
-          : parseJobEntry(currentEntryLines);
-        if (entry) entries.push(entry);
-        currentEntryLines = [];
-      }
-      currentEntryLines.push(trimmed);
-    } else if (trimmed.startsWith('-') || trimmed.startsWith('•') || trimmed.startsWith('*')) {
-      if (currentEntryLines.length > 0 && !currentEntryLines[currentEntryLines.length - 1].startsWith('-')) {
-        const entry = parseJobEntry(currentEntryLines);
-        if (entry) entries.push(entry);
-        currentEntryLines = [];
-      }
-      currentEntryLines.push(trimmed);
-    } else if (/^\d{4}[年/-]/.test(trimmed) || /^\([A-Z]\)/.test(trimmed) || /^[\u4e00-\u9fa5]{2,8}(经理|工程师|总监)/.test(trimmed)) {
-      if (currentEntryLines.length > 0) {
-        const entry = isEducationEntry(currentEntryLines.join('\n'))
-          ? parseEducationEntry(currentEntryLines)
-          : parseJobEntry(currentEntryLines);
-        if (entry) entries.push(entry);
-        currentEntryLines = [];
-      }
-      currentEntryLines.push(trimmed);
-    } else if (currentEntryLines.length > 0) {
-      currentEntryLines.push(trimmed);
-    } else {
-      currentEntryLines.push(trimmed);
-    }
+
+  if (section.key === 'skills') {
+    return {
+      title: section.title,
+      content: '',
+      entries: parseSkillSection(trimmedLines, lang),
+    };
   }
-  
-  if (currentEntryLines.length > 0) {
-    const entry = isEducationEntry(currentEntryLines.join('\n'))
-      ? parseEducationEntry(currentEntryLines)
-      : parseJobEntry(currentEntryLines);
-    if (entry) entries.push(entry);
+
+  const blocks = buildEntryBlocks(section.lines);
+  const entries = blocks.map(parseEntryBlock).filter((entry): entry is ResumeEntry => Boolean(entry));
+
+  if (entries.length > 0) {
+    return {
+      title: section.title,
+      content: '',
+      entries,
+    };
   }
-  
-  if (sectionTitle === 'SKILLS' && entries.length === 0) {
-    entries.push(...parseSkillSection(contentLines));
-  }
-  
+
   return {
-    title: sectionTitle,
-    content: '',
-    entries,
+    title: section.title,
+    content: trimmedLines.join('\n'),
+    entries: [],
   };
 }
 
-function splitIntoSections(text: string): string[][] {
-  const lines = text.split('\n');
-  const sections: string[][] = [];
-  let currentSection: string[] = [];
-  let currentSectionTitle = '';
-  
-  for (const line of lines) {
-    const trimmed = line.trim();
-    
-    if (/^##\s+/.test(trimmed)) {
-      if (currentSection.length > 0) {
-        sections.push(currentSection);
-      }
-      currentSection = [trimmed];
-      currentSectionTitle = trimmed.replace(/^##\s+/, '');
-    } else if (/^#{1,2}\s+/.test(trimmed)) {
-      if (currentSection.length > 0) {
-        sections.push(currentSection);
-      }
-      currentSection = [trimmed];
-    } else {
-      currentSection.push(trimmed);
-    }
-  }
-  
-  if (currentSection.length > 0) {
-    sections.push(currentSection);
-  }
-  
-  return sections;
-}
+export function parseRawResumeText(text: string, lang: SupportedLanguage): ResumeDraft {
+  const normalizedText = text.replace(/\r\n/g, '\n').trim();
+  const lines = normalizedText.split('\n').map(normalizeLine);
+  const firstSectionIndex = lines.findIndex(isLikelySectionHeading);
 
-export function parseRawResumeText(text: string, lang: 'zh' | 'en'): ResumeDraft {
   const frontmatter: ResumeFrontmatter = {
     name: '',
     title: '',
     contact: '',
   };
-  
-  const name = extractName(text);
-  if (name) frontmatter.name = name;
-  
-  const title = extractTitle(text);
-  if (title) frontmatter.title = title;
-  
-  const email = extractEmail(text);
-  const phone = extractPhone(text);
-  const contactParts: string[] = [];
-  if (phone) contactParts.push(phone);
-  if (email) contactParts.push(email);
-  if (contactParts.length > 0) frontmatter.contact = contactParts.join(' | ');
-  
-  const contactInfoRegex = /[\u4e00-\u9fa5]*(地址|Location|Address)[:：]?\s*([^\n]+)/i;
-  const addressMatch = text.match(contactInfoRegex);
-  if (addressMatch) {
-    frontmatter.contact += ' | ' + addressMatch[2].trim();
-  }
-  
-  let summary = '';
-  let summaryTitle = lang === 'zh' ? '个人简介' : 'PROFESSIONAL SUMMARY';
-  
-  const textWithoutContact = text
-    .replace(EMAIL_REGEX, '')
-    .replace(PHONE_REGEX, '')
-    .replace(contactInfoRegex, '');
-  
-  const firstParaMatch = textWithoutContact.match(/^[^#\n]{50,500}(?=\n\n|$)/m);
-  if (firstParaMatch) {
-    const firstPara = firstParaMatch[0].trim();
-    if (firstPara.length > 30 && !firstPara.includes('http') && !firstPara.includes('www')) {
-      summary = firstPara;
-    }
-  }
-  
-  const sections: ResumeSection[] = [];
-  
-  const sectionLines = splitIntoSections(text);
-  
-  for (const lines of sectionLines) {
-    if (lines.length === 0) continue;
-    
-    const firstLine = lines[0];
-    const isAlreadyHeader = /^#{1,3}\s+/.test(firstLine);
-    
-    if (isAlreadyHeader) {
-      const section = parseSectionLines(lines);
-      if (section.entries.length > 0 || section.content) {
-        if (summaryTitle !== section.title) {
-          sections.push(section);
-        }
-      }
-    } else {
-      const detectedTitle = detectSection(firstLine);
-      if (detectedTitle) {
-        const section = parseSectionLines([`## ${detectedTitle}`, ...lines.slice(1)]);
-        sections.push(section);
-      } else if (lines.join('\n').length > 50) {
-        const section: ResumeSection = {
-          title: lang === 'zh' ? '其他' : 'OTHER',
-          content: '',
-          entries: [{
+
+  frontmatter.name = extractName(lines);
+  frontmatter.title = extractTitle(lines, frontmatter.name);
+  frontmatter.contact = buildContact(lines);
+
+  const parsedSections = splitSections(lines, lang).map((section) => parseSection(section, lang));
+  const explicitSummary = parsedSections.find((section) => section.title === SUMMARY_TITLES[lang])?.content ?? '';
+  const sections = parsedSections.filter((section) => section.title !== SUMMARY_TITLES[lang]);
+
+  const summary = explicitSummary || getSummary(lines, firstSectionIndex);
+
+  if (sections.length === 0) {
+    const remainingLines = lines
+      .filter((line) => line && line !== frontmatter.name && line !== frontmatter.title && !isLikelyContactLine(line))
+      .join('\n')
+      .trim();
+
+    if (remainingLines) {
+      sections.push({
+        title: OTHER_TITLES[lang],
+        content: '',
+        entries: [
+          {
             heading: '',
             meta: '',
             organization: '',
-            content: lines.join('\n'),
-          }],
-        };
-        sections.push(section);
-      }
+            content: remainingLines,
+          },
+        ],
+      });
     }
   }
-  
-  if (summary && sections.length === 0) {
-    sections.push({
-      title: summaryTitle,
-      content: summary,
-      entries: [],
-    });
-  }
-  
+
   return {
     frontmatter,
     summary,
-    summaryTitle,
+    summaryTitle: SUMMARY_TITLES[lang],
     sections,
   };
 }
 
-export function autoFormatResume(rawText: string, lang: 'zh' | 'en'): string {
+export function autoFormatResume(rawText: string, lang: SupportedLanguage): string {
   const draft = parseRawResumeText(rawText, lang);
-  
-  const frontmatterParts: string[] = ['---'];
-  frontmatterParts.push(`name: ${draft.frontmatter.name || (lang === 'zh' ? '姓名' : 'Name')}`);
-  frontmatterParts.push(`title: ${draft.frontmatter.title || (lang === 'zh' ? '职位' : 'Title')}`);
+  const lines: string[] = ['---'];
+
+  lines.push(`name: ${draft.frontmatter.name || DEFAULT_NAME[lang]}`);
+  lines.push(`title: ${draft.frontmatter.title || DEFAULT_TITLE[lang]}`);
   if (draft.frontmatter.contact) {
-    frontmatterParts.push(`contact: ${draft.frontmatter.contact}`);
+    lines.push(`contact: ${draft.frontmatter.contact}`);
   }
-  frontmatterParts.push('---');
-  
-  const lines: string[] = [frontmatterParts.join('\n')];
-  
+  lines.push('---');
+
   if (draft.summary) {
-    lines.push('', `## ${draft.summaryTitle}`, '', draft.summary);
+    lines.push('', `## ${draft.summaryTitle || SUMMARY_TITLES[lang]}`, '', draft.summary);
   }
-  
+
   for (const section of draft.sections) {
-    lines.push('');
-    
-    const sectionLines: string[] = [`## ${section.title}`];
-    
+    lines.push('', `## ${section.title}`);
+
     if (section.content) {
-      sectionLines.push('', section.content);
+      lines.push('', section.content);
     }
-    
+
     for (const entry of section.entries) {
-      sectionLines.push('');
-      sectionLines.push(`### ${entry.heading}${entry.meta ? ` | ${entry.meta}` : ''}`);
-      
-      if (entry.organization) {
-        sectionLines.push(`**${entry.organization}**`);
+      lines.push('');
+      if (entry.heading || entry.meta) {
+        lines.push(`### ${entry.heading}${entry.meta ? ` | ${entry.meta}` : ''}`.trim());
       }
-      
+
+      if (entry.organization) {
+        lines.push(`**${entry.organization}**`);
+      }
+
       if (entry.content) {
-        sectionLines.push(entry.content);
+        lines.push(entry.content);
       }
     }
-    
-    lines.push(sectionLines.join('\n'));
   }
-  
-  return lines.join('\n').trim() + '\n';
+
+  return `${lines.join('\n').trim()}\n`;
 }

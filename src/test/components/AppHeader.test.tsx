@@ -26,7 +26,7 @@ import { defaultMarkdownZh } from '@/constants';
 import { DEFAULT_THEME_CONFIG } from '@/types/theme';
 
 describe('AppHeader', () => {
-  it('renders the repository GitHub link in the navigation bar', () => {
+  it('renders the brand title before the project selector and keeps the GitHub link', () => {
     render(
       <AppHeader
         fileInputRef={createRef<HTMLInputElement>()}
@@ -59,8 +59,13 @@ describe('AppHeader', () => {
       />,
     );
 
+    const brandTitle = screen.getByText('OpenResume');
+    const projectSelector = screen.getByText('ProjectSelector');
     const githubLink = screen.getByRole('link', { name: 'Open GitHub Project' });
 
+    expect(
+      brandTitle.compareDocumentPosition(projectSelector) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
     expect(githubLink).toHaveAttribute('href', 'https://github.com/jonbrown66/openResume');
     expect(githubLink).toHaveAttribute('target', '_blank');
   });
