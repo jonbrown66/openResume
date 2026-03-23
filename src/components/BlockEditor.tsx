@@ -1,9 +1,9 @@
 import { memo, useState, useCallback, useEffect, useRef } from 'react';
-import { startTransition } from 'react';
 import { Minus, Plus } from 'lucide-react';
 
 import type { AppLanguage, TranslationSet } from '@/config/ui';
 import type { ResumeDraft, ResumeSection } from '@/types/resume';
+import { AvatarUpload } from './AvatarUpload';
 
 interface BlockEditorProps {
   draft: ResumeDraft;
@@ -55,7 +55,7 @@ export const BlockEditor = memo(function BlockEditor({ draft, lang, translations
       return next;
     });
     if (next) {
-      startTransition(() => onChange(next!));
+      onChange(next);
     }
   }, [onChange]);
 
@@ -86,6 +86,13 @@ export const BlockEditor = memo(function BlockEditor({ draft, lang, translations
             onChange={(e) => update(prev => ({ ...prev, frontmatter: { ...prev.frontmatter, contact: e.target.value } }))}
           />
         </label>
+        <div className="sm:col-span-2">
+          <AvatarUpload
+            value={state.frontmatter.image}
+            onChange={(image) => update(prev => ({ ...prev, frontmatter: { ...prev.frontmatter, image } }))}
+            lang={lang}
+          />
+        </div>
       </section>
 
       <section>

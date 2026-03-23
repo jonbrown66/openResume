@@ -84,6 +84,20 @@ function normalizeWhitespace(text: string) {
   return text.replace(/\s+/g, ' ').trim();
 }
 
+function cleanPdfText(text: string) {
+  return text
+    .replace(/\u00A0/g, ' ') // 不间断空格 → 普通空格
+    .replace(/\u200B/g, '') // 零宽空格
+    .replace(/\u200C/g, '') // 零宽非连接符
+    .replace(/\u200D/g, '') // 零宽连接符
+    .replace(/\uFEFF/g, '') // 零宽无断空格 (BOM)
+    .replace(/\u2028/g, '\n') // 行分隔符
+    .replace(/\u2029/g, '\n\n') // 段落分隔符
+    .replace(/[\u2000-\u200A]/g, ' ') // 各种空格字符
+    .replace(/[\u202F\u205F\u3000]/g, ' ') // 窄空格、中空格、表意空格
+    .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, ''); // 控制字符
+}
+
 function buildPdfSegments(items: PdfTextItemLike[]) {
   return items
     .filter((item) => typeof item.str === 'string' && item.str.trim() && Array.isArray(item.transform))
@@ -206,12 +220,14 @@ export function reconstructPdfPageText(items: PdfTextItemLike[]) {
   const columns = splitSegmentsIntoColumns(segments).map((columnSegments) =>
     createLinesFromSegments(columnSegments),
   );
-  return columns
+  const rawText = columns
     .map((columnLines) => serializeColumnLines(columnLines))
     .filter(Boolean)
     .join('\n\n')
     .replace(/\n{3,}/g, '\n\n')
     .trim();
+  
+  return cleanPdfText(rawText);
 }
 
 function serializeHtmlNode(node: Node): string {

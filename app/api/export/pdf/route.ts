@@ -27,18 +27,12 @@ export async function POST(request: NextRequest) {
     });
 
     try {
-      await Promise.race([
-        page.setViewport({ width: A4_WIDTH_PX, height: A4_HEIGHT_PX }),
-        pageClosePromise,
-      ]);
+      await page.setViewport({ width: A4_WIDTH_PX, height: A4_HEIGHT_PX });
       
-      await Promise.race([
-        page.setContent(html, { waitUntil: 'domcontentloaded', timeout: 10000 }),
-        pageClosePromise,
-      ]);
+      await page.setContent(html, { waitUntil: 'networkidle2', timeout: 30000 });
       
       await page.evaluate(() => {
-        return document.fonts.ready.then(() => {});
+        return document.fonts.ready;
       });
 
       const pdf = await page.pdf({

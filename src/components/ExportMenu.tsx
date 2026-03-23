@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, memo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FileText, FileType, FileCode } from 'lucide-react';
+import { FileText, FileType, FileCode, Loader2, Check } from 'lucide-react';
 import type { TranslationSet } from '@/config/ui';
 import type { ResumeDraft } from '@/types/resume';
 import type { ResumeThemeConfig } from '@/types/theme';
@@ -17,6 +17,8 @@ interface ExportMenuProps {
   template?: string;
 }
 
+type ExportState = 'idle' | 'exporting' | 'success';
+
 export const ExportMenu = memo(function ExportMenu({ 
   canvasRef, 
   draft, 
@@ -26,9 +28,11 @@ export const ExportMenu = memo(function ExportMenu({
   template 
 }: ExportMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [isExporting, setIsExporting] = useState(false);
+  const [exportState, setExportState] = useState<ExportState>('idle');
+  const [exportFormat, setExportFormat] = useState<string>('');
   const { addToast } = useToast();
   const menuRef = useRef<HTMLDivElement>(null);
+  const successTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -41,33 +45,51 @@ export const ExportMenu = memo(function ExportMenu({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isOpen]);
 
+  useEffect(() => {
+    return () => {
+      if (successTimeoutRef.current) {
+        clearTimeout(successTimeoutRef.current);
+      }
+    };
+  }, []);
+
   const handleExport = async (format: 'pdf' | 'word' | 'html') => {
-    if (!canvasRef.current) {
-      addToast(translations.exportNoPreview, 'warning');
+    if (!canvasRef.current || exportState === 'exporting') {
+      if (!canvasRef.current) {
+        addToast(translations.exportNoPreview, 'warning');
+      }
       return;
     }
     
-    setIsExporting(true);
+    setExportState('exporting');
+    setExportFormat(format.toUpperCase());
     setIsOpen(false);
+    
     try {
       switch (format) {
         case 'pdf':
           await exportToPdf(canvasRef.current, draft, theme, template);
-          addToast(translations.exportPdfSuccess, 'success');
           break;
         case 'word':
           await exportToWord(canvasRef.current, draft);
-          addToast(translations.exportWordSuccess, 'success');
           break;
         case 'html':
           await exportToHtml(canvasRef.current, draft);
-          addToast(translations.exportHtmlSuccess, 'success');
           break;
       }
+      
+      setExportState('success');
+      
+      if (successTimeoutRef.current) {
+        clearTimeout(successTimeoutRef.current);
+      }
+      successTimeoutRef.current = setTimeout(() => {
+        setExportState('idle');
+      }, 2000);
+      
     } catch (error) {
+      setExportState('idle');
       addToast(error instanceof Error ? `${translations.exportFailed}: ${error.message}` : translations.exportFailed, 'error');
-    } finally {
-      setIsExporting(false);
     }
   };
 
@@ -79,9 +101,48 @@ export const ExportMenu = memo(function ExportMenu({
 
   return (
     <div ref={menuRef} className="relative">
-      <div onClick={() => !isExporting && setIsOpen(!isOpen)}>{children}</div>
+      <AnimatePresence mode="wait">
+        {exportState === 'exporting' ? (
+          <motion.div
+            key="exporting"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            transition={dynamicIslandSpring}
+            className="flex items-center gap-2 px-3 py-2 bg-blue-500/10 dark:bg-blue-400/10 rounded-lg"
+          >
+            <Loader2 size={16} className="animate-spin text-blue-500" />
+            <span className="text-sm font-medium text-blue-600 dark:text-blue-400">
+              {translations.exporting}
+            </span>
+          </motion.div>
+        ) : exportState === 'success' ? (
+          <motion.div
+            key="success"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            transition={dynamicIslandSpring}
+            className="flex items-center gap-2 px-3 py-2 bg-green-500/10 dark:bg-green-400/10 rounded-lg"
+          >
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ type: 'spring', stiffness: 500, damping: 15 }}
+            >
+              <Check size={16} className="text-green-500" />
+            </motion.div>
+            <span className="text-sm font-medium text-green-600 dark:text-green-400">
+              {exportFormat} {translations.exportSuccess}
+            </span>
+          </motion.div>
+        ) : (
+          <div onClick={() => setIsOpen(!isOpen)}>{children}</div>
+        )}
+      </AnimatePresence>
+      
       <AnimatePresence>
-        {isOpen && (
+        {isOpen && exportState === 'idle' && (
           <motion.div
             initial={{ opacity: 0, y: -8, scale: 0.96 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}

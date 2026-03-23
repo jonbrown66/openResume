@@ -159,35 +159,43 @@ export async function aiFormatResume(
 
 function getFormatPrompt(lang: AppLanguage, rawText: string) {
   return `
-Your task is to convert the following raw resume text into a specific Markdown format.
-The required Markdown format MUST follow this structure exactly:
+You are a resume formatter. Your task is to clean and structure the raw resume text into clean Markdown format.
 
+## Core Principles:
+1. **Content is King**: Preserve ALL original content - do not delete, summarize, or reorganize sections
+2. **Identify Structure**: Recognize sections like Work Experience, Projects, Education, Skills, Certifications, Languages, Awards, Interests, etc.
+3. **Clean Formatting Only**: Apply consistent Markdown formatting without changing the meaning
+
+## Formatting Rules:
+1. Extract name, title, and contact info into YAML frontmatter (between --- markers)
+2. Use ## for section headings (keep original section names)
+3. Use ### for entry titles (job titles, project names, degrees, etc.)
+4. Use **bold** for organization names (companies, schools)
+5. Use - for bullet points
+6. Preserve dates in their original format
+7. Keep the original order of sections
+
+## Example Output Structure:
 ---
-name: [Full Name]
-title: [Professional Title]
-contact: [Phone] | [Email] | [Location/Links]
+name: [Extracted Name]
+title: [Extracted Title]
+contact: [Extracted Contact Info]
 ---
 
-## ${lang === 'zh' ? '个人简介' : 'PROFESSIONAL SUMMARY'}
-[A brief professional summary paragraph]
+## [Original Section Name 1]
+### [Entry Title] | [Dates if present]
+**[Organization Name]**
+- [Content bullet points]
 
-## WORK EXPERIENCE
-### [Job Title] | [Start Date] - [End Date]
-**[Company Name]**
-- [Responsibility 1]
+## [Original Section Name 2]
+[Section content]
 
-## EDUCATION
-### [Degree] | [Start Date] - [End Date]
-**[School]**
-
-## SKILLS
-- [Skill 1]
-
-Rules:
-1. Put name, title, contact in YAML frontmatter.
-2. Use exactly '---' for frontmatter boundaries.
-3. Output the result in ${lang === 'en' ? 'English' : 'Chinese'}.
-4. Do not include markdown code fences in your response.
+## Important:
+- Output in ${lang === 'en' ? 'English' : 'Chinese'}
+- Do NOT add sections that don't exist in the original
+- Do NOT remove any sections from the original
+- Do NOT change the order of sections
+- Do NOT include markdown code fences
 
 Here is the raw resume text:
 ${rawText}

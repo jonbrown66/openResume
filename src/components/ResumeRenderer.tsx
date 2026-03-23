@@ -2,10 +2,56 @@ import { memo, useMemo, useId } from 'react';
 import ReactMarkdown from 'react-markdown';
 import rehypeRaw from 'rehype-raw';
 import remarkGfm from 'remark-gfm';
+import { User } from 'lucide-react';
 
 import type { ResumeDraft, ResumeEntry, ResumeSection } from '../types/resume';
 import { parseMarkdownToResumeDraft } from '../utils/resumeDocument';
 import type { ResumeThemeConfig } from '../types/theme';
+
+interface AvatarProps {
+  src?: string;
+  alt?: string;
+  size?: 'sm' | 'md' | 'lg' | 'xl';
+  shape?: 'circle' | 'square';
+  className?: string;
+}
+
+const Avatar = memo(({ src, alt = 'Profile', size = 'md', shape = 'circle', className = '' }: AvatarProps) => {
+  const sizeClasses = {
+    sm: 'w-12 h-12',
+    md: 'w-20 h-20',
+    lg: 'w-28 h-28',
+    xl: 'w-36 h-36',
+  };
+  
+  const iconSizes = {
+    sm: 16,
+    md: 24,
+    lg: 32,
+    xl: 40,
+  };
+  
+  const shapeClass = shape === 'circle' ? 'rounded-full' : 'rounded-lg';
+  
+  if (src) {
+    return (
+      <img
+        src={src}
+        alt={alt}
+        className={`${sizeClasses[size]} ${shapeClass} object-cover ${className}`}
+        referrerPolicy="no-referrer"
+        crossOrigin="anonymous"
+      />
+    );
+  }
+  
+  return (
+    <div className={`${sizeClasses[size]} ${shapeClass} bg-gray-200 dark:bg-gray-700 flex items-center justify-center ${className}`}>
+      <User size={iconSizes[size]} className="text-gray-400 dark:text-gray-500" />
+    </div>
+  );
+});
+Avatar.displayName = 'Avatar';
 
 interface ResumeRendererProps {
   markdown?: string;
@@ -104,17 +150,8 @@ const SectionItem = memo(({ section, index }: { section: ResumeSection; index: n
 SectionItem.displayName = 'SectionItem';
 
 const HeaderClassic = memo(({ frontmatter }: { frontmatter: ResumeDraft['frontmatter'] }) => (
-  <div className="bg-[#EAEAEA] p-6 flex items-center gap-6 mb-4 shrink-0">
-    {frontmatter.image && (
-      <img
-        src={frontmatter.image}
-        alt="Profile"
-        className="w-36 h-36 object-cover"
-        referrerPolicy="no-referrer"
-        crossOrigin="anonymous"
-      />
-    )}
-    <div className="flex-1">
+  <div className="bg-[#EAEAEA] p-6 flex mb-4 shrink-0">
+    <div className="w-1/2 flex flex-col justify-center">
       <h1 className="text-[2.5rem] font-black text-[var(--primary-color)] tracking-widest uppercase leading-none mb-2">
         {(frontmatter.name || 'NAME').split(' ').map((word) => (
           <span key={word} className="block">{word}</span>
@@ -127,38 +164,38 @@ const HeaderClassic = memo(({ frontmatter }: { frontmatter: ResumeDraft['frontma
         {frontmatter.contact || 'Contact Info'}
       </p>
     </div>
+    <div className="w-1/2 flex justify-end items-center pr-2">
+      <Avatar src={frontmatter.image} size="xl" shape="square" />
+    </div>
   </div>
 ));
 HeaderClassic.displayName = 'HeaderClassic';
 
 const HeaderStandard = memo(({ frontmatter }: { frontmatter: ResumeDraft['frontmatter'] }) => (
-  <div className="mb-4 shrink-0">
-    <div className="flex justify-between items-end border-b-2 border-[var(--primary-color)] pb-4 mb-4">
-      <h1 className="text-4xl font-bold text-[var(--primary-color)] uppercase tracking-tight">
-        {frontmatter.name || 'NAME'}
-      </h1>
-      <h2 className="text-lg font-bold text-[var(--secondary-color)] uppercase">
-        {frontmatter.title || 'Title'}
-      </h2>
+  <div className="mb-4 shrink-0 border-b-2 border-[var(--primary-color)] pb-4">
+    <div className="flex">
+      <div className="w-1/2 flex flex-col justify-center">
+        <h1 className="text-3xl font-bold text-[var(--primary-color)] uppercase tracking-tight mb-1">
+          {frontmatter.name || 'NAME'}
+        </h1>
+        <h2 className="text-lg font-bold text-[var(--secondary-color)] uppercase">
+          {frontmatter.title || 'Title'}
+        </h2>
+        <p className="text-sm text-[#4b5563] mt-2">
+          {frontmatter.contact?.split('|').map((item) => item.trim()).join('  ·  ') || 'Contact Info'}
+        </p>
+      </div>
+      <div className="w-1/2 flex justify-end items-center pr-2">
+        <Avatar src={frontmatter.image} size="lg" shape="circle" />
+      </div>
     </div>
-    <p className="text-sm text-[#4b5563] text-center">
-      {frontmatter.contact?.split('|').map((item) => item.trim()).join('  ·  ') || 'Contact Info'}
-    </p>
   </div>
 ));
 HeaderStandard.displayName = 'HeaderStandard';
 
 const HeaderMinimal = memo(({ frontmatter }: { frontmatter: ResumeDraft['frontmatter'] }) => (
   <div className="pb-5 flex flex-col items-center text-center border-b border-[#d1d5db] mb-4 shrink-0">
-    {frontmatter.image && (
-      <img
-        src={frontmatter.image}
-        alt="Profile"
-        className="w-20 h-20 rounded-full object-cover mb-4"
-        referrerPolicy="no-referrer"
-        crossOrigin="anonymous"
-      />
-    )}
+    <Avatar src={frontmatter.image} size="md" shape="circle" className="mb-4" />
     <h1 className="text-3xl font-serif font-bold text-[var(--primary-color)] uppercase tracking-widest mb-2">
       {frontmatter.name || 'NAME'}
     </h1>
@@ -178,9 +215,10 @@ function renderHeader(draft: ResumeDraft, template: string) {
   return <HeaderClassic frontmatter={draft.frontmatter} />;
 }
 
-const SidebarTemplate = memo(({ draft }: { draft: ResumeDraft }) => (
-  <div className={`template-sidebar h-full p-[var(--page-margin)] flex flex-col box-border bg-[#FDFBF7]`}>
+const SidebarTemplate = memo(({ draft, style }: { draft: ResumeDraft; style: React.CSSProperties }) => (
+  <div style={style} className={`template-sidebar h-full p-[var(--page-margin)] flex flex-col box-border bg-[#FDFBF7]`}>
     <div className="text-center mb-6 flex flex-col items-center shrink-0">
+      <Avatar src={draft.frontmatter.image} size="md" shape="circle" className="mb-4" />
       <h1 className="text-4xl font-bold text-[var(--primary-color)] uppercase tracking-widest mb-2">
         {draft.frontmatter.name || 'NAME'}
       </h1>
@@ -242,7 +280,7 @@ export const ResumeRenderer = memo(({ markdown, draft, template = 'classic', the
     return (
       <>
         <CustomCssInjector css={theme.customCss} id={customCssId} />
-        <SidebarTemplate draft={resumeDraft} />
+        <SidebarTemplate draft={resumeDraft} style={style} />
       </>
     );
   }

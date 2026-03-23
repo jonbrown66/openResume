@@ -84,6 +84,12 @@ function getSystemPrompt(mode: ResumeAssistantMode, lang: AppLanguage): string {
     : 'You are a professional resume advisor. Use the current resume to provide direct, specific, actionable guidance.';
 }
 
+function sanitizeMarkdownForAi(markdown: string): string {
+  return markdown
+    .replace(/image: data:image\/[^;]+;base64,[^\n]+/g, 'image: [avatar]')
+    .replace(/!\[([^\]]*)\]\(data:image\/[^;]+;base64,[^)]+\)/g, '![$1](avatar)');
+}
+
 function getUserPrompt({
   mode,
   userMessage,
@@ -91,13 +97,15 @@ function getUserPrompt({
   history,
   lang,
 }: Omit<ResumeAssistantRequest, 'settings'>): string {
+  const sanitizedMarkdown = sanitizeMarkdownForAi(markdown);
+
   if (mode === 'edit') {
     return `
 Current conversation:
 ${buildHistoryText(history)}
 
 Current resume markdown:
-${markdown}
+${sanitizedMarkdown}
 
 User instruction:
 ${userMessage}
@@ -115,6 +123,7 @@ Rules:
 4. Do not change work experience order or dates unless the user explicitly asks.
 5. Do not invent achievements, durations, titles, companies, or schools.
 6. Do not wrap the JSON in prose.
+7. Keep [avatar] placeholders as-is in the frontmatter image field.
 `.trim();
   }
 
@@ -123,7 +132,7 @@ Current conversation:
 ${buildHistoryText(history)}
 
 Current resume markdown:
-${markdown}
+${sanitizedMarkdown}
 
 User question:
 ${userMessage}
@@ -303,6 +312,16 @@ export function parseAssistantEditResponse(text: string): ResumeAssistantRespons
   };
 }
 
+function restoreAvatarInMarkdown(proposedMarkdown: string, originalMarkdown: string): string {
+  const avatarMatch = originalMarkdown.match(/image:\s*(data:image\/[^;]+;base64,[^\n]+)/);
+  if (!avatarMatch) {
+    return proposedMarkdown;
+  }
+  
+  const originalAvatar = avatarMatch[1];
+  return proposedMarkdown.replace(/image:\s*\[avatar\]/g, `image: ${originalAvatar}`);
+}
+
 export async function requestResumeAssistant({
   mode,
   userMessage,
@@ -319,7 +338,11 @@ export async function requestResumeAssistant({
   );
 
   if (mode === 'edit') {
-    return parseAssistantEditResponse(rawText);
+    const result = parseAssistantEditResponse(rawText);
+    if (result.proposedMarkdown) {
+      result.proposedMarkdown = restoreAvatarInMarkdown(result.proposedMarkdown, markdown);
+    }
+    return result;
   }
 
   return {

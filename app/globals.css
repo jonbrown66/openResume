@@ -53,7 +53,8 @@
 }
 
 /* Dark Mode - 避免纯黑 #000000 */
-.dark, [data-theme="dark"] {
+.dark,
+[data-theme="dark"] {
   color-scheme: dark;
   --background: #09090b;
   --foreground: #fafafa;
@@ -75,6 +76,33 @@
   --ring: #fafafa;
   
   --app-bg: #09090b;
+}
+
+/* System dark mode fallback for browsers that don't support JS theme detection */
+@media (prefers-color-scheme: dark) {
+  html:not([data-theme="light"]) {
+    color-scheme: dark;
+    --background: #09090b;
+    --foreground: #fafafa;
+    --card: #18181b;
+    --card-foreground: #fafafa;
+    --popover: #18181b;
+    --popover-foreground: #fafafa;
+    --primary: #fafafa;
+    --primary-foreground: #18181b;
+    --secondary: #27272a;
+    --secondary-foreground: #fafafa;
+    --muted: #27272a;
+    --muted-foreground: #a1a1aa;
+    --accent: #3b82f6;
+    --accent-foreground: #ffffff;
+    --destructive: #ef4444;
+    --border: #27272a;
+    --input: #27272a;
+    --ring: #fafafa;
+    
+    --app-bg: #09090b;
+  }
 }
 
 /* Base Body Stability */
@@ -307,10 +335,10 @@ html, body {
   margin-bottom: var(--section-spacing, 1.25rem);
 }
 .template-sidebar .sidebar-title {
-  width: 25%;
+  width: 18%;
   flex-shrink: 0;
   border-right: 1px solid var(--primary-color, #000);
-  padding-right: 1.5rem;
+  padding-right: 1rem;
   text-align: left;
 }
 .template-sidebar .sidebar-title h2 {
@@ -324,8 +352,8 @@ html, body {
   padding: 0;
 }
 .template-sidebar .sidebar-content {
-  width: 75%;
-  padding-left: 1.5rem;
+  width: 82%;
+  padding-left: 1rem;
 }
 .template-sidebar .resume-h3-split {
   margin-top: 0;

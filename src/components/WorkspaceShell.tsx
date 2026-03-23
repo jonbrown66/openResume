@@ -130,52 +130,56 @@ export function WorkspaceShell({
           animate="visible"
           variants={slideUpVariants}
         >
-          <AppHeader
-            fileInputRef={fileInputRef}
-            onFileChange={onFileChange}
-            isImporting={isImporting}
-            importStep={importStep}
-            lang={lang}
-            theme={theme}
-            resolvedTheme={resolvedTheme}
-            translations={t}
-            canvasRef={canvasRef}
-            draft={activeDraft}
-            onImportClick={onImportClick}
-            onLanguageToggle={onLanguageToggle}
-            onThemeToggle={onThemeToggle}
-            settings={settings}
-            onUpdateProvider={onUpdateProvider}
-            onSetActiveProvider={onSetActiveProvider}
-            resumeTheme={resumeTheme}
-            onThemeChange={onThemeChange}
-            onThemeReset={onThemeReset}
-            template={template}
-            onUpdateSettings={onUpdateSettings}
-            projects={projects}
-            currentProject={currentProject}
-            onProjectSwitch={onProjectSwitch}
-            onProjectCreate={onProjectCreate}
-            onProjectRename={onProjectRename}
-            onProjectDelete={onProjectDelete}
-          />
+          <ErrorBoundary>
+            <AppHeader
+              fileInputRef={fileInputRef}
+              onFileChange={onFileChange}
+              isImporting={isImporting}
+              importStep={importStep}
+              lang={lang}
+              theme={theme}
+              resolvedTheme={resolvedTheme}
+              translations={t}
+              canvasRef={canvasRef}
+              draft={activeDraft}
+              onImportClick={onImportClick}
+              onLanguageToggle={onLanguageToggle}
+              onThemeToggle={onThemeToggle}
+              settings={settings}
+              onUpdateProvider={onUpdateProvider}
+              onSetActiveProvider={onSetActiveProvider}
+              resumeTheme={resumeTheme}
+              onThemeChange={onThemeChange}
+              onThemeReset={onThemeReset}
+              template={template}
+              onUpdateSettings={onUpdateSettings}
+              projects={projects}
+              currentProject={currentProject}
+              onProjectSwitch={onProjectSwitch}
+              onProjectCreate={onProjectCreate}
+              onProjectRename={onProjectRename}
+              onProjectDelete={onProjectDelete}
+            />
+          </ErrorBoundary>
 
           <ImportNoticeBanner message={noticeMessage} />
 
           <div className="relative flex flex-1 overflow-hidden">
             <div className={`${activeView === 'editor' ? 'flex' : 'hidden'} w-full lg:flex`}>
-              <EditorPane
-                containerRef={editorContainerRef}
-                draft={draft}
-                editorMode={editorMode}
-                lang={lang}
-                isImporting={isImporting}
-                markdown={markdown}
-                translations={t}
-                onDraftChange={onDraftChange}
-                onEditorModeChange={onEditorModeChange}
-                onMarkdownChange={onMarkdownChange}
-              />
+              <ErrorBoundary>
+                <EditorPane
+                  containerRef={editorContainerRef}
+                  draft={draft}
+                  editorMode={editorMode}
+                  lang={lang}
+                  isImporting={isImporting}
+                  markdown={markdown}
+                  translations={t}
+                  onDraftChange={onDraftChange}
+                  onEditorModeChange={onEditorModeChange}
+                  onMarkdownChange={onMarkdownChange}
+                />
+              </ErrorBoundary>
             </div>
 
             <div className={`${activeView === 'preview' ? 'flex' : 'hidden'} w-full lg:flex`}>
@@ -209,14 +213,16 @@ export function WorkspaceShell({
         </motion.div>
       </main>
 
-      <AssistantWidget
-        lang={lang}
-        markdown={markdown}
-        projectId={currentProject?.id ?? 'default-project'}
-        settings={settings}
-        translations={t}
-        onApplyMarkdown={onAssistantApply}
-      />
+      <ErrorBoundary>
+        <AssistantWidget
+          lang={lang}
+          markdown={markdown}
+          projectId={currentProject?.id ?? 'default-project'}
+          settings={settings}
+          translations={t}
+          onApplyMarkdown={onAssistantApply}
+        />
+      </ErrorBoundary>
     </>
   );
 }

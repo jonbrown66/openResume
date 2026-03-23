@@ -12,9 +12,18 @@ async function buildExportHtml(
   template?: string,
   centered: boolean = false
 ): Promise<string> {
-  const styleNodes = Array.from(document.querySelectorAll('style, link[rel="stylesheet"]'))
-    .map(node => node.outerHTML)
-    .join('\n');
+  const origin = window.location.origin;
+  const styleElements: string[] = [];
+  
+  document.querySelectorAll('style').forEach(style => {
+    styleElements.push(style.outerHTML);
+  });
+  
+  document.querySelectorAll('link[rel="stylesheet"]').forEach(link => {
+    styleElements.push(link.outerHTML);
+  });
+  
+  const styleNodes = styleElements.join('\n');
 
   const bodyStyle = centered 
     ? `background: #f3f4f6; display: flex; justify-content: center; padding: 24px;`
@@ -28,7 +37,7 @@ async function buildExportHtml(
 <html lang="zh-CN" class="light">
 <head>
   <meta charset="UTF-8">
-  <base href="${window.location.origin}">
+  <base href="${origin}">
   ${styleNodes}
   <style>
     @media print {

@@ -1,8 +1,9 @@
-import { memo } from 'react';
+import { memo, useMemo, useCallback } from 'react';
 import { motion } from 'framer-motion';
 
 import type { AppLanguage, EditorMode, TranslationSet } from '@/config/ui';
 import type { ResumeDraft } from '@/types/resume';
+import { sanitizeMarkdownForDisplay, restoreAvatarFromDisplay } from '@/utils/markdownDisplay';
 import { BlockEditor } from './BlockEditor';
 import { EditorSkeleton } from './Skeleton';
 
@@ -31,6 +32,13 @@ export const EditorPane = memo(function EditorPane({
   onEditorModeChange,
   onMarkdownChange,
 }: EditorPaneProps) {
+  const displayMarkdown = useMemo(() => sanitizeMarkdownForDisplay(markdown), [markdown]);
+  
+  const handleMarkdownChange = useCallback((value: string) => {
+    const restored = restoreAvatarFromDisplay(value, markdown);
+    onMarkdownChange(restored);
+  }, [markdown, onMarkdownChange]);
+
   return (
     <div className="group/editor flex-1 h-full grid grid-rows-[auto_1fr] border-r-0 lg:border-r border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/50 z-10 transition-colors duration-200 print:hidden relative">
       <div className="relative">
@@ -83,8 +91,8 @@ export const EditorPane = memo(function EditorPane({
         {editorMode === 'markdown' ? (
           <textarea
             className="w-full min-h-[600px] bg-transparent text-zinc-800 dark:text-zinc-200 font-mono text-[13px] resize-none focus:outline-none leading-[1.7] tracking-tight selection:bg-zinc-200 dark:selection:bg-zinc-700 px-4 sm:px-8"
-            value={markdown}
-            onChange={(e) => onMarkdownChange(e.target.value)}
+            value={displayMarkdown}
+            onChange={(e) => handleMarkdownChange(e.target.value)}
             spellCheck={false}
             placeholder={t.markdownPlaceholder}
             style={{ fontFamily: "'JetBrains Mono', 'Fira Code', 'Courier New', monospace" }}
