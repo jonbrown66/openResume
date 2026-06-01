@@ -14,8 +14,8 @@ export function AssistantHeader({
   onClose,
 }: AssistantHeaderProps) {
   return (
-    <div className="flex items-start justify-between gap-3 border-b border-zinc-200/70 px-5 py-4 dark:border-zinc-800/70">
-      <div>
+    <div className="flex shrink-0 items-start justify-between gap-3 border-b border-[var(--app-border)] px-4 py-3 sm:px-5 sm:py-4">
+      <div className="min-w-0">
         <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">{title}</h2>
         {description ? (
           <p className="mt-1 text-xs leading-5 text-zinc-500 dark:text-zinc-400">{description}</p>
@@ -24,7 +24,7 @@ export function AssistantHeader({
       <button
         type="button"
         onClick={onClose}
-        className="rounded-full p-2 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-700 dark:hover:bg-zinc-800 dark:hover:text-zinc-200"
+        className="app-control flex min-h-10 min-w-10 shrink-0 items-center justify-center rounded-full p-2 transition-colors sm:min-h-0 sm:min-w-0"
         aria-label={closeLabel}
       >
         <X size={16} />

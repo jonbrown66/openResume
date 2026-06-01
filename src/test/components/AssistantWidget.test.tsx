@@ -73,6 +73,33 @@ describe('AssistantWidget', () => {
     ).toBeInTheDocument();
   });
 
+  it('uses a responsive bottom sheet layout for the assistant panel', () => {
+    render(
+      <AssistantWidget
+        lang="en"
+        markdown={defaultMarkdownEn}
+        projectId="project-a"
+        settings={createSettings()}
+        translations={translations.en}
+        onApplyMarkdown={vi.fn()}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Open AI assistant' }));
+
+    const panel = screen.getByRole('dialog', { name: 'Resume Assistant' });
+    const conversation = screen.getByTestId('assistant-conversation');
+
+    expect(panel).toHaveClass(
+      'h-[min(720px,calc(100dvh-5.5rem))]',
+      'w-[calc(100vw-1rem)]',
+      'sm:h-[min(680px,calc(100dvh-3rem))]',
+      'sm:w-[min(560px,calc(100vw-2rem))]',
+    );
+    expect(conversation).toHaveClass('min-h-0', 'flex-1', 'overflow-y-auto');
+    expect(conversation).not.toHaveClass('sm:h-[440px]', 'sm:flex-none');
+  });
+
   it('does not show the launcher button immediately while the panel is closing', () => {
     render(
       <AssistantWidget

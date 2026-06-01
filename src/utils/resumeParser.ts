@@ -31,27 +31,27 @@ const DEFAULT_TITLE = {
 const SECTION_DEFINITIONS = [
   {
     key: 'summary',
-    pattern: /^(个人简介|个人总结|职业概述|简介|summary|professional summary|profile)$/i,
+    pattern: /^(个人简介|个人总结|职业概述|职业总结|自我评价|自我介绍|简介|summary|professional summary|profile)$/i,
     title: SUMMARY_TITLES,
   },
   {
     key: 'work',
-    pattern: /^(工作经历|工作经验|职业经历|职业经验|实习经历|experience|work experience|employment)$/i,
+    pattern: /^(工作经历|工作经验|职业经历|职业经验|实习经历|工作经历项目经历|工作及项目经历|工作与项目经历|工作\/项目经历|experience|work experience|employment)$/i,
     title: { zh: '工作经历', en: 'WORK EXPERIENCE' },
   },
   {
     key: 'education',
-    pattern: /^(教育背景|教育经历|学历|education|academic background)$/i,
+    pattern: /^(教育背景|教育经历|学历|学习经历|教育|education|academic background)$/i,
     title: { zh: '教育背景', en: 'EDUCATION' },
   },
   {
     key: 'projects',
-    pattern: /^(项目经历|项目经验|项目|projects?|portfolio)$/i,
+    pattern: /^(项目经历|项目经验|项目|项目介绍|项目经验介绍|projects?|portfolio)$/i,
     title: { zh: '项目经历', en: 'PROJECTS' },
   },
   {
     key: 'skills',
-    pattern: /^(技能|专业技能|技能清单|技能概览|skills?|technical skills|tech stack)$/i,
+    pattern: /^(技能|技能特长|专业技能|职业技能|技术技能|技能清单|技能概览|skills?|technical skills|tech stack)$/i,
     title: { zh: '技能', en: 'SKILLS' },
   },
   {
@@ -84,6 +84,49 @@ function stripMarkdownDecorators(line: string) {
   return normalizeLine(line).replace(/^#{1,3}\s*/, '').replace(/^\*\*|\*\*$/g, '').trim();
 }
 
+function normalizeHeadingCandidate(line: string) {
+  return stripMarkdownDecorators(line)
+    .replace(/^[\d一二三四五六七八九十]+[.、．\s]+/, '')
+    .replace(/[：:]\s*$/, '')
+    .trim();
+}
+
+function parseFrontmatter(lines: string[]) {
+  if (lines[0] !== '---') {
+    return {
+      frontmatter: {} as Partial<ResumeFrontmatter>,
+      contentLines: lines,
+    };
+  }
+
+  const endIndex = lines.findIndex((line, index) => index > 0 && line === '---');
+  if (endIndex === -1) {
+    return {
+      frontmatter: {} as Partial<ResumeFrontmatter>,
+      contentLines: lines,
+    };
+  }
+
+  const frontmatter: Partial<ResumeFrontmatter> = {};
+  for (const line of lines.slice(1, endIndex)) {
+    const match = line.match(/^([A-Za-z][\w-]*)\s*:\s*(.*)$/);
+    if (!match) {
+      continue;
+    }
+
+    const key = match[1];
+    const value = match[2].trim();
+    if (key === 'name' || key === 'title' || key === 'contact' || key === 'image') {
+      frontmatter[key] = value;
+    }
+  }
+
+  return {
+    frontmatter,
+    contentLines: lines.slice(endIndex + 1),
+  };
+}
+
 function isBulletLine(line: string) {
   return /^[-*•●▪]\s*/.test(normalizeLine(line));
 }
@@ -98,13 +141,12 @@ function isLikelyContactLine(line: string) {
 }
 
 function isLikelySectionHeading(line: string) {
-  const trimmed = normalizeLine(line);
-  const candidate = trimmed.replace(/^#{1,3}\s*/, '');
+  const candidate = normalizeHeadingCandidate(line);
   return SECTION_DEFINITIONS.some((definition) => definition.pattern.test(candidate));
 }
 
 function getSectionDefinition(line: string) {
-  const candidate = normalizeLine(line).replace(/^#{1,3}\s*/, '');
+  const candidate = normalizeHeadingCandidate(line);
   return SECTION_DEFINITIONS.find((definition) => definition.pattern.test(candidate)) ?? null;
 }
 
@@ -193,7 +235,7 @@ function splitSections(lines: string[], lang: SupportedLanguage) {
 
       current = {
         key: definition.key,
-        title: definition.title[lang],
+        title: normalizeHeadingCandidate(line) || definition.title[lang],
         lines: [],
       };
       continue;
@@ -379,7 +421,9 @@ function parseSection(
 
 export function parseRawResumeText(text: string, lang: SupportedLanguage): ResumeDraft {
   const normalizedText = text.replace(/\r\n/g, '\n').trim();
-  const lines = normalizedText.split('\n').map(normalizeLine);
+  const rawLines = normalizedText.split('\n').map(normalizeLine);
+  const { frontmatter: parsedFrontmatter, contentLines } = parseFrontmatter(rawLines);
+  const lines = contentLines;
   const firstSectionIndex = lines.findIndex(isLikelySectionHeading);
 
   const frontmatter: ResumeFrontmatter = {
@@ -388,13 +432,16 @@ export function parseRawResumeText(text: string, lang: SupportedLanguage): Resum
     contact: '',
   };
 
-  frontmatter.name = extractName(lines);
-  frontmatter.title = extractTitle(lines, frontmatter.name);
-  frontmatter.contact = buildContact(lines);
+  frontmatter.name = parsedFrontmatter.name || extractName(lines);
+  frontmatter.title = parsedFrontmatter.title || extractTitle(lines, frontmatter.name);
+  frontmatter.contact = parsedFrontmatter.contact || buildContact(lines);
+  if (parsedFrontmatter.image) {
+    frontmatter.image = parsedFrontmatter.image;
+  }
 
   const parsedSections = splitSections(lines, lang).map((section) => parseSection(section, lang));
-  const explicitSummary = parsedSections.find((section) => section.title === SUMMARY_TITLES[lang])?.content ?? '';
-  const sections = parsedSections.filter((section) => section.title !== SUMMARY_TITLES[lang]);
+  const explicitSummary = parsedSections.find((section) => getSectionDefinition(section.title)?.key === 'summary')?.content ?? '';
+  const sections = parsedSections.filter((section) => getSectionDefinition(section.title)?.key !== 'summary');
 
   const summary = explicitSummary || getSummary(lines, firstSectionIndex);
 

@@ -30,18 +30,18 @@ export const TemplateSwitcher = memo(function TemplateSwitcher({
   return (
     <>
       <div 
-        className="absolute top-4 sm:top-6 left-1/2 -translate-x-1/2 z-30 opacity-0 group-hover/preview:opacity-100 transition-opacity duration-200 print:hidden"
+        className="absolute left-1/2 top-3 z-30 -translate-x-1/2 opacity-100 transition-opacity duration-200 print:hidden sm:top-5"
       >
-        <div className="inline-flex items-center gap-1 sm:gap-2 bg-white/90 dark:bg-zinc-800/90 backdrop-blur-xl px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg shadow-lg border border-zinc-200/50 dark:border-zinc-700/50">
+        <div className="app-panel inline-flex max-w-[calc(100vw-1rem)] items-center gap-1 overflow-x-auto rounded-xl border px-1.5 py-1.5 sm:px-3 sm:py-2">
           <span className="hidden sm:inline text-[10px] font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest mr-1 sm:mr-2">{t.template}</span>
           {resumeTemplates.map((item) => (
             <button
               key={item}
               onClick={() => onChange(item)}
-              className={`px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[10px] sm:text-xs font-semibold capitalize transition-colors whitespace-nowrap ${
+              className={`min-h-10 rounded-lg px-2.5 py-1 text-[10px] font-semibold capitalize transition-colors whitespace-nowrap sm:min-h-0 sm:px-3 sm:py-1.5 sm:text-xs ${
                 template === item
-                  ? 'bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 shadow-sm'
-                  : 'text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700/50'
+                  ? 'app-active shadow-sm'
+                  : 'app-control'
               }`}
             >
               {t[item]}
@@ -50,7 +50,7 @@ export const TemplateSwitcher = memo(function TemplateSwitcher({
           <div className="w-px h-4 bg-zinc-200 dark:bg-zinc-700 mx-1" />
           <button
             onClick={() => setShowCssEditor(true)}
-            className="px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[10px] sm:text-xs font-semibold transition-colors whitespace-nowrap flex items-center gap-1 bg-zinc-800 dark:bg-zinc-200 text-white dark:text-zinc-800 shadow-sm hover:bg-zinc-700 dark:hover:bg-zinc-300"
+            className="app-primary flex min-h-10 items-center gap-1 whitespace-nowrap rounded-lg px-2.5 py-1 text-[10px] font-semibold shadow-sm transition-colors sm:min-h-0 sm:px-3 sm:py-1.5 sm:text-xs"
           >
             <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />

@@ -87,35 +87,26 @@ contact: 138-0000-0000 | zhangsan@example.com | 北京市朝阳区
 `;
 
 export const pageWidthPx = 794;
+export const pageHeightPx = 1123;
 
 export const FONT_OPTIONS = [
   'Geist',
-  'Noto Sans',
-  'Noto Serif',
+  'Source Han Sans SC',
+  'Source Han Serif SC',
   'Noto Sans SC',
   'Noto Serif SC',
+  'Noto Sans',
+  'Noto Serif',
   'Noto Mono',
-  'ZCOOL QingKe HuangYou',
-  'Ma Shan Zheng',
-  'Maoci',
-  'Long Cang',
-  'Yuji Syuku',
-  'Shippori Mincho',
-  'IBM Plex Sans JP',
 ];
 
 export const FONT_STYLES: Record<string, { family: string; category: 'sans' | 'serif' | 'mono' | 'chinese' }> = {
   'Geist': { family: "'Geist', 'Noto Sans SC', 'PingFang SC', sans-serif", category: 'sans' },
+  'Source Han Sans SC': { family: "'Source Han Sans SC', 'Source Han Sans CN', 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif", category: 'chinese' },
+  'Source Han Serif SC': { family: "'Source Han Serif SC', 'Source Han Serif CN', 'Noto Serif SC', 'Songti SC', 'SimSun', serif", category: 'chinese' },
   'Noto Sans': { family: "'Noto Sans', 'Noto Sans SC', 'PingFang SC', sans-serif", category: 'sans' },
   'Noto Serif': { family: "'Noto Serif', 'Noto Serif SC', 'Songti SC', serif", category: 'serif' },
   'Noto Sans SC': { family: "'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif", category: 'chinese' },
   'Noto Serif SC': { family: "'Noto Serif SC', 'Songti SC', 'STSong', serif", category: 'chinese' },
   'Noto Mono': { family: "'Noto Sans Mono', 'Source Code Pro', monospace", category: 'mono' },
-  'ZCOOL QingKe HuangYou': { family: "'ZCOOL QingKe HuangYou', 'Noto Sans SC', sans-serif", category: 'chinese' },
-  'Ma Shan Zheng': { family: "'Ma Shan Zheng', 'Noto Sans SC', cursive", category: 'chinese' },
-  'Maoci': { family: "'Maoci', 'Noto Serif SC', serif", category: 'chinese' },
-  'Long Cang': { family: "'Long Cang', 'Noto Sans SC', cursive", category: 'chinese' },
-  'Yuji Syuku': { family: "'Yuji Syuku', 'Noto Serif JP', serif", category: 'serif' },
-  'Shippori Mincho': { family: "'Shippori Mincho', 'Noto Serif SC', serif", category: 'serif' },
-  'IBM Plex Sans JP': { family: "'IBM Plex Sans JP', 'Noto Sans SC', sans-serif", category: 'sans' },
 };

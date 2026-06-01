@@ -42,9 +42,9 @@ export const SliderControl = memo(function SliderControl({
         <span className="text-[11px] text-zinc-500 dark:text-zinc-400">{label}</span>
       </div>
       <div className="flex-1 relative h-5 flex items-center">
-        <div className="absolute left-0 right-0 h-1.5 bg-zinc-200 dark:bg-zinc-800 rounded-full" />
+        <div className="absolute left-0 right-0 h-1.5 bg-[var(--app-surface-muted)] rounded-full" />
         <div 
-          className="absolute left-0 h-1.5 bg-zinc-900 dark:bg-zinc-100 rounded-full transition-all duration-75"
+          className="absolute left-0 h-1.5 bg-[var(--app-accent)] rounded-full transition-all duration-75"
           style={{ width: `${percentage}%` }}
         />
         <input
@@ -75,8 +75,8 @@ export const SliderControl = memo(function SliderControl({
           onChange={handleInputChange}
           className={cn(
             "w-10 h-6 text-center font-mono text-[11px]",
-            "bg-zinc-50 dark:bg-zinc-900/80 border border-zinc-200 dark:border-zinc-800/80 rounded-md",
-            "focus:outline-none focus:ring-1 focus:ring-zinc-400/40",
+            "bg-[var(--app-surface-muted)] border border-[var(--app-border)] rounded-md",
+            "focus:outline-none focus:ring-1 focus:ring-[var(--app-accent)]/40",
             "[&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none",
             "tabular-nums"
           )}

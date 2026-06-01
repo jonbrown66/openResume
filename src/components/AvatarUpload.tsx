@@ -88,8 +88,8 @@ export const AvatarUpload = memo(function AvatarUpload({ value, onChange, lang }
           relative w-24 h-24 rounded-full cursor-pointer
           border-2 border-dashed transition-all
           ${isDragging 
-            ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20' 
-            : 'border-gray-300 dark:border-gray-600 hover:border-indigo-400 dark:hover:border-indigo-500'
+            ? 'border-[var(--app-accent)] bg-[var(--app-accent-soft)]' 
+            : 'border-[var(--app-border)] hover:border-[var(--app-accent)]'
           }
           ${value ? 'border-solid' : ''}
         `}
@@ -111,9 +111,9 @@ export const AvatarUpload = memo(function AvatarUpload({ value, onChange, lang }
             </button>
           </>
         ) : (
-          <div className="w-full h-full rounded-full bg-gray-100 dark:bg-gray-800 flex flex-col items-center justify-center gap-1">
-            <Upload size={20} className="text-gray-400 dark:text-gray-500" />
-            <span className="text-[10px] text-gray-400 dark:text-gray-500">
+          <div className="w-full h-full rounded-full bg-[var(--app-surface-muted)] flex flex-col items-center justify-center gap-1">
+            <Upload size={20} className="text-[var(--muted-foreground)]" />
+            <span className="text-[10px] text-[var(--muted-foreground)]">
               {lang === 'zh' ? '点击上传' : 'Upload'}
             </span>
           </div>

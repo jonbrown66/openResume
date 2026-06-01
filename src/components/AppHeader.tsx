@@ -12,6 +12,7 @@ import {
   ChevronDown,
   Palette,
   Github,
+  MoreHorizontal,
 } from 'lucide-react';
 
 import type { AppLanguage, AppTheme, TranslationSet, ResumeTemplate } from '@/config/ui';
@@ -88,11 +89,23 @@ export const AppHeader = memo(function AppHeader({
 }: AppHeaderProps) {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isStylePanelOpen, setIsStylePanelOpen] = useState(false);
+  const [isMobileMoreOpen, setIsMobileMoreOpen] = useState(false);
   const styleButtonRef = useRef<HTMLButtonElement>(null);
 
-  const handleOpenSettings = useCallback(() => setIsSettingsOpen(true), []);
+  const handleOpenSettings = useCallback(() => {
+    setIsMobileMoreOpen(false);
+    setIsSettingsOpen(true);
+  }, []);
   const handleCloseSettings = useCallback(() => setIsSettingsOpen(false), []);
   const handleToggleStylePanel = useCallback(() => setIsStylePanelOpen(prev => !prev), []);
+  const handleToggleTheme = useCallback(() => {
+    setIsMobileMoreOpen(false);
+    onThemeToggle();
+  }, [onThemeToggle]);
+  const handleToggleLanguage = useCallback(() => {
+    setIsMobileMoreOpen(false);
+    onLanguageToggle();
+  }, [onLanguageToggle]);
 
   const stylePanelProps = useMemo(() => ({
     triggerRef: styleButtonRef,
@@ -125,10 +138,12 @@ export const AppHeader = memo(function AppHeader({
     return t.themeLight;
   }, [theme, t]);
 
+  const mobileMenuItemClass = 'app-control flex w-full min-h-11 items-center gap-3 rounded-lg px-3 py-2 text-left text-sm font-medium transition-colors';
+
   return (
-    <header className="px-4 sm:px-6 py-3 sm:py-4 bg-white dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 flex justify-between items-center shrink-0 z-20 transition-colors duration-200 print:hidden">
-      <div className="flex items-center gap-1 sm:gap-3">
-        <span className="text-[10px] sm:text-sm font-semibold text-zinc-500 dark:text-zinc-400 tracking-wider sm:tracking-wide truncate max-w-[100px] sm:max-w-none">
+    <header className="flex shrink-0 items-center justify-between gap-2 border-b border-[var(--app-border)] bg-[var(--app-surface)] px-3 py-2.5 transition-colors duration-200 sm:px-6 sm:py-4 print:hidden z-20">
+      <div className="flex min-w-0 flex-1 items-center gap-1 sm:gap-3">
+        <span className="hidden text-[10px] font-semibold tracking-wider text-zinc-500 dark:text-zinc-400 sm:inline sm:text-sm sm:tracking-wide">
           OpenResume
         </span>
         <div className="hidden sm:flex items-center gap-2 mr-2">
@@ -158,13 +173,14 @@ export const AppHeader = memo(function AppHeader({
         />
       </div>
 
-      <div className="flex items-center gap-1 sm:gap-2">
-        <div>
+      <div className="flex shrink-0 items-center gap-0.5 sm:gap-2">
+        <div className="hidden sm:block">
           <motion.button
             ref={styleButtonRef}
             onClick={handleToggleStylePanel}
-            className="p-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-500 dark:text-zinc-400 transition-colors"
+            className="app-control flex items-center justify-center rounded-lg p-2 transition-colors"
             title={t.style}
+            aria-label={t.style}
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.95 }}
           >
@@ -178,9 +194,10 @@ export const AppHeader = memo(function AppHeader({
         </div>
         
         <motion.button
-          onClick={onThemeToggle}
-          className="p-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-500 dark:text-zinc-400 transition-colors"
+          onClick={handleToggleTheme}
+          className="app-control hidden items-center justify-center rounded-lg p-2 transition-colors sm:flex"
           title={themeLabel}
+          aria-label={themeLabel}
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.95 }}
         >
@@ -188,9 +205,10 @@ export const AppHeader = memo(function AppHeader({
         </motion.button>
         
         <motion.button
-          onClick={onLanguageToggle}
-          className="p-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-500 dark:text-zinc-400 transition-colors flex items-center justify-center"
+          onClick={handleToggleLanguage}
+          className="app-control hidden items-center justify-center rounded-lg p-2 transition-colors sm:flex"
           title={t.toggleLanguage}
+          aria-label={t.toggleLanguage}
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.95 }}
         >
@@ -200,8 +218,9 @@ export const AppHeader = memo(function AppHeader({
         
         <motion.button
           onClick={handleOpenSettings}
-          className="p-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-500 dark:text-zinc-400 transition-colors"
+          className="app-control hidden items-center justify-center rounded-lg p-2 transition-colors sm:flex"
           title={t.apiSettings}
+          aria-label={t.apiSettings}
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.95 }}
         >
@@ -212,7 +231,7 @@ export const AppHeader = memo(function AppHeader({
           href={PROJECT_GITHUB_URL}
           target="_blank"
           rel="noreferrer"
-          className="p-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-500 dark:text-zinc-400 transition-colors flex items-center justify-center"
+          className="app-control hidden items-center justify-center rounded-lg p-2 transition-colors sm:flex"
           title={t.githubProject}
           aria-label={t.githubProject}
           whileHover={{ scale: 1.1 }}
@@ -220,8 +239,84 @@ export const AppHeader = memo(function AppHeader({
         >
           <Github size={16} />
         </motion.a>
+
+        <div className="relative sm:hidden">
+          <motion.button
+            type="button"
+            onClick={() => setIsMobileMoreOpen(prev => !prev)}
+            className="app-control flex min-h-10 min-w-10 items-center justify-center rounded-lg p-2 transition-colors"
+            aria-label={t.moreActions}
+            aria-expanded={isMobileMoreOpen}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <MoreHorizontal size={18} />
+          </motion.button>
+          <AnimatePresence>
+            {isMobileMoreOpen && (
+              <motion.div
+                role="menu"
+                aria-label={t.moreActions}
+                initial={{ opacity: 0, y: -4, scale: 0.98 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -4, scale: 0.98 }}
+                transition={{ duration: 0.14, ease: 'easeOut' }}
+                className="app-panel absolute right-0 top-full z-50 mt-2 w-56 rounded-xl border p-1.5"
+              >
+                <button
+                  ref={styleButtonRef}
+                  type="button"
+                  role="menuitem"
+                  onClick={handleToggleStylePanel}
+                  className={mobileMenuItemClass}
+                >
+                  <Palette size={16} />
+                  <span>{t.style}</span>
+                </button>
+                <button
+                  type="button"
+                  role="menuitem"
+                  onClick={handleToggleTheme}
+                  className={mobileMenuItemClass}
+                >
+                  {themeIcon}
+                  <span>{themeLabel}</span>
+                </button>
+                <button
+                  type="button"
+                  role="menuitem"
+                  onClick={handleToggleLanguage}
+                  className={mobileMenuItemClass}
+                >
+                  <Languages size={16} />
+                  <span>{t.toggleLanguage}</span>
+                </button>
+                <button
+                  type="button"
+                  role="menuitem"
+                  onClick={handleOpenSettings}
+                  className={mobileMenuItemClass}
+                >
+                  <Settings size={16} />
+                  <span>{t.apiSettings}</span>
+                </button>
+                <a
+                  role="menuitem"
+                  href={PROJECT_GITHUB_URL}
+                  target="_blank"
+                  rel="noreferrer"
+                  onClick={() => setIsMobileMoreOpen(false)}
+                  className={mobileMenuItemClass}
+                >
+                  <Github size={16} />
+                  <span>{t.githubProject}</span>
+                </a>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
         
-        <div className="hidden sm:block w-px h-4 bg-zinc-200 dark:bg-zinc-700 mx-1 sm:mx-2"></div>
+        <div className="hidden sm:block w-px h-4 bg-[var(--app-border)] mx-1 sm:mx-2"></div>
 
         <input
           type="file"
@@ -234,7 +329,7 @@ export const AppHeader = memo(function AppHeader({
         <motion.button
           onClick={onImportClick}
           disabled={isImporting}
-          className="hidden sm:flex px-4 py-2 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 rounded-lg text-xs transition-all font-medium items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="app-secondary hidden items-center gap-2 rounded-lg border px-4 py-2 text-xs font-medium transition-all disabled:cursor-not-allowed disabled:opacity-50 sm:flex"
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
         >
@@ -249,7 +344,8 @@ export const AppHeader = memo(function AppHeader({
         <motion.button
           onClick={onImportClick}
           disabled={isImporting}
-          className="sm:hidden p-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 transition-colors flex items-center justify-center disabled:opacity-50"
+          className="app-control flex min-h-10 min-w-10 items-center justify-center rounded-lg p-2 transition-colors disabled:opacity-50 sm:hidden"
+          aria-label={t.import}
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.95 }}
         >
@@ -258,7 +354,7 @@ export const AppHeader = memo(function AppHeader({
 
         <ExportMenu {...exportMenuProps}>
           <motion.button
-            className="hidden sm:flex px-4 py-2 bg-zinc-900 dark:bg-zinc-100 hover:bg-zinc-800 dark:hover:bg-white text-white dark:text-zinc-900 rounded-lg text-xs transition-all font-medium shadow-sm hover:shadow-md items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="app-primary hidden items-center gap-2 rounded-lg px-4 py-2 text-xs font-semibold transition-all disabled:cursor-not-allowed disabled:opacity-50 sm:flex"
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
           >
@@ -267,7 +363,8 @@ export const AppHeader = memo(function AppHeader({
             <ChevronDown size={12} />
           </motion.button>
           <motion.button
-            className="sm:hidden p-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 transition-colors flex items-center justify-center disabled:opacity-50"
+            className="app-primary flex min-h-10 min-w-10 items-center justify-center rounded-lg p-2 transition-colors disabled:opacity-50 sm:hidden"
+            aria-label={t.export}
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.95 }}
           >

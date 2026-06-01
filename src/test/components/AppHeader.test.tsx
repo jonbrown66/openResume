@@ -1,5 +1,5 @@
 import { createRef } from 'react';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
 vi.mock('@/components/SettingsModal', () => ({
@@ -68,5 +68,48 @@ describe('AppHeader', () => {
     ).toBeTruthy();
     expect(githubLink).toHaveAttribute('href', 'https://github.com/jonbrown66/openResume');
     expect(githubLink).toHaveAttribute('target', '_blank');
+  });
+
+  it('groups secondary mobile header actions under a more menu', () => {
+    render(
+      <AppHeader
+        fileInputRef={createRef<HTMLInputElement>()}
+        onFileChange={vi.fn()}
+        isImporting={false}
+        importStep="idle"
+        lang="zh"
+        theme="system"
+        resolvedTheme="light"
+        translations={translations.zh}
+        canvasRef={createRef<HTMLDivElement>()}
+        draft={parseMarkdownToResumeDraft(defaultMarkdownZh)}
+        onImportClick={vi.fn()}
+        onLanguageToggle={vi.fn()}
+        onThemeToggle={vi.fn()}
+        settings={DEFAULT_SETTINGS}
+        onUpdateProvider={vi.fn()}
+        onSetActiveProvider={vi.fn()}
+        resumeTheme={DEFAULT_THEME_CONFIG}
+        onThemeChange={vi.fn()}
+        onThemeReset={vi.fn()}
+        template="classic"
+        onUpdateSettings={vi.fn()}
+        projects={[]}
+        currentProject={undefined}
+        onProjectSwitch={vi.fn()}
+        onProjectCreate={vi.fn()}
+        onProjectRename={vi.fn()}
+        onProjectDelete={vi.fn()}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: '更多操作' }));
+
+    expect(screen.getByRole('menu', { name: '更多操作' })).toBeInTheDocument();
+    expect(screen.getByRole('menuitem', { name: '样式' })).toBeInTheDocument();
+    expect(screen.getByRole('menuitem', { name: '跟随系统' })).toBeInTheDocument();
+    expect(screen.getByRole('menuitem', { name: '切换语言' })).toBeInTheDocument();
+    expect(screen.getByRole('menuitem', { name: 'API 设置' })).toBeInTheDocument();
+    expect(screen.getByRole('menuitem', { name: '打开 GitHub 项目' })).toBeInTheDocument();
   });
 });

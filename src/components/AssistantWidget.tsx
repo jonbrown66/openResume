@@ -143,7 +143,7 @@ export function AssistantWidget({
   };
 
   return (
-    <div className="fixed bottom-4 right-4 z-40 print:hidden sm:bottom-6 sm:right-6">
+    <div className="fixed inset-x-2 bottom-4 z-40 flex justify-end print:hidden sm:inset-x-auto sm:bottom-6 sm:right-6">
       <AnimatePresence
         initial={false}
         onExitComplete={() => {
@@ -155,11 +155,14 @@ export function AssistantWidget({
         {isOpen ? (
           <motion.div
             key="assistant-panel"
+            role="dialog"
+            aria-modal="false"
+            aria-label={t.assistantTitle}
             initial={{ opacity: 0, y: 20, scale: 0.96 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 12, scale: 0.98 }}
             transition={{ duration: 0.18, ease: 'easeOut' }}
-            className="w-[min(560px,calc(100vw-2rem))] overflow-hidden rounded-[28px] border border-zinc-200/80 bg-white/95 shadow-[0_24px_80px_-32px_rgba(15,23,42,0.45)] backdrop-blur-xl dark:border-zinc-800/80 dark:bg-zinc-950/95"
+            className="app-panel flex h-[min(720px,calc(100dvh-5.5rem))] w-[calc(100vw-1rem)] flex-col overflow-hidden rounded-[24px] border sm:h-[min(680px,calc(100dvh-3rem))] sm:w-[min(560px,calc(100vw-2rem))] sm:rounded-[28px]"
           >
             <AssistantHeader
               title={t.assistantTitle}
@@ -194,7 +197,7 @@ export function AssistantWidget({
           onClick={handleOpen}
           whileHover={{ scale: 1.04 }}
           whileTap={{ scale: 0.96 }}
-          className="ml-auto inline-flex h-14 w-14 items-center justify-center rounded-full bg-zinc-900 text-white shadow-[0_18px_40px_-18px_rgba(15,23,42,0.7)] transition-colors hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white"
+          className="app-primary ml-auto inline-flex h-14 w-14 items-center justify-center rounded-full transition-colors"
         >
           <Bot size={22} />
         </motion.button>

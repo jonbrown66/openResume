@@ -1,5 +1,7 @@
 import { memo, useEffect, useState, type PropsWithChildren, type RefObject } from 'react';
 
+import { pageHeightPx, pageWidthPx } from '@/constants';
+
 interface ResumeCanvasProps extends PropsWithChildren {
   canvasRef?: RefObject<HTMLDivElement | null>;
   scale: number;
@@ -15,18 +17,25 @@ export const ResumeCanvas = memo(function ResumeCanvas({ canvasRef, children, sc
 
   return (
     <div
-      ref={canvasRef}
-      className="resume-paper bg-[#ffffff] text-[#111827] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] dark:shadow-[0_20px_60px_-15px_rgba(0,0,0,0.5)] shrink-0 rounded-sm hover:shadow-[0_25px_70px_-15px_rgba(0,0,0,0.15)] dark:hover:shadow-[0_25px_70px_-15px_rgba(0,0,0,0.6)] origin-top"
+      className="shrink-0"
       style={{
-        width: '210mm',
-        minHeight: '297mm',
-        height: 'auto',
-        transform: `scale(${scale})`,
-        marginBottom: `calc(297mm * ${scale - 1})`,
-        transition: mounted ? 'transform 200ms ease-out, box-shadow 300ms' : 'none',
+        width: `${pageWidthPx * scale}px`,
+        minHeight: `${pageHeightPx * scale}px`,
       }}
     >
-      {children}
+      <div
+        ref={canvasRef}
+        className="resume-paper bg-[#ffffff] text-[#111827] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] dark:shadow-[0_20px_60px_-15px_rgba(0,0,0,0.5)] rounded-sm hover:shadow-[0_25px_70px_-15px_rgba(0,0,0,0.15)] dark:hover:shadow-[0_25px_70px_-15px_rgba(0,0,0,0.6)] origin-top-left"
+        style={{
+          width: `${pageWidthPx}px`,
+          minHeight: `${pageHeightPx}px`,
+          height: 'auto',
+          transform: `scale(${scale})`,
+          transition: mounted ? 'transform 200ms ease-out, box-shadow 300ms' : 'none',
+        }}
+      >
+        {children}
+      </div>
     </div>
   );
 });

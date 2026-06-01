@@ -40,7 +40,7 @@ export const EditorPane = memo(function EditorPane({
   }, [markdown, onMarkdownChange]);
 
   return (
-    <div className="group/editor flex-1 h-full grid grid-rows-[auto_1fr] border-r-0 lg:border-r border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/50 z-10 transition-colors duration-200 print:hidden relative">
+    <div className="group/editor relative z-10 grid h-full flex-1 grid-rows-[auto_1fr] border-r-0 border-[var(--app-border)] bg-[var(--app-surface)] transition-colors duration-200 print:hidden lg:border-r">
       <div className="relative">
         {isImporting ? (
           <motion.div 
@@ -56,16 +56,16 @@ export const EditorPane = memo(function EditorPane({
       </div>
 
       <div 
-        className="absolute top-4 left-1/2 -translate-x-1/2 z-30 opacity-0 group-hover/editor:opacity-100 transition-opacity duration-200 print:hidden"
+        className="absolute left-1/2 top-3 z-30 -translate-x-1/2 opacity-100 transition-opacity duration-200 print:hidden sm:top-5"
       >
-        <div className="inline-flex rounded-lg border border-zinc-200/50 dark:border-zinc-700/50 bg-white/90 dark:bg-zinc-800/90 backdrop-blur-xl p-1 shadow-lg">
+        <div className="app-panel inline-flex max-w-[calc(100vw-1rem)] rounded-xl border p-1">
           <button
             type="button"
             onClick={() => onEditorModeChange('markdown')}
-            className={`px-4 py-2 rounded-lg text-xs font-semibold transition-colors ${
+            className={`min-h-10 shrink-0 whitespace-nowrap rounded-lg px-3 py-2 text-xs font-semibold transition-colors sm:min-h-0 sm:px-4 ${
               editorMode === 'markdown' 
-                ? 'bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 shadow-sm' 
-                : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200'
+                ? 'app-active shadow-sm' 
+                : 'app-control'
             }`}
           >
             {t.markdownMode}
@@ -73,24 +73,24 @@ export const EditorPane = memo(function EditorPane({
           <button
             type="button"
             onClick={() => onEditorModeChange('blocks')}
-            className={`px-4 py-2 rounded-lg text-xs font-semibold transition-colors ${
+            className={`min-h-10 shrink-0 whitespace-nowrap rounded-lg px-3 py-2 text-xs font-semibold transition-colors sm:min-h-0 sm:px-4 ${
               editorMode === 'blocks' 
-                ? 'bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 shadow-sm' 
-                : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200'
+                ? 'app-active shadow-sm' 
+                : 'app-control'
             }`}
           >
-            {t.blockMode}
+            {lang === 'zh' ? '区块' : t.blockMode}
           </button>
         </div>
       </div>
 
       <div 
         ref={containerRef} 
-        className="row-start-2 overflow-y-auto overflow-x-hidden pt-16 sm:pt-20 pb-8 custom-scrollbar"
+        className="row-start-2 overflow-y-auto overflow-x-hidden pt-16 sm:pt-20 lg:pt-24 pb-8 custom-scrollbar"
       >
         {editorMode === 'markdown' ? (
           <textarea
-            className="w-full min-h-[600px] bg-transparent text-zinc-800 dark:text-zinc-200 font-mono text-[13px] resize-none focus:outline-none leading-[1.7] tracking-tight selection:bg-zinc-200 dark:selection:bg-zinc-700 px-4 sm:px-8"
+            className="w-full min-h-[calc(100dvh-9rem)] bg-transparent px-4 font-mono text-[13px] leading-[1.75] text-zinc-800 selection:bg-zinc-200 resize-none focus:outline-none dark:text-zinc-200 dark:selection:bg-zinc-700 sm:min-h-[600px] sm:px-8 lg:px-10"
             value={displayMarkdown}
             onChange={(e) => handleMarkdownChange(e.target.value)}
             spellCheck={false}

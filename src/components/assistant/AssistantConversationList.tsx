@@ -18,7 +18,10 @@ export function AssistantConversationList({
   onApplyProposal,
 }: AssistantConversationListProps) {
   return (
-    <div className="h-[440px] space-y-3 overflow-y-auto px-5 py-3">
+    <div
+      data-testid="assistant-conversation"
+      className="min-h-0 flex-1 space-y-3 overflow-y-auto px-4 py-3 sm:px-5"
+    >
       {conversation.map((message) => (
         <div
           key={message.id}
@@ -27,8 +30,8 @@ export function AssistantConversationList({
           <div
             className={`max-w-[92%] rounded-2xl px-4 py-3 text-sm leading-6 shadow-sm ${
               message.role === 'user'
-                ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900'
-                : 'bg-zinc-100 text-zinc-700 dark:bg-zinc-900 dark:text-zinc-200'
+                ? 'app-primary'
+                : 'bg-[var(--app-surface-muted)] text-[var(--secondary-foreground)]'
             }`}
           >
             <p className="whitespace-pre-wrap break-words">{message.content}</p>
@@ -46,8 +49,8 @@ export function AssistantConversationList({
                 disabled={message.applied}
                 className={`mt-3 inline-flex items-center rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
                   message.applied
-                    ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300'
-                    : 'bg-white text-zinc-900 hover:bg-zinc-200 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white'
+                    ? 'bg-[var(--app-accent-soft)] text-[var(--secondary-foreground)]'
+                    : 'app-secondary border'
                 }`}
               >
                 {message.applied ? t.assistantApplied : t.assistantApply}
@@ -59,7 +62,7 @@ export function AssistantConversationList({
 
       {isSubmitting ? (
         <div className="flex justify-start">
-          <div className="inline-flex items-center gap-2 rounded-2xl bg-zinc-100 px-4 py-3 text-sm text-zinc-600 dark:bg-zinc-900 dark:text-zinc-300">
+          <div className="inline-flex items-center gap-2 rounded-2xl bg-[var(--app-surface-muted)] px-4 py-3 text-sm text-[var(--muted-foreground)]">
             <Loader2 size={14} className="animate-spin" />
             {t.assistantThinking}
           </div>

@@ -142,4 +142,5 @@ export const zhTranslations: TranslationDefinition = {
   save: '保存',
   copy: '复制',
   copied: '已复制',
+  moreActions: '更多操作',
 };

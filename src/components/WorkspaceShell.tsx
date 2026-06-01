@@ -120,12 +120,12 @@ export function WorkspaceShell({
   return (
     <>
       <main
-        className={`flex h-screen w-full items-center justify-center overflow-hidden font-sans transition-colors duration-200 sm:p-4 md:p-8 ${
-          resolvedTheme === 'dark' ? 'bg-zinc-950' : 'bg-zinc-100'
+        className={`flex h-dvh w-full items-center justify-center overflow-hidden font-sans transition-colors duration-200 sm:p-4 md:p-8 ${
+          resolvedTheme === 'dark' ? 'bg-[var(--app-bg)]' : 'bg-[var(--app-bg)]'
         }`}
       >
         <motion.div
-          className="flex h-full w-full max-w-[1600px] flex-col overflow-hidden rounded-xl border border-zinc-200/60 bg-white shadow-[0_20px_40px_-15px_rgba(0,0,0,0.08)] transition-colors duration-200 dark:border-zinc-800/60 dark:bg-zinc-900 dark:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.3)]"
+          className="app-shell flex h-full w-full max-w-[1600px] flex-col overflow-hidden border transition-colors duration-200 sm:rounded-xl"
           initial="hidden"
           animate="visible"
           variants={slideUpVariants}
@@ -164,8 +164,8 @@ export function WorkspaceShell({
 
           <ImportNoticeBanner message={noticeMessage} />
 
-          <div className="relative flex flex-1 overflow-hidden">
-            <div className={`${activeView === 'editor' ? 'flex' : 'hidden'} w-full lg:flex`}>
+          <div className="relative flex flex-1 overflow-hidden bg-[var(--app-bg)]">
+            <div className={`${activeView === 'editor' ? 'flex' : 'hidden'} w-full lg:flex lg:w-[44%] xl:w-[41%] 2xl:w-[39%]`}>
               <ErrorBoundary>
                 <EditorPane
                   containerRef={editorContainerRef}
@@ -182,7 +182,7 @@ export function WorkspaceShell({
               </ErrorBoundary>
             </div>
 
-            <div className={`${activeView === 'preview' ? 'flex' : 'hidden'} w-full lg:flex`}>
+            <div className={`${activeView === 'preview' ? 'flex' : 'hidden'} w-full lg:flex lg:min-w-0 lg:flex-1`}>
               <ErrorBoundary>
                 <PreviewPane
                   containerRef={previewContainerRef}

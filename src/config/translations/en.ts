@@ -143,6 +143,7 @@ export const enTranslations = {
   save: 'Save',
   copy: 'Copy',
   copied: 'Copied!',
+  moreActions: 'More Actions',
 } as const;
 
 export type TranslationDefinition = {

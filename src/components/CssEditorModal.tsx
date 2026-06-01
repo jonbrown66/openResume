@@ -362,16 +362,16 @@ export function CssEditorModal({
             transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
             className={cn(
               "relative w-full max-w-2xl max-h-[85vh] flex flex-col",
-              "bg-white dark:bg-zinc-900",
-              "rounded-2xl shadow-2xl",
-              "border border-zinc-200 dark:border-zinc-700",
+              "app-panel",
+              "rounded-2xl",
+              "border",
               "overflow-hidden"
             )}
           >
-            <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-200 dark:border-zinc-700">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--app-border)]">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-zinc-100 dark:bg-zinc-800 rounded-xl">
-                  <Code2 className="w-5 h-5 text-zinc-600 dark:text-zinc-400" />
+                <div className="p-2 bg-[var(--app-accent-soft)] rounded-xl">
+                  <Code2 className="w-5 h-5 text-[var(--secondary-foreground)]" />
                 </div>
                 <div>
                   <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
@@ -384,14 +384,14 @@ export function CssEditorModal({
               </div>
               <button
                 onClick={onClose}
-                className="p-2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-xl transition-colors"
+                className="app-control rounded-xl p-2 transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             <div className="flex-1 px-6 py-4 min-h-0" ref={containerRef}>
-              <div className="relative rounded-xl border border-zinc-300 dark:border-zinc-600 bg-zinc-50 dark:bg-[#0d1117] overflow-hidden">
+              <div className="relative rounded-xl border border-[var(--app-border)] bg-[var(--app-surface-muted)] overflow-hidden">
                 <pre 
                   className="absolute inset-0 p-4 text-[13px] leading-6 font-mono whitespace-pre-wrap overflow-auto pointer-events-none text-zinc-900 dark:text-zinc-100"
                   dangerouslySetInnerHTML={{ __html: highlightCss(css) }}
@@ -427,13 +427,12 @@ export function CssEditorModal({
               .dark .css-brace { color: #c9d1d9; }
             `}</style>
 
-            <div className="flex items-center justify-between px-6 py-4 border-t border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/50">
+            <div className="flex items-center justify-between px-6 py-4 border-t border-[var(--app-border)] bg-[var(--app-surface-muted)]">
               <button
                 onClick={handleReset}
                 className={cn(
                   "flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium",
-                  "text-zinc-600 dark:text-zinc-400",
-                  "hover:bg-zinc-100 dark:hover:bg-zinc-700",
+                  "app-control",
                   "transition-colors"
                 )}
               >
@@ -446,8 +445,7 @@ export function CssEditorModal({
                   onClick={handleCopy}
                   className={cn(
                     "flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium",
-                    "text-zinc-600 dark:text-zinc-400",
-                    "hover:bg-zinc-100 dark:hover:bg-zinc-700",
+                    "app-control",
                     "transition-colors"
                   )}
                 >
@@ -459,9 +457,7 @@ export function CssEditorModal({
                   onClick={handleSave}
                   className={cn(
                     "flex items-center gap-2 px-5 py-2 rounded-xl text-sm font-semibold",
-                    "bg-zinc-900 dark:bg-zinc-100",
-                    "text-white dark:text-zinc-900",
-                    "hover:bg-zinc-800 dark:hover:bg-zinc-200",
+                    "app-primary",
                     "transition-colors"
                   )}
                 >

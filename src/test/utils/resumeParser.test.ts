@@ -42,4 +42,46 @@ describe('resumeParser', () => {
     expect(markdown).toContain('- 负责协调跨部门行政流程优化。');
     expect(markdown).toContain('## 教育背景');
   });
+
+  it('keeps existing markdown frontmatter and recognizes common chinese resume section aliases', () => {
+    const rawMarkdown = `
+---
+name: 李四
+title: 前端开发工程师
+contact: lisi@example.com | 138-1111-2222
+---
+
+## 个人简介：
+5 年前端开发经验，熟悉 React、TypeScript 与工程化，能独立负责复杂业务模块落地。
+
+## 技能特长
+React、TypeScript、Next.js、性能优化
+
+## 工作经历项目经历
+前端开发工程师 | 2021.06 - 至今
+某某科技有限公司
+负责简历编辑器、在线预览和导出链路建设。
+
+在线简历平台 | 2022.01 - 2023.12
+负责 Markdown 解析、模板渲染和移动端适配。
+
+## 教育背景
+计算机科学与技术 | 2016.09 - 2020.06
+浙江大学
+`.trim();
+
+    const markdown = autoFormatResume(rawMarkdown, 'zh');
+
+    expect(markdown).toContain('name: 李四');
+    expect(markdown).toContain('title: 前端开发工程师');
+    expect(markdown).toContain('contact: lisi@example.com | 138-1111-2222');
+    expect(markdown).toContain('## 个人简介');
+    expect(markdown).toContain('## 技能特长');
+    expect(markdown).toContain('- React');
+    expect(markdown).toContain('- TypeScript');
+    expect(markdown).toContain('## 工作经历项目经历');
+    expect(markdown).toContain('### 前端开发工程师 | 2021.06 - 至今');
+    expect(markdown).toContain('### 在线简历平台 | 2022.01 - 2023.12');
+    expect(markdown).toContain('## 教育背景');
+  });
 });

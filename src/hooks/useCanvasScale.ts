@@ -4,7 +4,7 @@ import { pageWidthPx } from '../constants';
 
 function getContainerWidth(element: HTMLDivElement) {
   const isMobile = window.innerWidth < 640;
-  const padding = isMobile ? 12 : 64;
+  const padding = isMobile ? 24 : 64;
   return Math.max(300, element.clientWidth - padding);
 }
 
@@ -36,8 +36,12 @@ export function useCanvasScale(containerRef: RefObject<HTMLDivElement | null>) {
 
     const observer = new ResizeObserver(() => updateScale());
     observer.observe(container);
+    window.addEventListener('resize', updateScale);
 
-    return () => observer.disconnect();
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('resize', updateScale);
+    };
   }, [containerRef]);
 
   const scale = useMemo(() => fitScale * (zoomPercent / 100), [fitScale, zoomPercent]);

@@ -94,14 +94,14 @@ export const ProjectSelector = memo(function ProjectSelector({
   };
 
   return (
-    <div className="relative" ref={dropdownRef}>
+    <div className="relative min-w-0" ref={dropdownRef}>
       <motion.button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 text-sm transition-colors"
+        className="app-secondary flex min-h-10 max-w-[132px] items-center gap-2 rounded-lg border px-3 py-1.5 text-sm transition-colors sm:min-h-0 sm:max-w-[180px]"
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
       >
-        <span className="font-medium truncate max-w-[120px]">
+        <span className="truncate font-medium">
           {currentProject?.name ?? '选择简历'}
         </span>
         <ChevronDown size={14} className={`transition-transform ${isOpen ? 'rotate-180' : ''}`} />
@@ -114,22 +114,22 @@ export const ProjectSelector = memo(function ProjectSelector({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -4, scale: 0.96, filter: 'blur(4px)' }}
             transition={{ ...dynamicIslandSpring, stiffness: 300 }}
-            className="absolute top-full left-0 mt-2 w-64 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl rounded-xl shadow-2xl shadow-black/8 dark:shadow-black/30 border border-black/5 dark:border-white/10 py-1.5 z-50"
+            className="app-panel absolute top-full left-0 mt-2 w-64 rounded-xl border py-1.5 z-50"
           >
             {projects.map(project => (
               <div
                 key={project.id}
                 className={`group flex items-center gap-2 px-3 py-2 cursor-pointer transition-colors ${
                   project.id === currentProject?.id
-                    ? 'bg-zinc-100 dark:bg-zinc-800'
-                    : 'hover:bg-zinc-50 dark:hover:bg-zinc-800/50'
+                    ? 'bg-[var(--app-accent-soft)]'
+                    : 'hover:bg-[var(--app-surface-muted)]'
                 }`}
                 onClick={() => handleSwitch(project.id)}
               >
                 <span className={`flex-1 truncate text-sm ${
                   project.id === currentProject?.id
-                    ? 'font-medium text-zinc-900 dark:text-zinc-100'
-                    : 'text-zinc-700 dark:text-zinc-300'
+                    ? 'font-medium text-[var(--secondary-foreground)]'
+                    : 'text-[var(--muted-foreground)]'
                 }`}>
                   {editingId === project.id ? (
                     <input
@@ -168,10 +168,10 @@ export const ProjectSelector = memo(function ProjectSelector({
               </div>
             ))}
 
-            <div className="border-t border-zinc-200 dark:border-zinc-700 mt-1 pt-1">
+            <div className="border-t border-[var(--app-border)] mt-1 pt-1">
               <button
                 onClick={() => { onCreate(); setIsOpen(false); }}
-                className="flex items-center gap-2 w-full px-3 py-2 text-sm text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors"
+                className="app-control flex items-center gap-2 w-full px-3 py-2 text-sm transition-colors"
               >
                 <Plus size={14} />
                 <span>新建简历</span>

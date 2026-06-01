@@ -22,12 +22,12 @@ export function AssistantComposer({
   onSubmit,
 }: AssistantComposerProps) {
   return (
-    <div className="border-t border-zinc-200/70 px-5 py-4 dark:border-zinc-800/70">
+    <div className="shrink-0 border-t border-[var(--app-border)] px-4 py-3 sm:px-5 sm:py-4">
       <div className="mb-2 flex items-center justify-between gap-3 text-[11px] text-zinc-400 dark:text-zinc-500">
         <div className="min-w-0 truncate">{providerLabel}</div>
-        <div className="shrink-0 text-right leading-4">{memoryHint}</div>
+        <div className="max-w-[45%] shrink-0 text-right leading-4 sm:max-w-none">{memoryHint}</div>
       </div>
-      <div className="rounded-2xl border border-zinc-200/80 bg-zinc-50 p-2 dark:border-zinc-800/80 dark:bg-zinc-900">
+      <div className="rounded-2xl border border-[var(--app-border)] bg-[var(--app-surface-muted)] p-2">
         <textarea
           value={input}
           onChange={(event) => onInputChange(event.target.value)}
@@ -40,7 +40,7 @@ export function AssistantComposer({
             type="button"
             onClick={onSubmit}
             disabled={isSubmitting || !input.trim()}
-            className="inline-flex items-center gap-2 rounded-full bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white"
+            className="app-primary inline-flex min-h-10 items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50 sm:min-h-0"
           >
             {isSubmitting ? <Loader2 size={14} className="animate-spin" /> : <SendHorizontal size={14} />}
             {sendLabel}

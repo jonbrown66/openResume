@@ -43,19 +43,19 @@ export function AppearanceSettings({ settings, onUpdateSettings }: AppearanceSet
               className={cn(
                 "flex flex-col items-center justify-center gap-2 p-4 rounded-lg border-2 transition-all duration-200",
                 settings.theme === mode.id
-                  ? "bg-white dark:bg-zinc-900 border-zinc-900 dark:border-zinc-100 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.1)]"
-                  : "bg-zinc-50/50 dark:bg-zinc-900/30 border-transparent hover:border-zinc-200 dark:hover:border-zinc-800/80"
+                  ? "bg-[var(--app-accent-soft)] border-[var(--app-accent)] shadow-[0_2px_10px_-4px_rgba(84,112,45,0.28)]"
+                  : "bg-[var(--app-surface-muted)] border-transparent hover:border-[var(--app-border)]"
               )}
             >
               <div className={cn(
                 "p-2 rounded-lg",
-                settings.theme === mode.id ? "text-zinc-900 dark:text-zinc-100" : "text-zinc-400"
+                settings.theme === mode.id ? "text-[var(--secondary-foreground)]" : "text-[var(--muted-foreground)]"
               )}>
                 {mode.icon}
               </div>
               <span className={cn(
                 "text-sm font-medium",
-                settings.theme === mode.id ? "text-zinc-900 dark:text-zinc-100" : "text-zinc-500"
+                settings.theme === mode.id ? "text-[var(--secondary-foreground)]" : "text-[var(--muted-foreground)]"
               )}>
                 {mode.name}
               </span>
@@ -72,10 +72,10 @@ export function AppearanceSettings({ settings, onUpdateSettings }: AppearanceSet
           value={settings.language} 
           onValueChange={(val) => onUpdateSettings({ language: val as 'zh' | 'en' })}
         >
-          <SelectTrigger className="w-full h-12 rounded-lg border-zinc-200/80 dark:border-zinc-800/80 bg-white/50 dark:bg-zinc-950/50 px-4 focus:ring-1 focus:ring-zinc-900/10 dark:focus:ring-zinc-100/10">
+          <SelectTrigger className="w-full h-12 rounded-lg border-[var(--app-border)] bg-[var(--app-surface)]/70 px-4 focus:ring-1 focus:ring-[var(--app-accent)]/35">
             <SelectValue />
           </SelectTrigger>
-          <SelectContent className="rounded-lg border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950">
+          <SelectContent className="rounded-lg border-[var(--app-border)] bg-[var(--app-surface)]">
             <SelectItem value="zh" className="rounded-lg">{t.languageZh}</SelectItem>
             <SelectItem value="en" className="rounded-lg">{t.languageEn}</SelectItem>
           </SelectContent>
