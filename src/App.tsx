@@ -42,6 +42,7 @@ export default function App() {
     updateCustomCss,
     handleAssistantApply,
     handleImportComplete,
+    handleFormatMarkdown,
     activeDraft,
     editorContainerRef,
     previewContainerRef,
@@ -135,6 +136,7 @@ export default function App() {
         onProjectDelete={deleteProject}
         onDraftChange={setDraft}
         onMarkdownChange={setMarkdown}
+        onFormatMarkdown={handleFormatMarkdown}
         onEditorModeChange={handleEditorModeChange}
         onTemplateChange={setTemplate}
         onActiveViewChange={setActiveView}

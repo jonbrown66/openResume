@@ -31,6 +31,14 @@ function trimAssistantMessages(messages: AssistantMessage[]) {
   return messages.slice(-ASSISTANT_MEMORY_LIMIT);
 }
 
+function toPersistedMessage(message: AssistantMessage): AssistantMessage {
+  return {
+    id: message.id,
+    role: message.role,
+    content: message.content,
+  };
+}
+
 function normalizeMessage(raw: unknown): AssistantMessage | null {
   if (!raw || typeof raw !== 'object') {
     return null;
@@ -86,7 +94,7 @@ function loadAssistantMemory(projectId: string): AssistantMessage[] {
 
 function saveAssistantMemory(projectId: string, messages: AssistantMessage[]) {
   try {
-    const trimmedMessages = trimAssistantMessages(messages);
+    const trimmedMessages = trimAssistantMessages(messages).map(toPersistedMessage);
 
     if (trimmedMessages.length === 0) {
       localStorage.removeItem(getStorageKey(projectId));
@@ -98,6 +106,14 @@ function saveAssistantMemory(projectId: string, messages: AssistantMessage[]) {
       JSON.stringify({ messages: trimmedMessages } satisfies PersistedAssistantMemory),
     );
   } catch (error) {
+    if (error instanceof DOMException && error.name === 'QuotaExceededError') {
+      try {
+        localStorage.removeItem(getStorageKey(projectId));
+      } catch {
+        // Ignore secondary storage failures; the in-memory conversation still works.
+      }
+      return;
+    }
     console.error('Failed to save assistant memory to localStorage', error);
   }
 }

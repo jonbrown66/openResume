@@ -1,5 +1,6 @@
 import { memo, useMemo, useCallback } from 'react';
 import { motion } from 'framer-motion';
+import { ListRestart } from 'lucide-react';
 
 import type { AppLanguage, EditorMode, TranslationSet } from '@/config/ui';
 import type { ResumeDraft } from '@/types/resume';
@@ -18,6 +19,7 @@ interface EditorPaneProps {
   onDraftChange: (draft: ResumeDraft) => void;
   onEditorModeChange: (mode: EditorMode) => void;
   onMarkdownChange: (value: string) => void;
+  onFormatMarkdown: () => void;
 }
 
 export const EditorPane = memo(function EditorPane({
@@ -31,6 +33,7 @@ export const EditorPane = memo(function EditorPane({
   onDraftChange,
   onEditorModeChange,
   onMarkdownChange,
+  onFormatMarkdown,
 }: EditorPaneProps) {
   const displayMarkdown = useMemo(() => sanitizeMarkdownForDisplay(markdown), [markdown]);
   
@@ -83,6 +86,18 @@ export const EditorPane = memo(function EditorPane({
           </button>
         </div>
       </div>
+
+      {editorMode === 'markdown' ? (
+        <button
+          type="button"
+          onClick={onFormatMarkdown}
+          className="app-panel app-control absolute right-3 top-3 z-30 inline-flex min-h-10 min-w-10 items-center justify-center rounded-full border p-2 transition-colors sm:right-5 sm:top-5 sm:min-h-0 sm:min-w-0"
+          title={t.formatMarkdown}
+          aria-label={t.formatMarkdown}
+        >
+          <ListRestart size={16} />
+        </button>
+      ) : null}
 
       <div 
         ref={containerRef} 

@@ -66,6 +66,7 @@ interface WorkspaceShellProps {
   onProjectDelete: (id: string) => void;
   onDraftChange: (draft: ResumeDraft) => void;
   onMarkdownChange: (markdown: string) => void;
+  onFormatMarkdown: () => void;
   onEditorModeChange: (mode: EditorMode) => void;
   onTemplateChange: (template: ResumeTemplate) => void;
   onActiveViewChange: (view: ActiveView) => void;
@@ -114,6 +115,7 @@ export function WorkspaceShell({
   onProjectDelete,
   onDraftChange,
   onMarkdownChange,
+  onFormatMarkdown,
   onEditorModeChange,
   onTemplateChange,
   onActiveViewChange,
@@ -183,6 +185,7 @@ export function WorkspaceShell({
                   onDraftChange={onDraftChange}
                   onEditorModeChange={onEditorModeChange}
                   onMarkdownChange={onMarkdownChange}
+                  onFormatMarkdown={onFormatMarkdown}
                 />
               </ErrorBoundary>
             </div>
@@ -227,6 +230,9 @@ export function WorkspaceShell({
             settings={settings}
             translations={t}
             onApplyMarkdown={onAssistantApply}
+            onUpdateProvider={onUpdateProvider}
+            onSetActiveProvider={onSetActiveProvider}
+            onUpdateSettings={onUpdateSettings}
           />
         </Suspense>
       </ErrorBoundary>

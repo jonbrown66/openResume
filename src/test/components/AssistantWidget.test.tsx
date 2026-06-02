@@ -45,7 +45,16 @@ describe('AssistantWidget', () => {
         lang="en"
         markdown={defaultMarkdownEn}
         projectId="project-a"
-        settings={createSettings()}
+        settings={createSettings({
+          activeProvider: 'gemini',
+          providers: {
+            ...DEFAULT_SETTINGS.providers,
+            gemini: {
+              ...DEFAULT_SETTINGS.providers.gemini,
+              apiKey: 'demo-key',
+            },
+          },
+        })}
         translations={translations.en}
         onApplyMarkdown={vi.fn()}
       />,
@@ -63,7 +72,7 @@ describe('AssistantWidget', () => {
     expect(screen.queryByRole('button', { name: 'Ask Anything' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Edit Resume' })).not.toBeInTheDocument();
     const memoryHint = screen.getByText('Only the latest 20 messages are kept.');
-    const providerMeta = screen.getByText(/Google Gemini/);
+    const providerMeta = screen.getAllByText(/Google Gemini/).at(-1)!;
 
     expect(memoryHint).toHaveClass('text-right');
     expect(memoryHint.parentElement).toBe(providerMeta.parentElement);
@@ -94,7 +103,7 @@ describe('AssistantWidget', () => {
       'h-[min(720px,calc(100dvh-5.5rem))]',
       'w-[calc(100vw-1rem)]',
       'sm:h-[min(680px,calc(100dvh-3rem))]',
-      'sm:w-[min(560px,calc(100vw-2rem))]',
+      'sm:w-[min(540px,calc(100vw-2rem))]',
     );
     expect(conversation).toHaveClass('min-h-0', 'flex-1', 'overflow-y-auto');
     expect(conversation).not.toHaveClass('sm:h-[440px]', 'sm:flex-none');
@@ -285,6 +294,39 @@ contact: jane@example.com
     });
 
     expect(requestResumeAssistant).not.toHaveBeenCalled();
+  });
+
+  it('shows the current provider model and opens settings when AI is not configured', () => {
+    render(
+      <AssistantWidget
+        lang="en"
+        markdown={defaultMarkdownEn}
+        projectId="project-a"
+        settings={createSettings({
+          activeProvider: 'anthropic',
+          providers: {
+            ...DEFAULT_SETTINGS.providers,
+            anthropic: {
+              ...DEFAULT_SETTINGS.providers.anthropic,
+              apiKey: '',
+              model: 'claude-opus-4-8',
+            },
+          },
+        })}
+        translations={translations.en}
+        onApplyMarkdown={vi.fn()}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Open AI assistant' }));
+
+    expect(screen.queryByText('Anthropic · claude-opus-4-8')).not.toBeInTheDocument();
+    expect(screen.getByText('The current AI provider is not fully configured. Configure it before using the assistant.')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Configure' }));
+
+    expect(screen.getByRole('heading', { name: 'Settings' })).toBeInTheDocument();
+    expect(screen.getByText('AI Provider')).toBeInTheDocument();
   });
 
   it('restores assistant conversation after remount for the same project', async () => {

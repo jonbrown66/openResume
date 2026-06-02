@@ -1,4 +1,5 @@
 import type { ResumeDraft, ResumeEntry, ResumeFrontmatter, ResumeSection } from '../types/resume';
+import { parseRawResumeText } from './resumeParser';
 
 // ---------------------------------------------------------------------------
 // Parsing
@@ -62,6 +63,14 @@ function parseEntry(block: string): ResumeEntry {
   let isFirstLine = true;
 
   for (const line of lines) {
+    const boldMetaMatch = line.trim().match(/^\*\*(.*?)\*\*\s*[|｜]\s*(.+)$/);
+    if (isFirstLine && !organization && boldMetaMatch) {
+      organization = boldMetaMatch[1].trim();
+      meta = meta ? `${meta} | ${boldMetaMatch[2].trim()}` : boldMetaMatch[2].trim();
+      isFirstLine = false;
+      continue;
+    }
+
     if (isFirstLine && !organization && /^\*\*.*\*\*$/.test(line.trim())) {
       organization = line.trim().replace(/^\*\*|\*\*$/g, '').trim();
       isFirstLine = false;
@@ -124,6 +133,12 @@ const SUMMARY_PATTERN = /summary|profile|about|简介|个人简介/i;
 
 export function parseMarkdownToResumeDraft(markdown: string): ResumeDraft {
   const { frontmatter, body } = parseFrontmatter(markdown);
+  const hasFrontmatter = /^---\s*\n[\s\S]*?\n---\s*\n?/.test(markdown.trim());
+
+  if (!hasFrontmatter) {
+    return parseRawResumeText(markdown, /[\u4e00-\u9fa5]/.test(markdown) ? 'zh' : 'en');
+  }
+
   const blocks = body.split(/(?=^##\s+)/m).map((block) => block.trim()).filter(Boolean);
   const summaryBlocks: string[] = [];
   const sections: ResumeSection[] = [];
@@ -159,6 +174,57 @@ export function parseMarkdownToResumeDraft(markdown: string): ResumeDraft {
     summaryTitle,
     sections,
   };
+}
+
+function removeBodyThematicBreaks(markdown: string) {
+  const lines = markdown.replace(/\r\n/g, '\n').trim().split('\n');
+  const result: string[] = [];
+  let frontmatterBreaks = 0;
+
+  for (const line of lines) {
+    const trimmed = line.trim();
+    const isThematicBreak = /^-{3,}$/.test(trimmed);
+
+    if (isThematicBreak && result.length === 0) {
+      frontmatterBreaks += 1;
+      result.push('---');
+      continue;
+    }
+
+    if (isThematicBreak && frontmatterBreaks === 1) {
+      frontmatterBreaks += 1;
+      result.push('---');
+      continue;
+    }
+
+    if (isThematicBreak) {
+      continue;
+    }
+
+    result.push(line);
+  }
+
+  return result.join('\n').trim();
+}
+
+function removeBulletMarkersFromSummary(summary: string) {
+  const lines = summary.split('\n').map((line) => line.trim()).filter(Boolean);
+
+  if (lines.length === 0 || !lines.every((line) => /^[-*•●▪]\s+/.test(line))) {
+    return summary.trim();
+  }
+
+  return lines.map((line) => line.replace(/^[-*•●▪]\s+/, '').trim()).join('\n');
+}
+
+export function formatResumeMarkdown(markdown: string): string {
+  const cleanedMarkdown = removeBodyThematicBreaks(markdown);
+  const draft = parseRawResumeText(cleanedMarkdown, /[\u4e00-\u9fa5]/.test(cleanedMarkdown) ? 'zh' : 'en');
+
+  return serializeResumeDraftToMarkdown({
+    ...draft,
+    summary: removeBulletMarkersFromSummary(draft.summary),
+  });
 }
 
 // ---------------------------------------------------------------------------

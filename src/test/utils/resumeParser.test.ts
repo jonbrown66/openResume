@@ -84,4 +84,64 @@ React、TypeScript、Next.js、性能优化
     expect(markdown).toContain('### 在线简历平台 | 2022.01 - 2023.12');
     expect(markdown).toContain('## 教育背景');
   });
+
+  it('extracts markdown heading name, bold title, and contact line from a plain markdown header', () => {
+    const rawMarkdown = `
+# 辛俊榜
+**高级软件测试工程师** · 8年经验 · Android系统测试
+8年测试经验 | xinjunbang@gmail.com | 13435399520
+
+## 个人简介
+拥有 8 年软件测试经验，长期负责 Android 系统测试、功能测试与质量保障。
+`.trim();
+
+    const draft = parseRawResumeText(rawMarkdown, 'zh');
+    const markdown = autoFormatResume(rawMarkdown, 'zh');
+
+    expect(draft.frontmatter.name).toBe('辛俊榜');
+    expect(draft.frontmatter.title).toBe('高级软件测试工程师 · 8年经验 · Android系统测试');
+    expect(draft.frontmatter.contact).toBe('13435399520 | xinjunbang@gmail.com');
+    expect(markdown).toContain('name: 辛俊榜');
+    expect(markdown).toContain('title: 高级软件测试工程师 · 8年经验 · Android系统测试');
+    expect(markdown).toContain('contact: 13435399520 | xinjunbang@gmail.com');
+  });
+
+  it('normalizes education detail lines so dates can align to the right', () => {
+    const rawMarkdown = `
+辛俊榜
+高级软件测试工程师
+
+教育背景
+河源职业技术学院
+**专科 · 软件技术** | 2015/9 - 2018/6 | 河源
+- 主修课程：JAVA程序设计、数据库技术、软件测试技术
+`.trim();
+
+    const markdown = autoFormatResume(rawMarkdown, 'zh');
+
+    expect(markdown).toContain('### 河源职业技术学院 | 2015/9 - 2018/6 | 河源');
+    expect(markdown).toContain('**专科 · 软件技术**');
+  });
+
+  it('recognizes company role date descriptors in common resume lines', () => {
+    const rawMarkdown = `
+辛俊榜
+高级软件测试工程师
+
+工作经历
+Realme移动通讯有限公司（软通动力） | Android系统模块测试负责人 | 2022-04 - 2025-12 | 深圳
+- 负责手机项目Android系统模块的测试管理与质量交付
+
+教育背景
+河源职业技术学院 | 专科 · 软件技术 | 2015/9 - 2018/6 | 河源
+- 主修课程：JAVA程序设计、数据库技术、软件测试技术
+`.trim();
+
+    const markdown = autoFormatResume(rawMarkdown, 'zh');
+
+    expect(markdown).toContain('### Android系统模块测试负责人 | 2022-04 - 2025-12 | 深圳');
+    expect(markdown).toContain('**Realme移动通讯有限公司（软通动力）**');
+    expect(markdown).toContain('### 专科 · 软件技术 | 2015/9 - 2018/6 | 河源');
+    expect(markdown).toContain('**河源职业技术学院**');
+  });
 });

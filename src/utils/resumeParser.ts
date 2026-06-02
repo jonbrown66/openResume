@@ -5,8 +5,10 @@ type SupportedLanguage = 'zh' | 'en';
 const EMAIL_REGEX = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/;
 const PHONE_REGEX = /(?:\+?\d[\d\s\-().]{6,}\d)/g;
 const DATE_RANGE_REGEX =
-  /((?:19|20)\d{2}(?:[./-]\d{1,2}(?:[./-]\d{1,2})?)?(?:\s*[—–-]\s*(?:至今|现在|Present|Current|current|至今|今))?)/i;
+  /((?:19|20)\d{2}(?:[./年-]\d{1,2}(?:[./月-]\d{1,2})?)?(?:\s*[—–-]\s*(?:(?:19|20)\d{2}(?:[./年-]\d{1,2}(?:[./月-]\d{1,2})?)?|至今|现在|Present|Current|current|今))?)/i;
 const ADDRESS_HINT_REGEX = /(北京市|上海市|深圳市|广州市|杭州|成都|区|市|Road|Street|Avenue|Location|Address)/i;
+const ORGANIZATION_HINT_REGEX = /(公司|科技|通讯|集团|有限|大学|学院|学校|University|College|Institute|Inc\.?|Ltd\.?|LLC)/i;
+const ROLE_HINT_REGEX = /(工程师|负责人|主管|经理|专员|助理|实习|本科|专科|硕士|博士|学士|Designer|Engineer|Manager|Lead|Specialist|Assistant|Bachelor|Master|PhD)/i;
 
 const SUMMARY_TITLES = {
   zh: '个人简介',
@@ -81,7 +83,23 @@ function normalizeLine(line: string) {
 }
 
 function stripMarkdownDecorators(line: string) {
-  return normalizeLine(line).replace(/^#{1,3}\s*/, '').replace(/^\*\*|\*\*$/g, '').trim();
+  return normalizeLine(line)
+    .replace(/\*\*([^*]+)\*\*/g, '$1')
+    .replace(/^#{1,3}\s*/, '')
+    .replace(/^\*\*|\*\*$/g, '')
+    .trim();
+}
+
+function stripInlineMarkdown(line: string) {
+  return normalizeLine(line)
+    .replace(/\*\*([^*]+)\*\*/g, '$1')
+    .replace(/\*([^*]+)\*/g, '$1')
+    .replace(/^#{1,3}\s*/, '')
+    .replace(/\*\*([^*]+)\*\*/g, '$1')
+    .replace(/\*([^*]+)\*/g, '$1')
+    .replace(/`([^`]+)`/g, '$1')
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+    .trim();
 }
 
 function normalizeHeadingCandidate(line: string) {
@@ -165,7 +183,7 @@ function extractAddress(lines: string[]) {
 
 function extractName(lines: string[]) {
   for (const line of lines.slice(0, 6)) {
-    const trimmed = normalizeLine(line);
+    const trimmed = stripInlineMarkdown(line);
     if (!trimmed || isLikelyContactLine(trimmed) || isLikelySectionHeading(trimmed)) {
       continue;
     }
@@ -180,7 +198,7 @@ function extractName(lines: string[]) {
 
 function extractTitle(lines: string[], name: string) {
   for (const line of lines.slice(0, 8)) {
-    const trimmed = normalizeLine(line);
+    const trimmed = stripInlineMarkdown(line);
     if (!trimmed || trimmed === name || isLikelyContactLine(trimmed) || isLikelySectionHeading(trimmed)) {
       continue;
     }
@@ -323,19 +341,75 @@ function splitHeadingAndMeta(line: string) {
   };
 }
 
+function splitEntryDescriptor(line: string) {
+  const cleaned = stripMarkdownDecorators(line);
+  const parts = cleaned.split(/\s*[|｜]\s*/).map((part) => part.trim()).filter(Boolean);
+  if (parts.length < 2) {
+    return null;
+  }
+
+  const datePartIndex = parts.findIndex((part) => DATE_RANGE_REGEX.test(part));
+  const firstDatePartIndex = datePartIndex === -1 ? parts.length : datePartIndex;
+  const descriptorParts = parts.slice(0, firstDatePartIndex);
+  const metaParts = datePartIndex === -1 ? [] : parts.slice(datePartIndex);
+
+  if (descriptorParts.length === 0 || metaParts.length === 0) {
+    return null;
+  }
+
+  if (descriptorParts.length === 1) {
+    return {
+      heading: descriptorParts[0],
+      organization: '',
+      meta: metaParts.join(' | '),
+    };
+  }
+
+  const [first, second] = descriptorParts;
+  const firstLooksOrg = ORGANIZATION_HINT_REGEX.test(first);
+  const secondLooksRole = ROLE_HINT_REGEX.test(second);
+
+  if (firstLooksOrg && secondLooksRole) {
+    return {
+      heading: second,
+      organization: first,
+      meta: metaParts.join(' | '),
+    };
+  }
+
+  return {
+    heading: first,
+    organization: descriptorParts.slice(1).join(' | '),
+    meta: metaParts.join(' | '),
+  };
+}
+
 function parseEntryBlock(block: string[]): ResumeEntry | null {
   const meaningfulLines = block.map(stripMarkdownDecorators).filter(Boolean);
   if (meaningfulLines.length === 0) {
     return null;
   }
 
-  const { heading, meta } = splitHeadingAndMeta(meaningfulLines[0]);
-  let organization = '';
+  const descriptor = splitEntryDescriptor(meaningfulLines[0]);
+  const { heading, meta: initialMeta } = descriptor ?? splitHeadingAndMeta(meaningfulLines[0]);
+  let meta = initialMeta;
+  let organization = descriptor?.organization ?? '';
   const contentLines: string[] = [];
 
   for (const line of meaningfulLines.slice(1)) {
     if (isBulletLine(line)) {
       contentLines.push(normalizeBullet(line));
+      continue;
+    }
+
+    const organizationMetaParts = line.split(/\s*[|｜]\s*/);
+    if (
+      !organization &&
+      organizationMetaParts.length >= 2 &&
+      DATE_RANGE_REGEX.test(organizationMetaParts.slice(1).join(' | '))
+    ) {
+      organization = organizationMetaParts[0].trim();
+      meta = meta ? `${meta} | ${organizationMetaParts.slice(1).join(' | ').trim()}` : organizationMetaParts.slice(1).join(' | ').trim();
       continue;
     }
 
@@ -356,6 +430,11 @@ function parseEntryBlock(block: string[]): ResumeEntry | null {
 }
 
 function parseSkillSection(lines: string[], lang: SupportedLanguage): ResumeEntry[] {
+  const blocks = buildEntryBlocks(lines);
+  if (blocks.some((block) => /^#{0,3}\s*技能概览$/i.test(stripMarkdownDecorators(block[0] ?? '')))) {
+    return blocks.map(parseEntryBlock).filter((entry): entry is ResumeEntry => Boolean(entry));
+  }
+
   const items = lines
     .flatMap((line) =>
       normalizeLine(line)
@@ -371,7 +450,7 @@ function parseSkillSection(lines: string[], lang: SupportedLanguage): ResumeEntr
 
   return [
     {
-      heading: lang === 'zh' ? '技能概览' : 'Skills',
+      heading: '',
       meta: '',
       organization: '',
       content: items.map((item) => `- ${item}`).join('\n'),

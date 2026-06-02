@@ -32,11 +32,19 @@ const PROVIDERS: { id: ApiProviderId; nameKey: string; icon: React.ReactNode }[]
 ];
 
 const DEFAULT_MODELS: Record<ApiProviderId, string[]> = {
-  openai: ['gpt-5.2', 'gpt-5.2-pro', 'gpt-5-mini', 'gpt-5'],
-  anthropic: ['claude-opus-4-6', 'claude-sonnet-4-6', 'claude-haiku-4-5', 'claude-3-7-sonnet-20250219'],
-  gemini: ['gemini-3-pro-preview', 'gemini-3-flash-preview', 'gemini-2.5-pro-preview', 'gemini-2.5-flash-preview'],
-  deepseek: ['deepseek-chat', 'deepseek-reasoner', 'deepseek-v3.2', 'deepseek-r1'],
-  openrouter: ['anthropic/claude-opus-4-6', 'openai/gpt-5.2', 'google/gemini-3-pro-preview', 'deepseek/deepseek-chat'],
+  openai: ['gpt-5.2', 'gpt-5.2-pro', 'gpt-5.1', 'gpt-5-mini', 'gpt-5-nano'],
+  anthropic: ['claude-opus-4-8', 'claude-sonnet-4-6', 'claude-haiku-4-5-20251001'],
+  gemini: ['gemini-3-pro-preview', 'gemini-3-flash-preview'],
+  deepseek: ['deepseek-v4-pro', 'deepseek-v4-flash'],
+  openrouter: [
+    'anthropic/claude-opus-4.8',
+    'openai/gpt-5.5',
+    'openai/gpt-5.4',
+    'google/gemini-3.5-flash',
+    'google/gemini-3-pro-preview',
+    'deepseek/deepseek-v4-pro',
+    'deepseek/deepseek-v4-flash',
+  ],
 };
 
 const ENDPOINT_PLACEHOLDERS: Record<ApiProviderId, string> = {

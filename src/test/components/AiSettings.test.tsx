@@ -93,4 +93,21 @@ describe('AiSettings', () => {
 
     expect(screen.queryByPlaceholderText('Enter a custom model name...')).not.toBeInTheDocument();
   });
+
+  it('treats every provider default model as a preset', () => {
+    const providers = Object.keys(DEFAULT_SETTINGS.providers) as Array<keyof typeof DEFAULT_SETTINGS.providers>;
+
+    providers.forEach((provider) => {
+      const { unmount } = render(
+        <AiSettings
+          settings={createSettings({ activeProvider: provider })}
+          onUpdateProvider={vi.fn()}
+          onSetActiveProvider={vi.fn()}
+        />,
+      );
+
+      expect(screen.queryByPlaceholderText('Enter a custom model name...')).not.toBeInTheDocument();
+      unmount();
+    });
+  });
 });

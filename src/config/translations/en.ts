@@ -19,6 +19,7 @@ export const enTranslations = {
     'Failed to import the file. Please use a valid PDF, Word, Markdown, or TXT file.',
   template: 'Template',
   markdownMode: 'Markdown',
+  formatMarkdown: 'Format',
   blockMode: 'Blocks',
   zoomIn: 'Zoom In',
   zoomOut: 'Zoom Out',
@@ -121,6 +122,9 @@ export const enTranslations = {
   assistantMissingModel: 'Please configure a model before using the assistant.',
   assistantRequestFailed: 'Assistant request failed',
   assistantNoModel: 'No model selected',
+  assistantAiNotConfigured:
+    'The current AI provider is not fully configured. Configure it before using the assistant.',
+  assistantConfigureAi: 'Configure',
   assistantMemoryHint: 'Only the latest 20 messages are kept.',
   llmConfigTitle: 'AI Engine Configuration',
   llmConfigDesc: 'Manage your AI interface credentials',

@@ -5,7 +5,7 @@ import { defaultMarkdownZh } from '@/constants';
 import { useCanvasScale } from '@/hooks/useCanvasScale';
 import type { ResumeDraft } from '@/types/resume';
 import { DEFAULT_THEME_CONFIG, type ResumeThemeConfig } from '@/types/theme';
-import { parseMarkdownToResumeDraft, serializeResumeDraftToMarkdown } from '@/utils/resumeDocument';
+import { formatResumeMarkdown, parseMarkdownToResumeDraft, serializeResumeDraftToMarkdown } from '@/utils/resumeDocument';
 import type { ResumeProject } from '@/types/resumeProject';
 
 interface UseResumeWorkspaceStateOptions {
@@ -112,6 +112,15 @@ export function useResumeWorkspaceState({
     setEditorMode('markdown');
   }, []);
 
+  const handleFormatMarkdown = useCallback(() => {
+    const nextMarkdown = formatResumeMarkdown(markdown);
+    const parsed = parseMarkdownToResumeDraft(nextMarkdown);
+    markdownDraftCache.current = parsed;
+    lastMarkdownRef.current = nextMarkdown;
+    setMarkdown(nextMarkdown);
+    setDraft(parsed);
+  }, [markdown]);
+
   useEffect(() => {
     if (debouncedMarkdown !== markdown) {
       return;
@@ -166,6 +175,7 @@ export function useResumeWorkspaceState({
     updateCustomCss,
     handleAssistantApply,
     handleImportComplete,
+    handleFormatMarkdown,
     activeDraft,
     editorContainerRef,
     previewContainerRef,

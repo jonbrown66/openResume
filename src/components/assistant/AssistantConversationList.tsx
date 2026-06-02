@@ -20,7 +20,7 @@ export function AssistantConversationList({
   return (
     <div
       data-testid="assistant-conversation"
-      className="min-h-0 flex-1 space-y-3 overflow-y-auto px-4 py-3 sm:px-5"
+      className="min-h-0 flex-1 space-y-4 overflow-y-auto px-4 py-4 sm:px-5 sm:py-5"
     >
       {conversation.map((message) => (
         <div
@@ -28,10 +28,10 @@ export function AssistantConversationList({
           className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
         >
           <div
-            className={`max-w-[92%] rounded-2xl px-4 py-3 text-sm leading-6 shadow-sm ${
+            className={`max-w-[88%] px-4 py-3 text-sm leading-6 ${
               message.role === 'user'
-                ? 'app-primary'
-                : 'bg-[var(--app-surface-muted)] text-[var(--secondary-foreground)]'
+                ? 'app-primary rounded-[18px] rounded-br-md shadow-sm'
+                : 'rounded-[18px] rounded-bl-md bg-[var(--app-surface-muted)]/85 text-[var(--secondary-foreground)] shadow-[0_8px_24px_-20px_rgba(40,52,25,0.5)]'
             }`}
           >
             <p className="whitespace-pre-wrap break-words">{message.content}</p>

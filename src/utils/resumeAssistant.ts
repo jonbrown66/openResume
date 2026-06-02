@@ -1,5 +1,6 @@
 import type { AppSettings, ApiProvider } from '@/config/settings';
 import type { AppLanguage } from '@/config/ui';
+import { sanitizeMarkdownImagesForAi } from '@/utils/aiMarkdownSanitizer';
 
 const REQUEST_TIMEOUT = 60000;
 
@@ -84,12 +85,6 @@ function getSystemPrompt(mode: ResumeAssistantMode, lang: AppLanguage): string {
     : 'You are a professional resume advisor. Use the current resume to provide direct, specific, actionable guidance.';
 }
 
-function sanitizeMarkdownForAi(markdown: string): string {
-  return markdown
-    .replace(/image: data:image\/[^;]+;base64,[^\n]+/g, 'image: [avatar]')
-    .replace(/!\[([^\]]*)\]\(data:image\/[^;]+;base64,[^)]+\)/g, '![$1](avatar)');
-}
-
 function getUserPrompt({
   mode,
   userMessage,
@@ -97,7 +92,7 @@ function getUserPrompt({
   history,
   lang,
 }: Omit<ResumeAssistantRequest, 'settings'>): string {
-  const sanitizedMarkdown = sanitizeMarkdownForAi(markdown);
+  const sanitizedMarkdown = sanitizeMarkdownImagesForAi(markdown);
 
   if (mode === 'edit') {
     return `

@@ -1,5 +1,6 @@
 import type { AppLanguage } from '@/config/ui';
 import type { AppSettings } from '@/config/settings';
+import { sanitizeMarkdownImagesForAi } from '@/utils/aiMarkdownSanitizer';
 
 const REQUEST_TIMEOUT = 60000;
 
@@ -51,7 +52,7 @@ export async function aiFormatResume(
     throw new Error('missing-model');
   }
 
-  const prompt = getFormatPrompt(lang, rawText);
+  const prompt = getFormatPrompt(lang, sanitizeMarkdownImagesForAi(rawText));
 
   if (provider.id === 'anthropic') {
     const endpoint = provider.baseUrl?.endsWith('/') 
