@@ -1,6 +1,4 @@
-import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Settings2, Cpu, Palette, PenLine, X } from 'lucide-react';
+import { Settings2, X } from 'lucide-react';
 import type { AppSettings, ApiProviderId } from '@/config/settings';
 import { translations } from '@/config/ui';
 import { 
@@ -9,8 +7,7 @@ import {
   DialogTitle,
   DialogClose,
 } from "@/components/ui/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { AiSettings, AppearanceSettings } from '@/components/settings';
+import { AiSettings } from '@/components/settings';
 import { cn } from '@/lib/utils';
 
 interface SettingsModalProps {
@@ -30,9 +27,7 @@ export function SettingsModal({
   lang,
   onUpdateProvider,
   onSetActiveProvider,
-  onUpdateSettings,
 }: SettingsModalProps) {
-  const [activeTab, setActiveTab] = useState("ai");
   const t = translations[lang];
 
   return (
@@ -58,69 +53,13 @@ export function SettingsModal({
           </DialogClose>
         </div>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="px-8 flex flex-col h-full">
-          <TabsList className="w-full h-12 bg-[var(--app-surface-muted)] p-1 rounded-lg border border-[var(--app-border)] gap-1 mb-6">
-            <TabsTrigger 
-              value="ai" 
-              className={cn(
-                "flex-1 h-full rounded-xl gap-2 text-sm font-medium transition-all duration-200",
-                "data-[state=active]:bg-[var(--app-accent)] data-[state=active]:text-[var(--primary-foreground)] data-[state=active]:shadow-sm"
-              )}
-            >
-              <Cpu className="w-4 h-4" />
-              {t.tabAi}
-            </TabsTrigger>
-            <TabsTrigger 
-              value="appearance" 
-              className={cn(
-                "flex-1 h-full rounded-xl gap-2 text-sm font-medium transition-all duration-200",
-                "data-[state=active]:bg-[var(--app-accent)] data-[state=active]:text-[var(--primary-foreground)] data-[state=active]:shadow-sm"
-              )}
-            >
-              <Palette className="w-4 h-4" />
-              {t.tabAppearance}
-            </TabsTrigger>
-            <TabsTrigger 
-              value="editor" 
-              className={cn(
-                "flex-1 h-full rounded-xl gap-2 text-sm font-medium transition-all duration-200",
-                "data-[state=active]:bg-[var(--app-accent)] data-[state=active]:text-[var(--primary-foreground)] data-[state=active]:shadow-sm"
-              )}
-            >
-              <PenLine className="w-4 h-4" />
-              {t.tabEditor}
-            </TabsTrigger>
-          </TabsList>
-
-          <AnimatePresence mode="wait">
-            <TabsContent key="ai" value="ai" className="focus-visible:outline-none min-h-[400px]">
-              <AiSettings
-                settings={settings}
-                onUpdateProvider={onUpdateProvider}
-                onSetActiveProvider={onSetActiveProvider}
-              />
-            </TabsContent>
-
-            <TabsContent key="appearance" value="appearance" className="focus-visible:outline-none min-h-[400px]">
-              <AppearanceSettings
-                settings={settings}
-                onUpdateSettings={onUpdateSettings}
-              />
-            </TabsContent>
-
-            <TabsContent key="editor" value="editor" className="focus-visible:outline-none min-h-[400px]">
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                className="flex flex-col items-center justify-center h-[300px] text-zinc-400"
-              >
-                <PenLine className="w-12 h-12 mb-4 opacity-20" />
-                <p>{t.tabEditor} - {lang === 'zh' ? '暂不可用' : 'Coming soon'}</p>
-              </motion.div>
-            </TabsContent>
-          </AnimatePresence>
-        </Tabs>
+        <div className="px-8 min-h-[400px]">
+          <AiSettings
+            settings={settings}
+            onUpdateProvider={onUpdateProvider}
+            onSetActiveProvider={onSetActiveProvider}
+          />
+        </div>
         
         <div className="pb-8" />
       </DialogContent>
