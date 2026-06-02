@@ -191,7 +191,10 @@ function serializeSection(section: ResumeSection): string {
 
   for (const entry of section.entries) {
     lines.push('');
-    lines.push(`### ${entry.heading}${entry.meta ? ` | ${entry.meta}` : ''}`);
+
+    if (entry.heading || entry.meta) {
+      lines.push(`### ${entry.heading}${entry.meta ? ` | ${entry.meta}` : ''}`.trim());
+    }
 
     if (entry.organization) {
       lines.push(`**${entry.organization}**`);

@@ -59,4 +59,25 @@ title: Product Designer
     });
     expect(serializeResumeDraftToMarkdown(draft)).toContain('### Resume Studio | 2024 - Present');
   });
+
+  it('does not emit empty level-three headings for untitled section content', () => {
+    const markdown = `---
+name: 张三
+title: 行政主管
+---
+
+## 专业技能
+
+- 办公室行政与运营管理
+- 标准作业流程（SOP）设计与优化
+- 预算编制与成本控制
+`;
+
+    const draft = parseMarkdownToResumeDraft(markdown);
+    const serialized = serializeResumeDraftToMarkdown(draft);
+
+    expect(serialized).toContain('## 专业技能');
+    expect(serialized).toContain('- 办公室行政与运营管理');
+    expect(serialized).not.toMatch(/^###\s*$/m);
+  });
 });

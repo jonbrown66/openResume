@@ -61,22 +61,17 @@ function createEntry(heading: string, meta: string, organization: string, conten
       spacing: { before: 200, after: 100 },
       children: [
         new TextRun({ text: heading, bold: true, size: 22 }),
+        ...(organization
+          ? [
+              new TextRun({ text: " / ", size: 22, color: "888888" }),
+              new TextRun({ text: organization, size: 22, color: "888888" }),
+            ]
+          : []),
         new TextRun({ text: "  ", size: 22 }),
         new TextRun({ text: meta, italics: true, size: 20, color: "666666" }),
       ],
     })
   );
-
-  if (organization) {
-    children.push(
-      new Paragraph({
-        spacing: { before: 50, after: 100 },
-        children: [
-          new TextRun({ text: organization, bold: true, size: 20 }),
-        ],
-      })
-    );
-  }
 
   if (content) {
     const lines = content.split('\n').filter(line => line.trim());

@@ -123,11 +123,17 @@ MarkdownRenderer.displayName = 'MarkdownRenderer';
 
 const EntryItem = memo(({ entry }: { entry: ResumeEntry }) => (
   <div>
-    <div className="resume-h3-split">
-      <h3>{entry.heading}</h3>
-      {entry.meta && <span>{entry.meta}</span>}
-    </div>
-    {entry.organization && <p><strong>{entry.organization}</strong></p>}
+    {(entry.heading || entry.organization || entry.meta) && (
+      <div className="resume-h3-split">
+        <h3>
+          {entry.heading}
+          {entry.organization && (
+            <span className="resume-entry-organization"> / {entry.organization}</span>
+          )}
+        </h3>
+        {entry.meta && <span className="resume-entry-meta">{entry.meta}</span>}
+      </div>
+    )}
     {entry.content && <MarkdownRenderer content={entry.content} />}
   </div>
 ));

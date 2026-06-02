@@ -30,13 +30,31 @@ export async function POST(request: NextRequest) {
       await page.setViewport({ width: A4_WIDTH_PX, height: A4_HEIGHT_PX });
       
       await page.setContent(html, { waitUntil: 'networkidle2', timeout: 30000 });
+      await page.emulateMediaType('screen');
       
       await page.evaluate(() => {
         return document.fonts.ready;
       });
 
+      const paperSize = await page.evaluate(() => {
+        const paper = document.querySelector('.resume-paper') as HTMLElement | null;
+        if (!paper) {
+          return { width: 794, height: 1123 };
+        }
+
+        const rect = paper.getBoundingClientRect();
+        const rawWidth = Math.ceil(rect.width || paper.scrollWidth || 794);
+        const rawHeight = Math.ceil(rect.height || paper.scrollHeight || 1123);
+
+        return {
+          width: Math.max(1, Math.min(rawWidth, 1200)),
+          height: Math.max(1, Math.min(rawHeight, 3200)),
+        };
+      });
+
       const pdf = await page.pdf({
-        format: 'A4',
+        width: `${paperSize.width}px`,
+        height: `${paperSize.height}px`,
         scale: 1,
         printBackground: true,
         margin: { top: '0', right: '0', bottom: '0', left: '0' },
