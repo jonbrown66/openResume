@@ -1,4 +1,5 @@
-import { type ChangeEvent, type RefObject, memo, useCallback, useMemo, useRef, useState } from 'react';
+import { type ChangeEvent, type RefObject, memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Languages,
@@ -91,13 +92,27 @@ export const AppHeader = memo(function AppHeader({
   const [isStylePanelOpen, setIsStylePanelOpen] = useState(false);
   const [isMobileMoreOpen, setIsMobileMoreOpen] = useState(false);
   const styleButtonRef = useRef<HTMLButtonElement>(null);
+  const mobileMoreRef = useRef<HTMLDivElement>(null);
+  const mobileMoreMenuRef = useRef<HTMLDivElement>(null);
+  const mobileMoreButtonRef = useRef<HTMLButtonElement>(null);
+  const mobileStyleTriggerRef = useRef<HTMLButtonElement>(null);
+  const [mobileMoreRect, setMobileMoreRect] = useState<DOMRect | null>(null);
+  const [styleAnchorRect, setStyleAnchorRect] = useState<DOMRect | null>(null);
 
   const handleOpenSettings = useCallback(() => {
     setIsMobileMoreOpen(false);
     setIsSettingsOpen(true);
   }, []);
   const handleCloseSettings = useCallback(() => setIsSettingsOpen(false), []);
-  const handleToggleStylePanel = useCallback(() => setIsStylePanelOpen(prev => !prev), []);
+  const handleToggleStylePanel = useCallback(() => {
+    setStyleAnchorRect(styleButtonRef.current?.getBoundingClientRect() ?? null);
+    setIsStylePanelOpen(prev => !prev);
+  }, []);
+  const handleMobileStylePanelOpen = useCallback(() => {
+    setStyleAnchorRect(mobileStyleTriggerRef.current?.getBoundingClientRect() ?? null);
+    setIsStylePanelOpen(true);
+    setIsMobileMoreOpen(false);
+  }, []);
   const handleToggleTheme = useCallback(() => {
     setIsMobileMoreOpen(false);
     onThemeToggle();
@@ -107,17 +122,55 @@ export const AppHeader = memo(function AppHeader({
     onLanguageToggle();
   }, [onLanguageToggle]);
 
+  useEffect(() => {
+    if (!isMobileMoreOpen) return;
+
+    const handlePointerDown = (event: PointerEvent) => {
+      const target = event.target as Node;
+      if (!mobileMoreRef.current?.contains(target) && !mobileMoreMenuRef.current?.contains(target)) {
+        setIsMobileMoreOpen(false);
+      }
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsMobileMoreOpen(false);
+      }
+    };
+
+    document.addEventListener('pointerdown', handlePointerDown);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('pointerdown', handlePointerDown);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isMobileMoreOpen]);
+
+  useEffect(() => {
+    if (!isMobileMoreOpen) return;
+
+    const updateMenuPosition = () => {
+      setMobileMoreRect(mobileMoreButtonRef.current?.getBoundingClientRect() ?? null);
+    };
+
+    updateMenuPosition();
+    window.addEventListener('resize', updateMenuPosition);
+    window.addEventListener('scroll', updateMenuPosition, true);
+    return () => {
+      window.removeEventListener('resize', updateMenuPosition);
+      window.removeEventListener('scroll', updateMenuPosition, true);
+    };
+  }, [isMobileMoreOpen]);
+
   const stylePanelProps = useMemo(() => ({
     triggerRef: styleButtonRef,
-    anchorRect: isStylePanelOpen && styleButtonRef.current 
-      ? styleButtonRef.current.getBoundingClientRect() 
-      : null,
+    anchorRect: isStylePanelOpen ? styleAnchorRect : null,
     theme: resumeTheme,
     lang,
     onChange: onThemeChange,
     onReset: onThemeReset,
     onClose: () => setIsStylePanelOpen(false),
-  }), [resumeTheme, lang, onThemeChange, onThemeReset, isStylePanelOpen]);
+  }), [resumeTheme, lang, onThemeChange, onThemeReset, isStylePanelOpen, styleAnchorRect]);
 
   const exportMenuProps = useMemo(() => ({
     canvasRef,
@@ -240,10 +293,15 @@ export const AppHeader = memo(function AppHeader({
           <Github size={16} />
         </motion.a>
 
-        <div className="relative sm:hidden">
+        <div className="relative sm:hidden" ref={mobileMoreRef}>
           <motion.button
+            ref={mobileMoreButtonRef}
             type="button"
-            onClick={() => setIsMobileMoreOpen(prev => !prev)}
+            onClick={() => {
+              setIsStylePanelOpen(false);
+              setMobileMoreRect(mobileMoreButtonRef.current?.getBoundingClientRect() ?? null);
+              setIsMobileMoreOpen(prev => !prev);
+            }}
             className="app-control flex min-h-10 min-w-10 items-center justify-center rounded-lg p-2 transition-colors"
             aria-label={t.moreActions}
             aria-expanded={isMobileMoreOpen}
@@ -252,22 +310,29 @@ export const AppHeader = memo(function AppHeader({
           >
             <MoreHorizontal size={18} />
           </motion.button>
-          <AnimatePresence>
-            {isMobileMoreOpen && (
+          {typeof document !== 'undefined' ? createPortal(
+            <AnimatePresence>
+              {isMobileMoreOpen && (
               <motion.div
+                ref={mobileMoreMenuRef}
                 role="menu"
                 aria-label={t.moreActions}
                 initial={{ opacity: 0, y: -4, scale: 0.98 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: -4, scale: 0.98 }}
                 transition={{ duration: 0.14, ease: 'easeOut' }}
-                className="app-panel absolute right-0 top-full z-50 mt-2 w-56 rounded-xl border p-1.5"
+                style={{
+                  position: 'fixed',
+                  top: mobileMoreRect ? mobileMoreRect.bottom + 8 : 56,
+                  right: mobileMoreRect ? Math.max(8, window.innerWidth - mobileMoreRect.right) : 8,
+                }}
+                className="app-panel z-[120] w-56 rounded-xl border p-1.5"
               >
                 <button
-                  ref={styleButtonRef}
+                  ref={mobileStyleTriggerRef}
                   type="button"
                   role="menuitem"
-                  onClick={handleToggleStylePanel}
+                  onClick={handleMobileStylePanelOpen}
                   className={mobileMenuItemClass}
                 >
                   <Palette size={16} />
@@ -312,8 +377,10 @@ export const AppHeader = memo(function AppHeader({
                   <span>{t.githubProject}</span>
                 </a>
               </motion.div>
-            )}
-          </AnimatePresence>
+              )}
+            </AnimatePresence>,
+            document.body
+          ) : null}
         </div>
         
         <div className="hidden sm:block w-px h-4 bg-[var(--app-border)] mx-1 sm:mx-2"></div>

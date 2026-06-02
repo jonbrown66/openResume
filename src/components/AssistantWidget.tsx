@@ -143,7 +143,7 @@ export function AssistantWidget({
   };
 
   return (
-    <div className="fixed inset-x-2 bottom-4 z-40 flex justify-end print:hidden sm:inset-x-auto sm:bottom-6 sm:right-6">
+    <div className="pointer-events-none fixed inset-x-2 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-40 flex justify-end print:hidden sm:inset-x-auto sm:bottom-6 sm:right-6">
       <AnimatePresence
         initial={false}
         onExitComplete={() => {
@@ -162,7 +162,7 @@ export function AssistantWidget({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 12, scale: 0.98 }}
             transition={{ duration: 0.18, ease: 'easeOut' }}
-            className="app-panel flex h-[min(720px,calc(100dvh-5.5rem))] w-[calc(100vw-1rem)] flex-col overflow-hidden rounded-[24px] border sm:h-[min(680px,calc(100dvh-3rem))] sm:w-[min(560px,calc(100vw-2rem))] sm:rounded-[28px]"
+            className="app-panel pointer-events-auto flex h-[min(720px,calc(100dvh-5.5rem))] w-[calc(100vw-1rem)] flex-col overflow-hidden rounded-[24px] border sm:h-[min(680px,calc(100dvh-3rem))] sm:w-[min(560px,calc(100vw-2rem))] sm:rounded-[28px]"
           >
             <AssistantHeader
               title={t.assistantTitle}
@@ -197,7 +197,7 @@ export function AssistantWidget({
           onClick={handleOpen}
           whileHover={{ scale: 1.04 }}
           whileTap={{ scale: 0.96 }}
-          className="app-primary ml-auto inline-flex h-14 w-14 items-center justify-center rounded-full transition-colors"
+          className="app-primary pointer-events-auto ml-auto inline-flex h-14 w-14 items-center justify-center rounded-full transition-colors"
         >
           <Bot size={22} />
         </motion.button>

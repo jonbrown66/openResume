@@ -63,10 +63,8 @@ interface ResumeRendererProps {
 const CustomCssInjector = memo(({ css, id }: { css: string; id: string }) => {
   if (!css) return null;
   const protectedStyles = `
-    .template-classic h1, .template-minimal h1, .template-standard h1,
-    .template-classic h2, .template-minimal h2, .template-standard h2,
-    .template-sidebar h1, .template-sidebar h2 {
-      color: inherit !important;
+    .resume-template .resume-header h1 {
+      color: var(--resume-ink) !important;
     }
   `;
   return (
@@ -150,59 +148,45 @@ const SectionItem = memo(({ section, index }: { section: ResumeSection; index: n
 SectionItem.displayName = 'SectionItem';
 
 const HeaderClassic = memo(({ frontmatter }: { frontmatter: ResumeDraft['frontmatter'] }) => (
-  <div className="bg-[#EAEAEA] p-6 flex mb-4 shrink-0">
-    <div className="w-1/2 flex flex-col justify-center">
-      <h1 className="text-[2.5rem] font-black text-[var(--primary-color)] tracking-widest uppercase leading-none mb-2">
+  <div className="resume-header resume-header-classic">
+    <div className="resume-header-main">
+      <p className="resume-kicker">{frontmatter.title || 'Title'}</p>
+      <h1>
         {(frontmatter.name || 'NAME').split(' ').map((word) => (
           <span key={word} className="block">{word}</span>
         ))}
       </h1>
-      <h2 className="text-xl text-[var(--secondary-color)] mt-2 font-medium">
-        {frontmatter.title || 'Title'}
-      </h2>
-      <p className="text-xs text-[#6b7280] mt-4 tracking-wider font-medium">
+      <p className="resume-contact">
         {frontmatter.contact || 'Contact Info'}
       </p>
     </div>
-    <div className="w-1/2 flex justify-end items-center pr-2">
-      <Avatar src={frontmatter.image} size="xl" shape="square" />
+    <div className="resume-header-media">
+      <Avatar src={frontmatter.image} size="xl" shape="square" className="resume-avatar" />
     </div>
   </div>
 ));
 HeaderClassic.displayName = 'HeaderClassic';
 
 const HeaderStandard = memo(({ frontmatter }: { frontmatter: ResumeDraft['frontmatter'] }) => (
-  <div className="mb-4 shrink-0 border-b-2 border-[var(--primary-color)] pb-4">
-    <div className="flex">
-      <div className="w-1/2 flex flex-col justify-center">
-        <h1 className="text-3xl font-bold text-[var(--primary-color)] uppercase tracking-tight mb-1">
-          {frontmatter.name || 'NAME'}
-        </h1>
-        <h2 className="text-lg font-bold text-[var(--secondary-color)] uppercase">
-          {frontmatter.title || 'Title'}
-        </h2>
-        <p className="text-sm text-[#4b5563] mt-2">
-          {frontmatter.contact?.split('|').map((item) => item.trim()).join('  ·  ') || 'Contact Info'}
-        </p>
-      </div>
-      <div className="w-1/2 flex justify-end items-center pr-2">
-        <Avatar src={frontmatter.image} size="lg" shape="circle" />
-      </div>
+  <div className="resume-header resume-header-standard">
+    <div>
+      <h1>{frontmatter.name || 'NAME'}</h1>
+      <p className="resume-kicker">{frontmatter.title || 'Title'}</p>
     </div>
+    <p className="resume-contact">
+      {frontmatter.contact?.split('|').map((item) => item.trim()).join('  ·  ') || 'Contact Info'}
+    </p>
+    <Avatar src={frontmatter.image} size="md" shape="circle" className="resume-avatar" />
   </div>
 ));
 HeaderStandard.displayName = 'HeaderStandard';
 
 const HeaderMinimal = memo(({ frontmatter }: { frontmatter: ResumeDraft['frontmatter'] }) => (
-  <div className="pb-5 flex flex-col items-center text-center border-b border-[#d1d5db] mb-4 shrink-0">
-    <Avatar src={frontmatter.image} size="md" shape="circle" className="mb-4" />
-    <h1 className="text-3xl font-serif font-bold text-[var(--primary-color)] uppercase tracking-widest mb-2">
-      {frontmatter.name || 'NAME'}
-    </h1>
-    <h2 className="text-base text-[#4b5563] tracking-widest uppercase mb-3">
-      {frontmatter.title || 'Title'}
-    </h2>
-    <p className="text-xs text-[#6b7280] tracking-widest">
+  <div className="resume-header resume-header-minimal">
+    <Avatar src={frontmatter.image} size="md" shape="circle" className="resume-avatar" />
+    <p className="resume-kicker">{frontmatter.title || 'Title'}</p>
+    <h1>{frontmatter.name || 'NAME'}</h1>
+    <p className="resume-contact">
       {frontmatter.contact || 'Contact Info'}
     </p>
   </div>
@@ -216,16 +200,18 @@ function renderHeader(draft: ResumeDraft, template: string) {
 }
 
 const SidebarTemplate = memo(({ draft, style }: { draft: ResumeDraft; style: React.CSSProperties }) => (
-  <div style={style} className={`template-sidebar h-full p-[var(--page-margin)] flex flex-col box-border bg-[#FDFBF7]`}>
-    <div className="text-center mb-6 flex flex-col items-center shrink-0">
-      <Avatar src={draft.frontmatter.image} size="md" shape="circle" className="mb-4" />
-      <h1 className="text-4xl font-bold text-[var(--primary-color)] uppercase tracking-widest mb-2">
-        {draft.frontmatter.name || 'NAME'}
-      </h1>
-      <h2 className="text-lg text-[var(--secondary-color)] mb-3 uppercase tracking-widest">
-        {draft.frontmatter.title || 'Title'}
-      </h2>
-      <p className="text-xs text-[#6b7280]">
+  <div style={style} className="template-sidebar resume-template h-full p-[var(--page-margin)] flex flex-col box-border">
+    <div className="resume-header resume-header-sidebar">
+      <Avatar src={draft.frontmatter.image} size="md" shape="circle" className="resume-avatar" />
+      <div>
+        <h1>
+          {draft.frontmatter.name || 'NAME'}
+        </h1>
+        <p className="resume-kicker">
+          {draft.frontmatter.title || 'Title'}
+        </p>
+      </div>
+      <p className="resume-contact">
         {draft.frontmatter.contact?.split('|').map((item) => item.trim()).join('  |  ') || 'Contact Info'}
       </p>
     </div>
@@ -286,10 +272,10 @@ export const ResumeRenderer = memo(({ markdown, draft, template = 'classic', the
   }
 
   return (
-    <div style={style} className={`template-${template} h-full p-[var(--page-margin)] flex flex-col box-border bg-white`}>
+    <div style={style} className={`template-${template} resume-template h-full p-[var(--page-margin)] flex flex-col box-border`}>
       <CustomCssInjector css={theme.customCss} id={customCssId} />
       {renderHeader(resumeDraft, template)}
-      <div className="resume-content text-[var(--font-size)] text-[#374151] leading-[var(--line-height)] flex-1">
+      <div className="resume-content text-[var(--font-size)] leading-[var(--line-height)] flex-1">
         {resumeDraft.summary && (
           <div>
             <h2>{getSummaryTitle(resumeDraft)}</h2>
