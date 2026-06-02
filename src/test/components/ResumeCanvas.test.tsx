@@ -14,7 +14,7 @@ describe('ResumeCanvas', () => {
 
     const paper = screen.getByText('Resume content').parentElement;
 
-    expect(paper).toHaveClass('resume-paper', 'flex', 'flex-col');
+    expect(paper).toHaveClass('resume-paper', 'flex', 'flex-col', '[contain:layout_paint_style]');
     expect(paper).toHaveStyle({
       width: `${pageWidthPx}px`,
       height: 'auto',

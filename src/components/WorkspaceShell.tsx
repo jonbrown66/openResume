@@ -1,8 +1,7 @@
-import type { ChangeEvent, RefObject } from 'react';
+import { lazy, Suspense, type ChangeEvent, type RefObject } from 'react';
 import { motion } from 'framer-motion';
 
 import { AppHeader } from '@/components/AppHeader';
-import { AssistantWidget } from '@/components/AssistantWidget';
 import { EditorPane } from '@/components/EditorPane';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { ImportNoticeBanner } from '@/components/ImportNoticeBanner';
@@ -21,6 +20,12 @@ import { slideUpVariants } from '@/lib/motion';
 import type { ResumeDraft } from '@/types/resume';
 import type { ResumeProject } from '@/types/resumeProject';
 import type { ResumeThemeConfig } from '@/types/theme';
+
+const AssistantWidget = lazy(() =>
+  import('@/components/AssistantWidget').then((module) => ({
+    default: module.AssistantWidget,
+  })),
+);
 
 interface WorkspaceShellProps {
   settings: AppSettings;
@@ -214,14 +219,16 @@ export function WorkspaceShell({
       </main>
 
       <ErrorBoundary>
-        <AssistantWidget
-          lang={lang}
-          markdown={markdown}
-          projectId={currentProject?.id ?? 'default-project'}
-          settings={settings}
-          translations={t}
-          onApplyMarkdown={onAssistantApply}
-        />
+        <Suspense fallback={null}>
+          <AssistantWidget
+            lang={lang}
+            markdown={markdown}
+            projectId={currentProject?.id ?? 'default-project'}
+            settings={settings}
+            translations={t}
+            onApplyMarkdown={onAssistantApply}
+          />
+        </Suspense>
       </ErrorBoundary>
     </>
   );

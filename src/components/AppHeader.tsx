@@ -1,4 +1,4 @@
-import { type ChangeEvent, type RefObject, memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { lazy, Suspense, type ChangeEvent, type RefObject, memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -20,7 +20,6 @@ import type { AppLanguage, AppTheme, TranslationSet, ResumeTemplate } from '@/co
 import type { AppSettings, ApiProviderId } from '@/config/settings';
 import type { ResumeDraft } from '@/types/resume';
 import type { ResumeProject } from '@/types/resumeProject';
-import { SettingsModal } from './SettingsModal';
 import { ExportMenu } from './ExportMenu';
 import { ProjectSelector } from './ProjectSelector';
 import type { ResumeThemeConfig } from '@/types/theme';
@@ -28,6 +27,12 @@ import { ThemeEditorPanel } from './ThemeEditorPanel';
 import { buttonHoverVariants, springTransition } from '@/lib/motion';
 
 const PROJECT_GITHUB_URL = 'https://github.com/jonbrown66/openResume';
+
+const SettingsModal = lazy(() =>
+  import('./SettingsModal').then((module) => ({
+    default: module.SettingsModal,
+  })),
+);
 
 interface AppHeaderProps {
   fileInputRef: RefObject<HTMLInputElement | null>;
@@ -440,15 +445,19 @@ export const AppHeader = memo(function AppHeader({
         </ExportMenu>
       </div>
 
-      <SettingsModal
-        isOpen={isSettingsOpen}
-        onClose={handleCloseSettings}
-        settings={settings}
-        lang={lang}
-        onUpdateProvider={onUpdateProvider}
-        onSetActiveProvider={onSetActiveProvider}
-        onUpdateSettings={onUpdateSettings}
-      />
+      {isSettingsOpen && (
+        <Suspense fallback={null}>
+          <SettingsModal
+            isOpen={isSettingsOpen}
+            onClose={handleCloseSettings}
+            settings={settings}
+            lang={lang}
+            onUpdateProvider={onUpdateProvider}
+            onSetActiveProvider={onSetActiveProvider}
+            onUpdateSettings={onUpdateSettings}
+          />
+        </Suspense>
+      )}
     </header>
   );
 });

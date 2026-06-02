@@ -23,6 +23,17 @@ function isSameTheme(
   return JSON.stringify(left) === JSON.stringify(right);
 }
 
+function useDebouncedValue<T>(value: T, delay: number) {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => setDebouncedValue(value), delay);
+    return () => window.clearTimeout(timer);
+  }, [delay, value]);
+
+  return debouncedValue;
+}
+
 export function useResumeWorkspaceState({
   currentProject,
   updateProject,
@@ -41,6 +52,7 @@ export function useResumeWorkspaceState({
   const resumeRef = useRef<HTMLDivElement>(null);
   const markdownDraftCache = useRef<ResumeDraft | null>(null);
   const lastMarkdownRef = useRef<string>(markdown);
+  const debouncedMarkdown = useDebouncedValue(markdown, 180);
 
   const handleEditorModeChange = useCallback((newMode: EditorMode) => {
     if (newMode === 'blocks' && editorMode === 'markdown') {
@@ -63,11 +75,15 @@ export function useResumeWorkspaceState({
       return markdownDraftCache.current;
     }
 
-    const parsed = parseMarkdownToResumeDraft(markdown);
+    if (markdownDraftCache.current && debouncedMarkdown === lastMarkdownRef.current) {
+      return markdownDraftCache.current;
+    }
+
+    const parsed = parseMarkdownToResumeDraft(debouncedMarkdown);
     markdownDraftCache.current = parsed;
-    lastMarkdownRef.current = markdown;
+    lastMarkdownRef.current = debouncedMarkdown;
     return parsed;
-  }, [draft, editorMode, markdown]);
+  }, [debouncedMarkdown, draft, editorMode]);
 
   const updateTheme = useCallback((newConfig: Partial<ResumeThemeConfig>) => {
     setResumeTheme((previousTheme) => ({ ...previousTheme, ...newConfig }));
@@ -97,13 +113,17 @@ export function useResumeWorkspaceState({
   }, []);
 
   useEffect(() => {
+    if (debouncedMarkdown !== markdown) {
+      return;
+    }
+
     if (currentProject) {
       const currentProjectMarkdown = serializeResumeDraftToMarkdown(currentProject.data);
-      if (currentProjectMarkdown !== markdown) {
-        updateProject(currentProject.id, { data: parseMarkdownToResumeDraft(markdown) });
+      if (currentProjectMarkdown !== debouncedMarkdown) {
+        updateProject(currentProject.id, { data: parseMarkdownToResumeDraft(debouncedMarkdown) });
       }
     }
-  }, [currentProject, markdown, updateProject]);
+  }, [currentProject, debouncedMarkdown, markdown, updateProject]);
 
   useEffect(() => {
     if (currentProject && currentProject.templateId !== template) {

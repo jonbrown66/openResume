@@ -79,7 +79,7 @@ export const PreviewPane = memo(function PreviewPane({
       <TemplateSwitcher {...templateSwitcherProps} />
       <CanvasScaleControls {...canvasScaleProps} />
 
-      <div ref={containerRef} className="flex flex-1 items-start justify-center overflow-y-auto overflow-x-hidden px-3 pt-16 pb-24 custom-scrollbar sm:px-8 sm:pt-20 sm:pb-12 lg:px-10 lg:pt-24">
+      <div ref={containerRef} className="flex flex-1 items-start justify-center overflow-y-auto overflow-x-hidden px-3 pt-16 pb-24 custom-scrollbar [contain:layout_paint_style] sm:px-8 sm:pt-20 sm:pb-12 lg:px-10 lg:pt-24">
         <ResumeCanvas {...canvasProps}>
           <ResumeRenderer {...rendererProps} />
         </ResumeCanvas>
