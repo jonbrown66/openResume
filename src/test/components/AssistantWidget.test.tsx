@@ -109,6 +109,28 @@ describe('AssistantWidget', () => {
     expect(conversation).not.toHaveClass('sm:h-[440px]', 'sm:flex-none');
   });
 
+  it('keeps the mobile launcher above the bottom view switcher', () => {
+    render(
+      <AssistantWidget
+        lang="en"
+        markdown={defaultMarkdownEn}
+        projectId="project-a"
+        settings={createSettings()}
+        translations={translations.en}
+        onApplyMarkdown={vi.fn()}
+      />,
+    );
+
+    const launcher = screen.getByRole('button', { name: 'Open AI assistant' });
+    const floatingLayer = launcher.parentElement;
+
+    expect(floatingLayer).toHaveClass(
+      'bottom-[calc(5.25rem+env(safe-area-inset-bottom))]',
+      'z-[70]',
+    );
+    expect(floatingLayer).not.toHaveClass('z-40');
+  });
+
   it('does not show the launcher button immediately while the panel is closing', () => {
     render(
       <AssistantWidget

@@ -534,7 +534,7 @@ html, body {
   margin-bottom: 1.15rem;
   padding-bottom: 1.15rem;
   text-align: center;
-  border-bottom: 1px solid var(--resume-line);
+  border-bottom: 1px solid color-mix(in srgb, var(--primary-color) 42%, var(--resume-line));
 }
 
 .resume-header-minimal .resume-avatar {
@@ -551,6 +551,7 @@ html, body {
 
 .resume-header-minimal .resume-contact {
   max-width: 38rem;
+  color: color-mix(in srgb, var(--secondary-color) 58%, var(--resume-muted));
 }
 
 .template-minimal {
@@ -561,7 +562,7 @@ html, body {
 .template-minimal .resume-content h2 {
   justify-content: center;
   text-align: center;
-  color: var(--resume-ink);
+  color: var(--primary-color);
   letter-spacing: 0.18em;
 }
 
@@ -571,11 +572,11 @@ html, body {
   height: 1px;
   flex: 1;
   max-width: 5rem;
-  background: var(--resume-line);
+  background: color-mix(in srgb, var(--primary-color) 48%, var(--resume-line));
 }
 
 .template-minimal .resume-content h2::after {
-  background: var(--resume-line);
+  background: color-mix(in srgb, var(--primary-color) 48%, var(--resume-line));
 }
 
 .template-standard {

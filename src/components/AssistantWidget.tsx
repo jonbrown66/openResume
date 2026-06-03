@@ -162,7 +162,7 @@ export function AssistantWidget({
 
   return (
     <>
-      <div className="pointer-events-none fixed inset-x-2 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-40 flex justify-end print:hidden sm:inset-x-auto sm:bottom-6 sm:right-6">
+      <div className="pointer-events-none fixed inset-x-2 bottom-[calc(5.25rem+env(safe-area-inset-bottom))] z-[70] flex justify-end print:hidden sm:inset-x-auto sm:bottom-6 sm:right-6">
       <AnimatePresence
         initial={false}
         onExitComplete={() => {

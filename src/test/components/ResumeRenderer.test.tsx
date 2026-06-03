@@ -44,4 +44,21 @@ describe('ResumeRenderer', () => {
     expect(container.firstElementChild).toHaveClass('resume-template');
     expect(container.firstElementChild).not.toHaveClass('min-h-[inherit]');
   });
+
+  it('passes custom theme colors to the minimal template', () => {
+    const draft = parseMarkdownToResumeDraft(defaultMarkdownEn);
+    const theme = {
+      ...DEFAULT_THEME_CONFIG,
+      primaryColor: '#a9d56b',
+      secondaryColor: '#56693f',
+    };
+
+    const { container } = render(<ResumeRenderer draft={draft} template="minimal" theme={theme} />);
+
+    expect(container.firstElementChild).toHaveClass('template-minimal');
+    expect(container.firstElementChild).toHaveStyle({
+      '--primary-color': '#a9d56b',
+      '--secondary-color': '#56693f',
+    });
+  });
 });
