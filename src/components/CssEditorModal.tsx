@@ -126,9 +126,10 @@ const TEMPLATE_CSS: Record<ResumeTemplate, string> = {
 };
 
 function getBaseCss(fontFamily: string): string {
+  const familyString = FONT_STYLES[fontFamily]?.family || `'${fontFamily}', sans-serif`;
   return `/* 基础样式 */
 .resume-content {
-  font-family: '${fontFamily}', sans-serif;
+  font-family: ${familyString};
   font-size: var(--font-size);
   line-height: var(--line-height);
 }

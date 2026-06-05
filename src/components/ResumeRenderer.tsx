@@ -7,6 +7,7 @@ import { User } from 'lucide-react';
 import type { ResumeDraft, ResumeEntry, ResumeSection } from '../types/resume';
 import { parseMarkdownToResumeDraft } from '../utils/resumeDocument';
 import type { ResumeThemeConfig } from '../types/theme';
+import { FONT_STYLES } from '@/constants';
 
 interface AvatarProps {
   src?: string;
@@ -264,7 +265,7 @@ export const ResumeRenderer = memo(({ markdown, draft, template = 'classic', the
   const style = useMemo(() => ({
     '--primary-color': theme.primaryColor,
     '--secondary-color': theme.secondaryColor,
-    '--font-family': theme.fontFamily,
+    '--font-family': FONT_STYLES[theme.fontFamily]?.family || theme.fontFamily,
     '--font-size': `${theme.fontSize}pt`,
     '--line-height': theme.lineHeight,
     '--section-spacing': `${theme.sectionSpacing}px`,
