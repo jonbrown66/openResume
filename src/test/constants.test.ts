@@ -15,6 +15,8 @@ describe('font constants', () => {
       'Noto Mono',
       'Fira Mono',
       '源泉圓體',
+      '全字庫正宋體',
+      '全字庫正楷體',
     ]);
 
     expect(FONT_OPTIONS).not.toContain('ZCOOL QingKe HuangYou');
