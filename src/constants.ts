@@ -116,6 +116,8 @@ export const FONT_OPTIONS = [
   'Noto Sans',
   'Noto Serif',
   'Noto Mono',
+  'Fira Mono',
+  '源泉圓體',
 ];
 
 export const FONT_STYLES: Record<string, { family: string; category: 'sans' | 'serif' | 'mono' | 'chinese' }> = {
@@ -127,4 +129,6 @@ export const FONT_STYLES: Record<string, { family: string; category: 'sans' | 's
   'Noto Sans SC': { family: "'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif", category: 'chinese' },
   'Noto Serif SC': { family: "'Noto Serif SC', 'Songti SC', 'STSong', serif", category: 'chinese' },
   'Noto Mono': { family: "'Noto Sans Mono', 'Source Code Pro', monospace", category: 'mono' },
+  'Fira Mono': { family: "'Fira Mono', 'Noto Mono', monospace", category: 'mono' },
+  '源泉圓體': { family: "'GenSenRounded', '源泉圓體', 'Source Han Sans SC', 'PingFang SC', sans-serif", category: 'chinese' },
 };

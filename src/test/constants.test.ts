@@ -13,6 +13,8 @@ describe('font constants', () => {
       'Noto Sans',
       'Noto Serif',
       'Noto Mono',
+      'Fira Mono',
+      '源泉圓體',
     ]);
 
     expect(FONT_OPTIONS).not.toContain('ZCOOL QingKe HuangYou');
