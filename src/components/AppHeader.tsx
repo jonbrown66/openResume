@@ -2,7 +2,6 @@ import { type ChangeEvent, type RefObject, memo, useCallback, useEffect, useMemo
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Languages,
   Loader2,
   Moon,
   Printer,
@@ -20,14 +19,35 @@ import type { AppLanguage, AppTheme, TranslationSet, ResumeTemplate } from '@/co
 import type { AppSettings, ApiProviderId } from '@/config/settings';
 import type { ResumeDraft } from '@/types/resume';
 import type { ResumeProject } from '@/types/resumeProject';
-import { SettingsModal } from './SettingsModal';
+import { AiSettings } from './settings/AiSettings';
 import { ExportMenu } from './ExportMenu';
 import { ProjectSelector } from './ProjectSelector';
 import type { ResumeThemeConfig } from '@/types/theme';
 import { ThemeEditorPanel } from './ThemeEditorPanel';
-import { buttonHoverVariants, springTransition } from '@/lib/motion';
+import { buttonHoverVariants, springTransition, dynamicIslandSpring } from '@/lib/motion';
 
 const PROJECT_GITHUB_URL = 'https://github.com/jonbrown66/openResume';
+
+const TranslationIcon = () => (
+  <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M2 5H9M16 5H13.5M9 5L13.5 5M9 5V3M13.5 5C12.6795 7.73513 10.9612 10.3206 9 12.5929M4 17.5C5.58541 16.1411 7.376 14.4744 9 12.5929M9 12.5929C8 11.5 6.4 9.3 6 8.5M9 12.5929L12 15.5" />
+    <path d="M13.5 21L14.6429 18M21.5 21L20.3571 18M14.6429 18L17.5 10.5L20.3571 18M14.6429 18H20.3571" />
+  </svg>
+);
+
+const LogoIcon = () => (
+  <svg className="w-5 h-5 shrink-0" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+    <defs>
+      <linearGradient id="header-logo-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#a9d56b" />
+        <stop offset="100%" stopColor="#54702d" />
+      </linearGradient>
+    </defs>
+    <circle cx="16" cy="16" r="12" stroke="url(#header-logo-grad)" strokeWidth="2.5" />
+    <path d="M12 21V11C12 10 13 9 14 9H17C18.5 9 19.5 10 19.5 11.5C19.5 13 18.5 14 17 14H12" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M16 14L20 21" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
 
 interface AppHeaderProps {
   fileInputRef: RefObject<HTMLInputElement | null>;
@@ -99,11 +119,26 @@ export const AppHeader = memo(function AppHeader({
   const [mobileMoreRect, setMobileMoreRect] = useState<DOMRect | null>(null);
   const [styleAnchorRect, setStyleAnchorRect] = useState<DOMRect | null>(null);
 
-  const handleOpenSettings = useCallback(() => {
+  const handleToggleSettings = useCallback(() => {
     setIsMobileMoreOpen(false);
-    setIsSettingsOpen(true);
+    setIsSettingsOpen(prev => !prev);
   }, []);
-  const handleCloseSettings = useCallback(() => setIsSettingsOpen(false), []);
+  const settingsRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!isSettingsOpen) return;
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        settingsRef.current && 
+        !settingsRef.current.contains(event.target as Node) &&
+        !(event.target as Element).closest('[role="menuitem"]')
+      ) {
+        setIsSettingsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isSettingsOpen]);
   const handleToggleStylePanel = useCallback(() => {
     setStyleAnchorRect(styleButtonRef.current?.getBoundingClientRect() ?? null);
     setIsStylePanelOpen(prev => !prev);
@@ -194,8 +229,9 @@ export const AppHeader = memo(function AppHeader({
   const mobileMenuItemClass = 'app-control flex w-full min-h-11 items-center gap-3 rounded-lg px-3 py-2 text-left text-sm font-medium transition-colors';
 
   return (
-    <header className="flex shrink-0 items-center justify-between gap-2 border-b border-[var(--app-border)] bg-[var(--app-surface)] px-3 py-2.5 transition-colors duration-200 sm:px-6 sm:py-4 print:hidden z-20">
-      <div className="flex min-w-0 flex-1 items-center gap-1 sm:gap-3">
+    <header className="relative flex shrink-0 items-center justify-between gap-2 border-b border-[var(--app-border)] bg-[var(--app-surface)] px-3 py-2.5 transition-colors duration-200 sm:px-6 sm:py-4 print:hidden z-50">
+      <div className="flex min-w-0 flex-1 items-center gap-1.5 sm:gap-3">
+        <LogoIcon />
         <span className="hidden text-[10px] font-semibold tracking-wider text-zinc-500 dark:text-zinc-400 sm:inline sm:text-sm sm:tracking-wide">
           OpenResume
         </span>
@@ -226,7 +262,7 @@ export const AppHeader = memo(function AppHeader({
         />
       </div>
 
-      <div className="flex shrink-0 items-center gap-0.5 sm:gap-2">
+      <div className="flex shrink-0 items-center gap-0.5 sm:gap-2 relative">
         <div className="hidden sm:block">
           <motion.button
             ref={styleButtonRef}
@@ -265,20 +301,44 @@ export const AppHeader = memo(function AppHeader({
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.95 }}
         >
-          <Languages size={16} />
+          <TranslationIcon />
           <span className="ml-1 text-[10px] font-bold uppercase">{lang === 'en' ? '中' : 'EN'}</span>
         </motion.button>
         
-        <motion.button
-          onClick={handleOpenSettings}
-          className="app-control hidden items-center justify-center rounded-lg p-2 transition-colors sm:flex"
-          title={t.apiSettings}
-          aria-label={t.apiSettings}
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.95 }}
-        >
-          <Settings size={16} />
-        </motion.button>
+        <div className="relative" ref={settingsRef}>
+          <motion.button
+            onClick={handleToggleSettings}
+            className="app-control hidden items-center justify-center rounded-lg p-2 transition-colors sm:flex"
+            title={t.apiSettings}
+            aria-label={t.apiSettings}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <Settings size={16} />
+          </motion.button>
+          
+          <AnimatePresence>
+            {isSettingsOpen && (
+              <motion.div
+                initial={{ opacity: 0, y: -8, scale: 0.96 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -4, scale: 0.96, filter: 'blur(4px)' }}
+                transition={{ ...dynamicIslandSpring, stiffness: 300 }}
+                className="app-panel fixed inset-x-4 top-16 mx-auto sm:absolute sm:inset-auto sm:right-0 sm:top-full sm:mt-2 w-auto max-w-[320px] sm:w-80 rounded-xl border p-5 z-[100] overflow-hidden text-left"
+              >
+                <h3 className="text-sm font-bold text-[var(--foreground)] mb-4 flex items-center gap-2">
+                  <Settings size={14} />
+                  <span>{t.settingsTitle}</span>
+                </h3>
+                <AiSettings
+                  settings={settings}
+                  onUpdateProvider={onUpdateProvider}
+                  onSetActiveProvider={onSetActiveProvider}
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
 
         <motion.a
           href={PROJECT_GITHUB_URL}
@@ -353,13 +413,13 @@ export const AppHeader = memo(function AppHeader({
                   onClick={handleToggleLanguage}
                   className={mobileMenuItemClass}
                 >
-                  <Languages size={16} />
+                  <TranslationIcon />
                   <span>{t.toggleLanguage}</span>
                 </button>
                 <button
                   type="button"
                   role="menuitem"
-                  onClick={handleOpenSettings}
+                  onClick={handleToggleSettings}
                   className={mobileMenuItemClass}
                 >
                   <Settings size={16} />
@@ -438,19 +498,9 @@ export const AppHeader = memo(function AppHeader({
             <Printer size={16} />
           </motion.button>
         </ExportMenu>
-      </div>
 
-      {isSettingsOpen && (
-        <SettingsModal
-          isOpen={isSettingsOpen}
-          onClose={handleCloseSettings}
-          settings={settings}
-          lang={lang}
-          onUpdateProvider={onUpdateProvider}
-          onSetActiveProvider={onSetActiveProvider}
-          onUpdateSettings={onUpdateSettings}
-        />
-      )}
+
+      </div>
     </header>
   );
 });

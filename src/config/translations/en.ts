@@ -95,6 +95,7 @@ export const enTranslations = {
   githubProject: 'Open GitHub Project',
   assistantOpen: 'Open AI assistant',
   assistantClose: 'Close AI assistant',
+  assistantBackToChat: 'Back to chat',
   assistantTitle: 'Resume Assistant',
   assistantDescription: '',
   assistantSingleIntro: 'I am your resume editing assistant. How can I help you?',

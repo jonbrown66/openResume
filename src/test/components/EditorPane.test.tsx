@@ -20,6 +20,10 @@ function renderEditorPane(overrides?: Partial<React.ComponentProps<typeof Editor
     onEditorModeChange: vi.fn(),
     onMarkdownChange: vi.fn(),
     onFormatMarkdown: vi.fn(),
+    canUndo: false,
+    canRedo: false,
+    onUndo: vi.fn(),
+    onRedo: vi.fn(),
     ...overrides,
   };
 

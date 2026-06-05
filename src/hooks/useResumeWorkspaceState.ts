@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import type { ActiveView, EditorMode, ResumeTemplate } from '@/config/ui';
-import { defaultMarkdownZh } from '@/constants';
+import { defaultMarkdownEn } from '@/constants';
 import { useCanvasScale } from '@/hooks/useCanvasScale';
 import type { ResumeDraft } from '@/types/resume';
 import { DEFAULT_THEME_CONFIG, type ResumeThemeConfig } from '@/types/theme';
@@ -38,14 +38,52 @@ export function useResumeWorkspaceState({
   currentProject,
   updateProject,
 }: UseResumeWorkspaceStateOptions) {
-  const [markdown, setMarkdown] = useState(defaultMarkdownZh);
-  const [draft, setDraft] = useState(() => parseMarkdownToResumeDraft(defaultMarkdownZh));
+  const [markdown, setMarkdown] = useState(defaultMarkdownEn);
+  const [draft, setDraft] = useState(() => parseMarkdownToResumeDraft(defaultMarkdownEn));
   const [template, setTemplate] = useState<ResumeTemplate>('classic');
   const [activeView, setActiveView] = useState<ActiveView>('editor');
   const [editorMode, setEditorMode] = useState<EditorMode>('markdown');
   const [resumeTheme, setResumeTheme] = useState<ResumeThemeConfig>(
     currentProject?.theme ?? DEFAULT_THEME_CONFIG,
   );
+
+  // Undo and Redo stacks for markdown changes
+  const [undoStack, setUndoStack] = useState<string[]>([]);
+  const [redoStack, setRedoStack] = useState<string[]>([]);
+  const lastUndoPushRef = useRef<{ value: string; time: number }>({ value: defaultMarkdownEn, time: 0 });
+
+  const pushMarkdownToUndo = useCallback((currentVal: string) => {
+    setUndoStack((prev) => {
+      const nextStack = [...prev, currentVal];
+      return nextStack.length > 50 ? nextStack.slice(1) : nextStack;
+    });
+    setRedoStack([]);
+  }, []);
+
+  const setMarkdownWithHistory = useCallback((nextVal: string | ((prev: string) => string)) => {
+    setMarkdown((prevMarkdown) => {
+      const resolvedNext = typeof nextVal === 'function' ? nextVal(prevMarkdown) : nextVal;
+      if (resolvedNext === prevMarkdown) {
+        return prevMarkdown;
+      }
+
+      const now = Date.now();
+      if (
+        (now - lastUndoPushRef.current.time > 1500 ||
+         Math.abs(resolvedNext.length - lastUndoPushRef.current.value.length) > 10) &&
+        prevMarkdown !== lastUndoPushRef.current.value
+      ) {
+        setUndoStack((prev) => {
+          const nextStack = [...prev, prevMarkdown];
+          return nextStack.length > 50 ? nextStack.slice(1) : nextStack;
+        });
+        setRedoStack([]);
+        lastUndoPushRef.current = { value: prevMarkdown, time: now };
+      }
+
+      return resolvedNext;
+    });
+  }, []);
 
   const editorContainerRef = useRef<HTMLDivElement>(null);
   const previewContainerRef = useRef<HTMLDivElement>(null);
@@ -98,28 +136,76 @@ export function useResumeWorkspaceState({
   }, []);
 
   const handleAssistantApply = useCallback((nextMarkdown: string) => {
+    if (nextMarkdown === markdown) return;
+    pushMarkdownToUndo(markdown);
+
     const parsed = parseMarkdownToResumeDraft(nextMarkdown);
     markdownDraftCache.current = parsed;
     lastMarkdownRef.current = nextMarkdown;
     setMarkdown(nextMarkdown);
     setDraft(parsed);
-  }, []);
+    
+    lastUndoPushRef.current = { value: nextMarkdown, time: Date.now() };
+  }, [markdown, pushMarkdownToUndo]);
 
   const handleImportComplete = useCallback((nextMarkdown: string) => {
+    if (nextMarkdown === markdown) return;
+    pushMarkdownToUndo(markdown);
+
     setMarkdown(nextMarkdown);
     setDraft(parseMarkdownToResumeDraft(nextMarkdown));
     setActiveView('editor');
     setEditorMode('markdown');
-  }, []);
+
+    lastUndoPushRef.current = { value: nextMarkdown, time: Date.now() };
+  }, [markdown, pushMarkdownToUndo]);
 
   const handleFormatMarkdown = useCallback(() => {
     const nextMarkdown = formatResumeMarkdown(markdown);
+    if (nextMarkdown === markdown) return;
+    
+    pushMarkdownToUndo(markdown);
+
     const parsed = parseMarkdownToResumeDraft(nextMarkdown);
     markdownDraftCache.current = parsed;
     lastMarkdownRef.current = nextMarkdown;
     setMarkdown(nextMarkdown);
     setDraft(parsed);
-  }, [markdown]);
+
+    lastUndoPushRef.current = { value: nextMarkdown, time: Date.now() };
+  }, [markdown, pushMarkdownToUndo]);
+
+  const handleUndo = useCallback(() => {
+    if (undoStack.length === 0) return;
+    const prevMarkdown = undoStack[undoStack.length - 1];
+
+    setUndoStack((prev) => prev.slice(0, -1));
+    setRedoStack((prev) => [...prev, markdown]);
+
+    const parsed = parseMarkdownToResumeDraft(prevMarkdown);
+    markdownDraftCache.current = parsed;
+    lastMarkdownRef.current = prevMarkdown;
+    setMarkdown(prevMarkdown);
+    setDraft(parsed);
+
+    lastUndoPushRef.current = { value: prevMarkdown, time: Date.now() };
+  }, [undoStack, markdown]);
+
+  const handleRedo = useCallback(() => {
+    if (redoStack.length === 0) return;
+    const nextMarkdown = redoStack[redoStack.length - 1];
+
+    setRedoStack((prev) => prev.slice(0, -1));
+    setUndoStack((prev) => [...prev, markdown]);
+
+    const parsed = parseMarkdownToResumeDraft(nextMarkdown);
+    markdownDraftCache.current = parsed;
+    lastMarkdownRef.current = nextMarkdown;
+    setMarkdown(nextMarkdown);
+    setDraft(parsed);
+
+    lastUndoPushRef.current = { value: nextMarkdown, time: Date.now() };
+  }, [redoStack, markdown]);
 
   useEffect(() => {
     if (debouncedMarkdown !== markdown) {
@@ -160,7 +246,7 @@ export function useResumeWorkspaceState({
 
   return {
     markdown,
-    setMarkdown,
+    setMarkdown: setMarkdownWithHistory,
     draft,
     setDraft,
     template,
@@ -184,5 +270,9 @@ export function useResumeWorkspaceState({
     zoomPercent,
     resetZoom,
     updateZoom,
+    canUndo: undoStack.length > 0,
+    canRedo: redoStack.length > 0,
+    onUndo: handleUndo,
+    onRedo: handleRedo,
   };
 }

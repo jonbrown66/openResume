@@ -2,10 +2,6 @@ import { createRef } from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
-vi.mock('@/components/SettingsModal', () => ({
-  SettingsModal: () => null,
-}));
-
 vi.mock('@/components/ThemeEditorPanel', () => ({
   ThemeEditorPanel: () => null,
 }));

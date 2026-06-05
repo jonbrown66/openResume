@@ -95,6 +95,7 @@ export const zhTranslations: TranslationDefinition = {
   githubProject: '打开 GitHub 项目',
   assistantOpen: '打开 AI 助手',
   assistantClose: '关闭 AI 助手',
+  assistantBackToChat: '返回聊天',
   assistantTitle: '简历助手',
   assistantDescription: '',
   assistantSingleIntro: '我是您的简历修改助手，有什么可以帮您',

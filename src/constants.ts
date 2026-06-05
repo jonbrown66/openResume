@@ -40,6 +40,24 @@ Results-driven Administrative Manager with 8+ years of experience leading office
 - Procurement & Vendor Management
 - Team Leadership & Training
 - HR Administration & Onboarding
+
+## TECHNICAL TOOLS & STATS
+
+Here is a summary of technical proficiency and process impact:
+
+| Tool / System | Proficiency Level | Core Applications & Use Cases |
+| :--- | :--- | :--- |
+| **ERP & Procurement** | Expert (8+ Years) | Vendor management, budgeting, and cost control |
+| **Document Mgmt** | Advanced (5+ Years) | Digital SOP development and compliance audits |
+| **HR Platforms** | Proficient | Onboarding workflows, payroll tracking, and CRM |
+
+## PROJECTS & INITIATIVES
+
+### Office Digitization Program | Jan 2024
+**Arowwai Industries Initiative**
+- Led the *digital transformation* of office administrative workflows.
+- Achieved **45% reduction** in document retrieval latency.
+- *Tools utilized*: Google Workspace, Slack API, and custom script integrations.
 `;
 
 export const defaultMarkdownZh = `---

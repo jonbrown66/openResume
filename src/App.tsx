@@ -51,6 +51,10 @@ export default function App() {
     zoomPercent,
     resetZoom,
     updateZoom,
+    canUndo,
+    canRedo,
+    onUndo,
+    onRedo,
   } = useResumeWorkspaceState({
     currentProject,
     updateProject,
@@ -144,6 +148,10 @@ export default function App() {
         onZoomReset={resetZoom}
         onCustomCssChange={updateCustomCss}
         onAssistantApply={handleAssistantApply}
+        canUndo={canUndo}
+        canRedo={canRedo}
+        onUndo={onUndo}
+        onRedo={onRedo}
       />
     </ToastProvider>
   );

@@ -2,11 +2,11 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import type { ResumeProject, StorageSchema } from '@/types/resumeProject';
 import { STORAGE_KEY, generateId } from '@/types/resumeProject';
 import { parseMarkdownToResumeDraft } from '@/utils/resumeDocument';
-import { defaultMarkdownZh } from '@/constants';
+import { defaultMarkdownEn } from '@/constants';
 import type { ResumeDraft } from '@/types/resume';
 import { DEFAULT_THEME_CONFIG } from '@/types/theme';
 
-const DEFAULT_DRAFT: ResumeDraft = parseMarkdownToResumeDraft(defaultMarkdownZh);
+const DEFAULT_DRAFT: ResumeDraft = parseMarkdownToResumeDraft(defaultMarkdownEn);
 
 function getDefaultProject(): ResumeProject {
   return {

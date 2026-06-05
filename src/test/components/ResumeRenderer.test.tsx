@@ -61,4 +61,30 @@ describe('ResumeRenderer', () => {
       '--secondary-color': '#56693f',
     });
   });
+
+  it('renders markdown tables inside a custom wrapper', () => {
+    const markdownWithTable = `---
+name: JANE DOE
+title: Developer
+---
+
+## SKILLS
+
+| Skill | Level |
+| :--- | :--- |
+| React | Expert |
+| Node | Intermediate |
+`;
+
+    const { container } = render(
+      <ResumeRenderer markdown={markdownWithTable} template="classic" theme={DEFAULT_THEME_CONFIG} />
+    );
+
+    const table = container.querySelector('table');
+    expect(table).toBeInTheDocument();
+    expect(table?.closest('.resume-table-wrapper')).toBeInTheDocument();
+    expect(screen.getByText('Skill')).toBeInTheDocument();
+    expect(screen.getByText('React')).toBeInTheDocument();
+    expect(screen.getByText('Expert')).toBeInTheDocument();
+  });
 });

@@ -1,11 +1,11 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Bot } from 'lucide-react';
 
 import { AssistantComposer } from '@/components/assistant/AssistantComposer';
 import { AssistantConversationList } from '@/components/assistant/AssistantConversationList';
 import { AssistantHeader } from '@/components/assistant/AssistantHeader';
-import { SettingsModal } from '@/components/SettingsModal';
+import { AiSettings } from '@/components/settings/AiSettings';
 import { useToast } from '@/components/ui/Toast';
 import type { AppSettings, ApiProviderId } from '@/config/settings';
 import type { AppLanguage, TranslationSet } from '@/config/ui';
@@ -43,18 +43,42 @@ export function AssistantWidget({
   onUpdateSettings = () => undefined,
 }: AssistantWidgetProps) {
   const { addToast } = useToast();
-  const [isOpen, setIsOpen] = useState(false);
-  const [showLauncher, setShowLauncher] = useState(true);
-  const [input, setInput] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const { messages, setMessages } = useAssistantMemory(projectId);
-
   const activeProvider = settings.providers[settings.activeProvider];
   const providerModel = activeProvider.model.trim();
   const hasApiKey = Boolean(activeProvider.apiKey.trim());
   const hasModel = Boolean(providerModel);
   const needsAiConfig = !hasApiKey || !hasModel;
+
+  const [isOpen, setIsOpen] = useState(false);
+  const [showLauncher, setShowLauncher] = useState(true);
+  const [input, setInput] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [widgetView, setWidgetView] = useState<'chat' | 'settings'>('chat');
+  const { messages, setMessages } = useAssistantMemory(projectId);
+
+  const panelRef = useRef<HTMLDivElement>(null);
+
+
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleClickOutside = (event: PointerEvent) => {
+      if (
+        panelRef.current &&
+        !panelRef.current.contains(event.target as Node) &&
+        !(event.target as Element).closest('#assistant-launcher')
+      ) {
+        handleClose();
+      }
+    };
+
+    document.addEventListener('pointerdown', handleClickOutside);
+    return () => {
+      document.removeEventListener('pointerdown', handleClickOutside);
+    };
+  }, [isOpen]);
+
   const assistantHint = buildAssistantHint(t.assistantSingleIntro);
   const conversation = buildAssistantConversation(messages, assistantHint);
 
@@ -81,13 +105,13 @@ export function AssistantWidget({
 
     if (!hasApiKey) {
       addToast(t.assistantMissingApiKey, 'warning');
-      setIsSettingsOpen(true);
+      setWidgetView('settings');
       return;
     }
 
     if (!hasModel) {
       addToast(t.assistantMissingModel, 'warning');
-      setIsSettingsOpen(true);
+      setWidgetView('settings');
       return;
     }
 
@@ -154,6 +178,7 @@ export function AssistantWidget({
 
   const handleClose = () => {
     setIsOpen(false);
+    setWidgetView('chat');
   };
 
   const providerLabel = needsAiConfig
@@ -173,6 +198,7 @@ export function AssistantWidget({
       >
         {isOpen ? (
           <motion.div
+            ref={panelRef}
             key="assistant-panel"
             role="dialog"
             aria-modal="false"
@@ -184,35 +210,50 @@ export function AssistantWidget({
             className="app-panel pointer-events-auto flex h-[min(720px,calc(100dvh-5.5rem))] w-[calc(100vw-1rem)] flex-col overflow-hidden rounded-[22px] border shadow-[0_18px_60px_-28px_rgba(40,52,25,0.45)] sm:h-[min(680px,calc(100dvh-3rem))] sm:w-[min(540px,calc(100vw-2rem))] sm:rounded-[24px]"
           >
             <AssistantHeader
-              title={t.assistantTitle}
-              description={t.assistantDescription}
+              title={widgetView === 'settings' ? t.settingsTitle : t.assistantTitle}
+              description={widgetView === 'settings' ? '' : t.assistantDescription}
               closeLabel={t.assistantClose}
               onClose={handleClose}
+              onBack={widgetView === 'settings' ? () => setWidgetView('chat') : undefined}
+              backLabel={t.assistantBackToChat}
             />
-            <AssistantConversationList
-              conversation={conversation}
-              isSubmitting={isSubmitting}
-              translations={t}
-              onApplyProposal={handleApplyProposal}
-            />
-            <AssistantComposer
-              providerLabel={providerLabel}
-              memoryHint={t.assistantMemoryHint}
-              configureLabel={needsAiConfig ? t.assistantConfigureAi : undefined}
-              placeholder={t.assistantInputPlaceholderEdit}
-              sendLabel={t.assistantSend}
-              isSubmitting={isSubmitting}
-              input={input}
-              onInputChange={setInput}
-              onSubmit={handleSubmit}
-              onConfigure={() => setIsSettingsOpen(true)}
-            />
+            {widgetView === 'settings' ? (
+              <div className="flex-1 overflow-y-auto px-4 py-4 sm:px-5">
+                <AiSettings
+                  settings={settings}
+                  onUpdateProvider={onUpdateProvider}
+                  onSetActiveProvider={onSetActiveProvider}
+                />
+              </div>
+            ) : (
+              <>
+                <AssistantConversationList
+                  conversation={conversation}
+                  isSubmitting={isSubmitting}
+                  translations={t}
+                  onApplyProposal={handleApplyProposal}
+                />
+                <AssistantComposer
+                  providerLabel={providerLabel}
+                  memoryHint={t.assistantMemoryHint}
+                  configureLabel={needsAiConfig ? t.assistantConfigureAi : undefined}
+                  placeholder={t.assistantInputPlaceholderEdit}
+                  sendLabel={t.assistantSend}
+                  isSubmitting={isSubmitting}
+                  input={input}
+                  onInputChange={setInput}
+                  onSubmit={handleSubmit}
+                  onConfigure={() => setWidgetView('settings')}
+                />
+              </>
+            )}
           </motion.div>
         ) : null}
       </AnimatePresence>
 
       {showLauncher ? (
         <motion.button
+          id="assistant-launcher"
           type="button"
           aria-label={t.assistantOpen}
           onClick={handleOpen}
@@ -224,18 +265,6 @@ export function AssistantWidget({
         </motion.button>
       ) : null}
       </div>
-
-      {isSettingsOpen ? (
-        <SettingsModal
-          isOpen={isSettingsOpen}
-          onClose={() => setIsSettingsOpen(false)}
-          settings={settings}
-          lang={lang}
-          onUpdateProvider={onUpdateProvider}
-          onSetActiveProvider={onSetActiveProvider}
-          onUpdateSettings={onUpdateSettings}
-        />
-      ) : null}
     </>
   );
 }

@@ -1,6 +1,6 @@
 import { memo, useMemo, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { ListRestart } from 'lucide-react';
+import { ListRestart, Undo, Redo } from 'lucide-react';
 
 import type { AppLanguage, EditorMode, TranslationSet } from '@/config/ui';
 import type { ResumeDraft } from '@/types/resume';
@@ -20,6 +20,10 @@ interface EditorPaneProps {
   onEditorModeChange: (mode: EditorMode) => void;
   onMarkdownChange: (value: string) => void;
   onFormatMarkdown: () => void;
+  canUndo: boolean;
+  canRedo: boolean;
+  onUndo: () => void;
+  onRedo: () => void;
 }
 
 export const EditorPane = memo(function EditorPane({
@@ -34,6 +38,10 @@ export const EditorPane = memo(function EditorPane({
   onEditorModeChange,
   onMarkdownChange,
   onFormatMarkdown,
+  canUndo,
+  canRedo,
+  onUndo,
+  onRedo,
 }: EditorPaneProps) {
   const displayMarkdown = useMemo(() => sanitizeMarkdownForDisplay(markdown), [markdown]);
   
@@ -61,42 +69,82 @@ export const EditorPane = memo(function EditorPane({
       <div 
         className="absolute left-1/2 top-3 z-30 -translate-x-1/2 opacity-100 transition-opacity duration-200 print:hidden sm:top-5"
       >
-        <div className="app-panel inline-flex max-w-[calc(100vw-1rem)] rounded-xl border p-1">
+        <div className="app-panel relative inline-flex max-w-[calc(100vw-1rem)] rounded-xl border p-1">
           <button
             type="button"
             onClick={() => onEditorModeChange('markdown')}
-            className={`min-h-10 shrink-0 whitespace-nowrap rounded-lg px-3 py-2 text-xs font-semibold transition-colors sm:min-h-0 sm:px-4 ${
+            className={`relative min-h-10 shrink-0 whitespace-nowrap rounded-lg px-3 py-2 text-xs font-semibold transition-colors duration-200 sm:min-h-0 sm:px-4 z-10 ${
               editorMode === 'markdown' 
-                ? 'app-active shadow-sm' 
+                ? 'text-[var(--primary-foreground)]' 
                 : 'app-control'
             }`}
           >
-            {t.markdownMode}
+            {editorMode === 'markdown' && (
+              <motion.div
+                layoutId="activeEditorTab"
+                className="absolute inset-0 rounded-lg bg-[var(--app-accent)] shadow-sm z-[-1]"
+                transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+              />
+            )}
+            <span className="relative z-10">{t.markdownMode}</span>
           </button>
           <button
             type="button"
             onClick={() => onEditorModeChange('blocks')}
-            className={`min-h-10 shrink-0 whitespace-nowrap rounded-lg px-3 py-2 text-xs font-semibold transition-colors sm:min-h-0 sm:px-4 ${
+            className={`relative min-h-10 shrink-0 whitespace-nowrap rounded-lg px-3 py-2 text-xs font-semibold transition-colors duration-200 sm:min-h-0 sm:px-4 z-10 ${
               editorMode === 'blocks' 
-                ? 'app-active shadow-sm' 
+                ? 'text-[var(--primary-foreground)]' 
                 : 'app-control'
             }`}
           >
-            {lang === 'zh' ? '区块' : t.blockMode}
+            {editorMode === 'blocks' && (
+              <motion.div
+                layoutId="activeEditorTab"
+                className="absolute inset-0 rounded-lg bg-[var(--app-accent)] shadow-sm z-[-1]"
+                transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+              />
+            )}
+            <span className="relative z-10">{lang === 'zh' ? '区块' : t.blockMode}</span>
           </button>
         </div>
       </div>
 
       {editorMode === 'markdown' ? (
-        <button
-          type="button"
-          onClick={onFormatMarkdown}
-          className="app-panel app-control absolute right-3 top-3 z-30 inline-flex min-h-10 min-w-10 items-center justify-center rounded-full border p-2 transition-colors sm:right-5 sm:top-5 sm:min-h-0 sm:min-w-0"
-          title={t.formatMarkdown}
-          aria-label={t.formatMarkdown}
-        >
-          <ListRestart size={16} />
-        </button>
+        <div className="absolute right-3 top-3 z-30 flex gap-1.5 sm:right-5 sm:top-5">
+          <button
+            type="button"
+            onClick={onUndo}
+            disabled={!canUndo}
+            className={`app-panel app-control inline-flex min-h-10 min-w-10 items-center justify-center rounded-full border p-2 transition-colors sm:min-h-0 sm:min-w-0 ${
+              !canUndo ? 'opacity-35 cursor-not-allowed pointer-events-none' : ''
+            }`}
+            title={lang === 'zh' ? '撤销' : 'Undo'}
+            aria-label={lang === 'zh' ? '撤销' : 'Undo'}
+          >
+            <Undo size={16} />
+          </button>
+          <button
+            type="button"
+            onClick={onRedo}
+            disabled={!canRedo}
+            className={`app-panel app-control inline-flex min-h-10 min-w-10 items-center justify-center rounded-full border p-2 transition-colors sm:min-h-0 sm:min-w-0 ${
+              !canRedo ? 'opacity-35 cursor-not-allowed pointer-events-none' : ''
+            }`}
+            title={lang === 'zh' ? '重做' : 'Redo'}
+            aria-label={lang === 'zh' ? '重做' : 'Redo'}
+          >
+            <Redo size={16} />
+          </button>
+          <button
+            type="button"
+            onClick={onFormatMarkdown}
+            className="app-panel app-control inline-flex min-h-10 min-w-10 items-center justify-center rounded-full border p-2 transition-colors sm:min-h-0 sm:min-w-0"
+            title={t.formatMarkdown}
+            aria-label={t.formatMarkdown}
+          >
+            <ListRestart size={16} />
+          </button>
+        </div>
       ) : null}
 
       <div 

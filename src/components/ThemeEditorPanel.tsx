@@ -9,6 +9,13 @@ import { springTransition, staggerItem, staggerContainer } from '@/lib/motion';
 import { FONT_OPTIONS } from '@/constants';
 import { ColorPicker } from './ColorPicker';
 import { SliderControl } from './SliderControl';
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from '@/components/ui/select';
 
 interface ThemeEditorPanelProps {
   triggerRef: React.RefObject<HTMLElement | null>;
@@ -162,22 +169,21 @@ export const ThemeEditorPanel = memo(function ThemeEditorPanel({
               {t.typography}
             </span>
           </div>
-          <select
+          <Select
             value={theme.fontFamily}
-            onChange={(e) => onChange({ fontFamily: e.target.value })}
-            className={cn(
-              "w-full h-10 px-3 rounded-xl",
-              "bg-[var(--app-surface-muted)]",
-              "border border-[var(--app-border)]",
-              "text-sm text-zinc-900 dark:text-zinc-100",
-              "focus:outline-none focus:ring-2 focus:ring-[var(--app-accent)]/35",
-              "transition-all cursor-pointer"
-            )}
+            onValueChange={(val) => onChange({ fontFamily: val || undefined })}
           >
-            {FONT_OPTIONS.map((font) => (
-              <option key={font} value={font}>{font}</option>
-            ))}
-          </select>
+            <SelectTrigger className="w-full h-10 rounded-xl border-[var(--app-border)] bg-[var(--app-surface)]/70 px-4 focus:ring-1 focus:ring-[var(--app-accent)]/35">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent className="rounded-lg border-[var(--app-border)] bg-[var(--app-surface)]">
+              {FONT_OPTIONS.map((font) => (
+                <SelectItem key={font} value={font} className="rounded-lg">
+                  {font}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </motion.div>
 
         <motion.div variants={staggerItem} className="space-y-3 pt-2 border-t border-[var(--app-border)]">

@@ -148,7 +148,7 @@ export const ExportMenu = memo(function ExportMenu({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -4, scale: 0.96, filter: 'blur(4px)' }}
             transition={{ ...dynamicIslandSpring, stiffness: 300 }}
-            className="app-panel absolute right-0 mt-2 w-52 rounded-xl border py-2 z-50 overflow-hidden"
+            className="app-panel absolute right-0 mt-2 w-52 rounded-xl border p-1.5 z-50 overflow-hidden"
           >
             {exportOptions.map((option, index) => (
               <motion.button
@@ -157,7 +157,7 @@ export const ExportMenu = memo(function ExportMenu({
                 initial={{ opacity: 0, x: -12 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ ...dynamicIslandSpring, stiffness: 300, delay: index * 0.04 }}
-                className="app-control flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm transition-colors"
+                className="app-control flex w-full items-center gap-3 px-3 py-2 text-left text-sm transition-colors rounded-lg"
                 whileHover={{ x: 2 }}
                 whileTap={{ scale: 0.98 }}
               >

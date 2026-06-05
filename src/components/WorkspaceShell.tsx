@@ -74,6 +74,10 @@ interface WorkspaceShellProps {
   onZoomReset: () => void;
   onCustomCssChange: (css: string) => void;
   onAssistantApply: (markdown: string) => void;
+  canUndo: boolean;
+  canRedo: boolean;
+  onUndo: () => void;
+  onRedo: () => void;
 }
 
 export function WorkspaceShell({
@@ -123,6 +127,10 @@ export function WorkspaceShell({
   onZoomReset,
   onCustomCssChange,
   onAssistantApply,
+  canUndo,
+  canRedo,
+  onUndo,
+  onRedo,
 }: WorkspaceShellProps) {
   return (
     <>
@@ -186,6 +194,10 @@ export function WorkspaceShell({
                   onEditorModeChange={onEditorModeChange}
                   onMarkdownChange={onMarkdownChange}
                   onFormatMarkdown={onFormatMarkdown}
+                  canUndo={canUndo}
+                  canRedo={canRedo}
+                  onUndo={onUndo}
+                  onRedo={onRedo}
                 />
               </ErrorBoundary>
             </div>

@@ -114,6 +114,11 @@ const MarkdownRenderer = memo(({ content, isSkills = false }: { content: string;
           {children}
         </ul>
       ),
+      table: ({ children, ...props }) => (
+        <div className="resume-table-wrapper">
+          <table {...props}>{children}</table>
+        </div>
+      ),
     }}
   >
     {content}

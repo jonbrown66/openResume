@@ -28,7 +28,17 @@ export function AssistantComposer({
   return (
     <div className="shrink-0 border-t border-[var(--app-border)] bg-[var(--app-surface)]/80 px-4 py-3 sm:px-5 sm:py-4">
       <div className="mb-2.5 flex items-center justify-between gap-3 text-[11px] leading-4 text-[var(--muted-foreground)]">
-        <div className="min-w-0 truncate font-medium text-[var(--secondary-foreground)]/70">{providerLabel}</div>
+        {configureLabel ? (
+          <button
+            type="button"
+            onClick={onConfigure}
+            className="min-w-0 truncate font-medium text-[var(--secondary-foreground)]/70 hover:text-[var(--secondary-foreground)] hover:underline text-left cursor-pointer"
+          >
+            {providerLabel}
+          </button>
+        ) : (
+          <div className="min-w-0 truncate font-medium text-[var(--secondary-foreground)]/70">{providerLabel}</div>
+        )}
         {configureLabel ? (
           <button
             type="button"

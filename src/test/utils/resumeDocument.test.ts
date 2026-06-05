@@ -14,7 +14,7 @@ describe('resumeDocument', () => {
     expect(draft.frontmatter.name).toBe('EMMA SANCHEZ');
     expect(draft.frontmatter.title).toBe('Administrative Manager');
     expect(draft.summary).toContain('Results-driven Administrative Manager');
-    expect(draft.sections).toHaveLength(3);
+    expect(draft.sections).toHaveLength(5);
     expect(draft.sections[0].title).toBe('WORK EXPERIENCE');
     expect(draft.sections[0].entries[0]).toMatchObject({
       heading: 'Administrative Assistant',

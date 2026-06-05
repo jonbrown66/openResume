@@ -349,6 +349,10 @@ contact: jane@example.com
 
     expect(screen.getByRole('heading', { name: 'Settings' })).toBeInTheDocument();
     expect(screen.getByText('AI Provider')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Back to chat' }));
+    expect(screen.getByRole('heading', { name: 'Resume Assistant' })).toBeInTheDocument();
+    expect(screen.queryByText('AI Provider')).not.toBeInTheDocument();
   });
 
   it('restores assistant conversation after remount for the same project', async () => {

@@ -385,6 +385,24 @@ function splitEntryDescriptor(line: string) {
 }
 
 function parseEntryBlock(block: string[]): ResumeEntry | null {
+  if (block.length === 0) {
+    return null;
+  }
+
+  // If the first line is a table line, do not attempt to split it into heading/meta.
+  // Directly return it as a plain-text table entry.
+  const firstLine = block[0].trim();
+  const isFirstLineTable = (firstLine.match(/[|｜]/g) || []).length >= 2 &&
+                           (!DATE_RANGE_REGEX.test(firstLine) || /^[|:\-\s]+$/.test(firstLine));
+  if (isFirstLineTable) {
+    return {
+      heading: '',
+      meta: '',
+      organization: '',
+      content: block.join('\n'),
+    };
+  }
+
   const meaningfulLines = block.map(stripMarkdownDecorators).filter(Boolean);
   if (meaningfulLines.length === 0) {
     return null;
@@ -396,7 +414,23 @@ function parseEntryBlock(block: string[]): ResumeEntry | null {
   let organization = descriptor?.organization ?? '';
   const contentLines: string[] = [];
 
-  for (const line of meaningfulLines.slice(1)) {
+  for (let i = 1; i < block.length; i++) {
+    const rawLine = block[i];
+    const trimmedRaw = rawLine.trim();
+
+    // Detect if this is a table row (containing at least two pipe characters and no resume date range)
+    const isTable = (trimmedRaw.match(/[|｜]/g) || []).length >= 2 &&
+                    (!DATE_RANGE_REGEX.test(trimmedRaw) || /^[|:\-\s]+$/.test(trimmedRaw));
+    if (isTable) {
+      contentLines.push(rawLine);
+      continue;
+    }
+
+    const line = stripMarkdownDecorators(rawLine);
+    if (!line) {
+      continue;
+    }
+
     if (isBulletLine(line)) {
       contentLines.push(normalizeBullet(line));
       continue;
@@ -430,6 +464,18 @@ function parseEntryBlock(block: string[]): ResumeEntry | null {
 }
 
 function parseSkillSection(lines: string[], lang: SupportedLanguage): ResumeEntry[] {
+  const hasTable = lines.some((line) => (line.match(/[|｜]/g) || []).length >= 2);
+  if (hasTable) {
+    return [
+      {
+        heading: '',
+        meta: '',
+        organization: '',
+        content: lines.join('\n'),
+      },
+    ];
+  }
+
   const blocks = buildEntryBlocks(lines);
   if (blocks.some((block) => /^#{0,3}\s*技能概览$/i.test(stripMarkdownDecorators(block[0] ?? '')))) {
     return blocks.map(parseEntryBlock).filter((entry): entry is ResumeEntry => Boolean(entry));

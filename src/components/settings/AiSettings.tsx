@@ -139,10 +139,10 @@ export function AiSettings({ settings, onUpdateProvider, onSetActiveProvider }: 
           value={currentProviderId} 
           onValueChange={(val) => onSetActiveProvider(val as ApiProviderId)}
         >
-          <SelectTrigger className="w-full h-12 rounded-lg border-zinc-200/80 dark:border-zinc-800/80 bg-white/50 dark:bg-zinc-950/50 px-4 focus:ring-1 focus:ring-zinc-900/10 dark:focus:ring-zinc-100/10">
+          <SelectTrigger className="w-full h-12 rounded-lg border-[var(--app-border)] bg-[var(--app-surface)]/70 px-4 focus:ring-1 focus:ring-[var(--app-accent)]/35">
             <SelectValue />
           </SelectTrigger>
-          <SelectContent className="rounded-lg border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950">
+          <SelectContent className="rounded-lg border-[var(--app-border)] bg-[var(--app-surface)]">
             {PROVIDERS.map(p => (
               <SelectItem key={p.id} value={p.id} className="rounded-lg">
                 <span className="flex items-center gap-2">
@@ -199,10 +199,10 @@ export function AiSettings({ settings, onUpdateProvider, onSetActiveProvider }: 
           value={selectedModelValue}
           onValueChange={handleModelChange}
         >
-          <SelectTrigger className="w-full h-12 rounded-lg border-zinc-200/80 dark:border-zinc-800/80 bg-white/50 dark:bg-zinc-950/50 px-4 focus:ring-1 focus:ring-zinc-900/10 dark:focus:ring-zinc-100/10">
+          <SelectTrigger className="w-full h-12 rounded-lg border-[var(--app-border)] bg-[var(--app-surface)]/70 px-4 focus:ring-1 focus:ring-[var(--app-accent)]/35">
             <SelectValue />
           </SelectTrigger>
-          <SelectContent className="rounded-lg border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950">
+          <SelectContent className="rounded-lg border-[var(--app-border)] bg-[var(--app-surface)]">
             {availableModels.map(m => (
               <SelectItem key={m} value={m} className="rounded-lg">{m}</SelectItem>
             ))}

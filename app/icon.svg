@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
+  <defs>
+    <linearGradient id="logo-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#a9d56b" />
+      <stop offset="100%" stop-color="#54702d" />
+    </linearGradient>
+  </defs>
+  <style>
+    .brand-ring { stroke: url(#logo-grad); }
+    .brand-letter { stroke: #26311d; }
+    @media (prefers-color-scheme: dark) {
+      .brand-letter { stroke: #f5f8f0; }
+    }
+  </style>
+  <circle class="brand-ring" cx="16" cy="16" r="12" stroke-width="2.5" />
+  <path class="brand-letter" d="M12 21V11C12 10 13 9 14 9H17C18.5 9 19.5 10 19.5 11.5C19.5 13 18.5 14 17 14H12" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
+  <path class="brand-letter" d="M16 14L20 21" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
+</svg>

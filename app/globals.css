@@ -412,6 +412,42 @@ html, body {
   color: var(--resume-body);
 }
 
+/* -----------------------------------------
+   Markdown Table Core Styles
+   ----------------------------------------- */
+.resume-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  margin: 0.68rem 0;
+  border-radius: 0.38rem;
+  background-color: transparent;
+}
+
+.resume-content table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88em;
+  line-height: 1.4;
+  color: var(--resume-body);
+}
+
+.resume-content th,
+.resume-content td {
+  padding: 0.42rem 0.6rem;
+  border-bottom: 1px solid var(--resume-line);
+  text-align: left;
+}
+
+.resume-content th {
+  font-weight: 700;
+  color: var(--resume-ink);
+  border-bottom: 2px solid color-mix(in srgb, var(--primary-color) 60%, var(--resume-line));
+}
+
+.resume-content tr:last-child td {
+  border-bottom: none;
+}
+
 /* Remove margin from empty p tags used for spacing */
 .resume-content p:empty {
   display: none;
@@ -725,6 +761,84 @@ html, body {
 
 .template-sidebar .resume-h3-split {
   margin-top: 0;
+}
+
+/* -----------------------------------------
+   Template-Specific Table Style Customizations
+   ----------------------------------------- */
+
+/* Classic (Card/Classic) Customizations */
+.template-classic .resume-content table {
+  border: none;
+}
+.template-classic .resume-content th {
+  background-color: color-mix(in srgb, var(--primary-color) 6%, var(--resume-ivory));
+  border-bottom: 1px solid color-mix(in srgb, var(--primary-color) 15%, var(--resume-line));
+}
+.template-classic .resume-content td {
+  border-bottom: 1px solid color-mix(in srgb, var(--resume-line) 60%, transparent);
+}
+.template-classic .resume-content tr:last-child td {
+  border-bottom: none;
+}
+
+/* Standard (Modern Academic Light Style) Customizations */
+.template-standard .resume-content table {
+  border-top: none;
+  border-bottom: none;
+}
+.template-standard .resume-content th {
+  border-bottom: 1px solid color-mix(in srgb, var(--primary-color) 30%, var(--resume-line));
+  background-color: color-mix(in srgb, var(--primary-color) 4%, transparent);
+  color: var(--resume-ink);
+}
+.template-standard .resume-content td {
+  border-bottom: 1px solid color-mix(in srgb, var(--resume-line) 40%, transparent);
+}
+.template-standard .resume-content tr:last-child td {
+  border-bottom: none;
+}
+
+/* Minimal (Lightweight & Spacious Table) Customizations */
+.template-minimal .resume-content table {
+  border-top: none;
+  border-bottom: none;
+}
+.template-minimal .resume-content th {
+  border-bottom: 1.5px solid var(--primary-color);
+  background-color: transparent;
+  color: var(--resume-ink);
+  font-weight: 700;
+}
+.template-minimal .resume-content td {
+  border-bottom: 1px solid color-mix(in srgb, var(--resume-line) 30%, transparent);
+  padding: 0.52rem 0.4rem;
+}
+.template-minimal .resume-content tr:last-child td {
+  border-bottom: none;
+}
+
+/* Sidebar (Narrow Columns / Dense Table) Customizations */
+.template-sidebar .resume-content table {
+  font-size: 0.8em;
+  table-layout: auto;
+  border-top: none;
+  border-bottom: none;
+}
+.template-sidebar .resume-content th,
+.template-sidebar .resume-content td {
+  padding: 0.32rem 0.45rem;
+}
+.template-sidebar .resume-content th {
+  border-bottom: 1.5px solid var(--primary-color);
+  background-color: transparent;
+  color: var(--resume-ink);
+}
+.template-sidebar .resume-content td {
+  border-bottom: 1px solid color-mix(in srgb, var(--resume-line) 50%, transparent);
+}
+.template-sidebar .resume-content tr:last-child td {
+  border-bottom: none;
 }
 
 @theme inline {
