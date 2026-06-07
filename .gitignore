@@ -17,3 +17,11 @@ tsconfig.tsbuildinfo
 filelist.txt
 .playwright-mcp/
 nul
+
+# OpenNext
+.open-next
+
+# wrangler files
+.wrangler
+.dev.vars*
+!.dev.vars.example
