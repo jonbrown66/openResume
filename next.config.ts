@@ -4,6 +4,7 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   compress: true,
   poweredByHeader: false,
+  serverExternalPackages: ['@sparticuz/chromium', 'puppeteer-core'],
   experimental: {
     optimizePackageImports: ['lucide-react', 'framer-motion'],
   },

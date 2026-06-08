@@ -14,14 +14,14 @@ GitHub: [https://github.com/jonbrown66/openResume](https://github.com/jonbrown66
 
 - Dual editing modes: Markdown and block editor
 - Unified A4 canvas for both editing and preview
-- Zoomable preview with template switching and style controls
+- Zoomable preview with template switching and style controls (built-in fonts including Geist, Fira Mono, GenSenRounded, TW-Sung, TW-Kai, etc. with font fallback system)
 - Import support for `md / txt / pdf / docx`
 - Local fallback parsing when no API key is configured
 - AI-assisted resume editing with before/after diff preview
 - Project-scoped assistant memory with a default limit of 20 recent messages
 - Export to `PDF / DOCX / HTML`
-- Local multi-project resume management
-- Support for OpenAI, Anthropic, Gemini, DeepSeek, and OpenRouter
+- Local multi-project resume management with optimized mobile layout and UI details
+- Support for OpenAI, Anthropic, Gemini, DeepSeek, and OpenRouter (supports custom models and connectivity test)
 
 ## Tech Stack
 

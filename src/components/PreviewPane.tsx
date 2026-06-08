@@ -64,7 +64,9 @@ export const PreviewPane = memo(function PreviewPane({
   const canvasProps = useMemo(() => ({
     canvasRef: resumeRef,
     scale,
-  }), [resumeRef, scale]);
+    theme,
+    template,
+  }), [resumeRef, scale, theme, template]);
 
   const rendererProps = useMemo(() => ({
     draft,

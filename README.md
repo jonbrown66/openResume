@@ -14,14 +14,14 @@ GitHub：[https://github.com/jonbrown66/openResume](https://github.com/jonbrown6
 
 - Markdown 编辑与区块编辑双模式切换
 - 编辑画布与预览画布统一为 A4 尺寸
-- 预览支持缩放、模板切换与样式调整
+- 预览支持缩放、模板切换与样式调整（内置 Geist, Fira Mono, 源泉圓體, 全字庫正宋體, 全字庫正楷體等，支持字体 fallback 列表）
 - 支持导入 `md / txt / pdf / docx`
 - 无 API Key 时支持本地解析导入
 - 支持 AI 对话式修改简历，并展示修改前后差异
 - 助手支持项目级会话记忆，默认仅保留最近 20 条记录
 - 支持导出 `PDF / DOCX / HTML`
-- 支持多简历项目本地管理
-- 支持 OpenAI、Anthropic、Gemini、DeepSeek、OpenRouter
+- 支持多简历项目本地管理，优化了移动端适配与交互体验
+- 支持 OpenAI、Anthropic、Gemini、DeepSeek、OpenRouter（支持自定义模型与一键连通性测试）
 
 ## 技术栈
 

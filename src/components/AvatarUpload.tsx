@@ -23,8 +23,41 @@ export const AvatarUpload = memo(function AvatarUpload({ value, onChange, lang }
 
     const reader = new FileReader();
     reader.onload = (e) => {
-      const result = e.target?.result as string;
-      onChange(result);
+      const rawBase64 = e.target?.result as string;
+
+      const img = new Image();
+      img.onload = () => {
+        const maxDimension = 300;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > maxDimension || height > maxDimension) {
+          if (width > height) {
+            height = Math.round((height * maxDimension) / width);
+            width = maxDimension;
+          } else {
+            width = Math.round((width * maxDimension) / height);
+            height = maxDimension;
+          }
+        }
+
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(img, 0, 0, width, height);
+          const compressedBase64 = canvas.toDataURL('image/jpeg', 0.8);
+          onChange(compressedBase64);
+        } else {
+          onChange(rawBase64);
+        }
+      };
+      img.onerror = () => {
+        onChange(rawBase64);
+      };
+      img.src = rawBase64;
     };
     reader.readAsDataURL(file);
   }, [lang, onChange]);
@@ -70,7 +103,7 @@ export const AvatarUpload = memo(function AvatarUpload({ value, onChange, lang }
       <span className="block text-xs font-semibold uppercase tracking-[0.2em] text-gray-400 dark:text-gray-500 mb-2">
         {lang === 'zh' ? '头像' : 'Avatar'}
       </span>
-      
+
       <input
         ref={fileInputRef}
         type="file"
@@ -87,8 +120,8 @@ export const AvatarUpload = memo(function AvatarUpload({ value, onChange, lang }
         className={`
           relative w-24 h-24 rounded-full cursor-pointer
           border-2 border-dashed transition-all
-          ${isDragging 
-            ? 'border-[var(--app-accent)] bg-[var(--app-accent-soft)]' 
+          ${isDragging
+            ? 'border-[var(--app-accent)] bg-[var(--app-accent-soft)]'
             : 'border-[var(--app-border)] hover:border-[var(--app-accent)]'
           }
           ${value ? 'border-solid' : ''}

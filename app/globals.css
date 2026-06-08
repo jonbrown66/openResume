@@ -208,32 +208,53 @@ html, body {
 @media print {
   @page {
     size: A4 portrait;
-    margin: 0;
+    margin: 0 !important;
   }
 
   html, body {
-    background: #fff;
+    background-color: var(--resume-paper, #faf9f3) !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
 
   body * {
     visibility: hidden;
   }
-  .resume-paper, .resume-paper * {
-    visibility: visible;
+  .resume-canvas-screen-preview, .resume-canvas-screen-preview * {
+    visibility: visible !important;
   }
-  .resume-paper {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 210mm;
-    min-height: 297mm;
-    height: auto;
+  .resume-canvas-screen-preview {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 210mm !important;
+    height: auto !important;
     box-shadow: none !important;
     border: none !important;
-    margin: 0;
-    padding: 0;
-    transform: scale(1) !important;
-    page-break-after: always;
+    margin: 0 !important;
+    padding: 0 !important;
+    transform: none !important;
+  }
+  .resume-canvas-screen-preview .origin-top-left {
+    transform: none !important;
+    transition: none !important;
+    width: 210mm !important;
+    height: auto !important;
+  }
+  .resume-paper-page-card {
+    width: 210mm !important;
+    height: 297mm !important;
+    box-shadow: none !important;
+    border: none !important;
+    border-radius: 0 !important;
+    margin: 0 !important;
+    page-break-after: always !important;
+    break-after: page !important;
+    overflow: hidden !important;
+  }
+  .resume-paper-page-card:last-child {
+    page-break-after: auto !important;
+    break-after: auto !important;
   }
 }
 

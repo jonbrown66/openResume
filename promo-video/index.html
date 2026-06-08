@@ -1,0 +1,486 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body {
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background: #eef3e7;
+        color: #1b1f16;
+        font-family: sans-serif;
+      }
+      #root {
+        position: relative;
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background: #eef3e7;
+      }
+      .scene {
+        position: absolute;
+        inset: 0;
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background: #eef3e7;
+      }
+      #scene1 { z-index: 1; }
+      #scene2, #scene3, #scene4, #scene5, #scene6 { opacity: 0; z-index: 2; }
+      .noise {
+        position: absolute;
+        inset: 0;
+        opacity: 0.32;
+        background-image:
+          linear-gradient(rgba(86, 105, 63, 0.05) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(86, 105, 63, 0.05) 1px, transparent 1px);
+        background-size: 54px 54px;
+      }
+      .glow {
+        position: absolute;
+        width: 760px;
+        height: 760px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(169, 213, 107, 0.32), rgba(169, 213, 107, 0));
+        filter: blur(6px);
+      }
+      .glow-a { left: -180px; top: -170px; }
+      .glow-b { right: -230px; bottom: -250px; }
+      .scene-content {
+        position: relative;
+        z-index: 3;
+        width: 100%;
+        height: 100%;
+        padding: 76px 92px;
+        display: flex;
+        flex-direction: column;
+        gap: 34px;
+      }
+      .topbar {
+        height: 76px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 28px;
+        border: 1px solid rgba(86, 105, 63, 0.18);
+        border-radius: 18px;
+        background: rgba(251, 252, 248, 0.9);
+        box-shadow: 0 24px 70px -42px rgba(38, 49, 29, 0.42);
+        backdrop-filter: blur(18px);
+      }
+      .brand { display: flex; align-items: center; gap: 16px; font-size: 25px; font-weight: 800; }
+      .mark {
+        width: 42px;
+        height: 42px;
+        border-radius: 13px;
+        display: grid;
+        place-items: center;
+        background: #a9d56b;
+        color: #16210d;
+        font-weight: 900;
+      }
+      .nav { display: flex; align-items: center; gap: 12px; color: #566052; font-size: 19px; }
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 44px;
+        padding: 0 18px;
+        border: 1px solid #dfe7d5;
+        border-radius: 12px;
+        background: #ffffff;
+        color: #26311d;
+        font-size: 18px;
+      }
+      .pill.primary { background: #a9d56b; border-color: #a9d56b; color: #16210d; font-weight: 750; }
+      .hero {
+        flex: 1;
+        display: grid;
+        grid-template-columns: 0.88fr 1.12fr;
+        gap: 46px;
+        min-height: 0;
+        align-items: center;
+      }
+      .kicker {
+        color: #56693f;
+        font-family: monospace;
+        font-size: 21px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+      }
+      h1 {
+        max-width: 760px;
+        font-size: 92px;
+        line-height: 1.02;
+        font-weight: 900;
+        letter-spacing: 0;
+        color: #1b1f16;
+      }
+      h2 {
+        max-width: 820px;
+        font-size: 72px;
+        line-height: 1.05;
+        font-weight: 900;
+        letter-spacing: 0;
+        color: #1b1f16;
+      }
+      .lead {
+        max-width: 760px;
+        color: #4d5545;
+        font-size: 30px;
+        line-height: 1.45;
+        font-weight: 420;
+      }
+      .hero-copy, .copy-stack { display: flex; flex-direction: column; gap: 24px; }
+      .workspace {
+        height: 700px;
+        border: 1px solid rgba(86, 105, 63, 0.18);
+        border-radius: 18px;
+        overflow: hidden;
+        background: #fbfcf8;
+        box-shadow: 0 30px 80px -42px rgba(38, 49, 29, 0.52);
+        display: flex;
+        flex-direction: column;
+      }
+      .workspace-head {
+        height: 68px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 20px;
+        border-bottom: 1px solid #dfe7d5;
+        background: rgba(255,255,255,0.86);
+      }
+      .workspace-body { flex: 1; display: grid; grid-template-columns: 41% 59%; min-height: 0; background: #eef3e7; }
+      .editor-pane, .preview-pane { padding: 22px; min-width: 0; }
+      .editor-pane {
+        border-right: 1px solid #dfe7d5;
+        background: rgba(255,255,255,0.88);
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+      .tabline { display: flex; gap: 10px; align-items: center; }
+      .tab { padding: 10px 15px; border-radius: 10px; color: #566052; background: #f5f8f0; font-size: 17px; }
+      .tab.active { color: #16210d; background: #a9d56b; font-weight: 750; }
+      .md-line {
+        height: 24px;
+        border-radius: 6px;
+        background: #eef3e7;
+      }
+      .md-line.dark { background: #dfe7d5; }
+      .md-line.short { width: 66%; }
+      .md-line.mid { width: 82%; }
+      .preview-pane {
+        display: grid;
+        place-items: center;
+        background: #eef3e7;
+      }
+      .paper {
+        width: 420px;
+        height: 594px;
+        padding: 34px 38px;
+        background: #fffdf8;
+        color: #1f211a;
+        box-shadow: 0 24px 54px -34px rgba(31, 33, 26, 0.5);
+        font-family: serif;
+      }
+      .paper h3 { font-size: 33px; line-height: 1; letter-spacing: 0.04em; margin-bottom: 12px; }
+      .paper .role { color: #566052; font-size: 14px; margin-bottom: 18px; }
+      .rule { height: 2px; background: #a9d56b; margin: 16px 0; }
+      .paper-line { height: 9px; background: #e5e1d4; margin: 8px 0; border-radius: 4px; }
+      .paper-line.w70 { width: 70%; }
+      .paper-line.w88 { width: 88%; }
+      .feature-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 22px;
+      }
+      .feature {
+        min-height: 178px;
+        padding: 24px;
+        border: 1px solid #dfe7d5;
+        border-radius: 16px;
+        background: rgba(255,255,255,0.88);
+        box-shadow: 0 20px 50px -38px rgba(38, 49, 29, 0.5);
+      }
+      .feature b { display: block; font-size: 27px; margin-bottom: 12px; color: #1b1f16; }
+      .feature span { color: #4d5545; font-size: 21px; line-height: 1.36; }
+      .panel-row {
+        flex: 1;
+        display: grid;
+        grid-template-columns: 0.82fr 1.18fr;
+        gap: 34px;
+        min-height: 0;
+      }
+      .side-panel, .large-panel {
+        border: 1px solid #dfe7d5;
+        border-radius: 18px;
+        background: rgba(255,255,255,0.88);
+        box-shadow: 0 22px 60px -36px rgba(38, 49, 29, 0.48);
+        padding: 28px;
+      }
+      .side-panel { display: flex; flex-direction: column; gap: 18px; }
+      .large-panel { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: center; }
+      .import-stack { display: flex; flex-direction: column; gap: 18px; }
+      .step {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 18px;
+        border-radius: 14px;
+        background: #f5f8f0;
+        font-size: 22px;
+        color: #26311d;
+      }
+      .dot { width: 16px; height: 16px; border-radius: 50%; background: #a9d56b; box-shadow: 0 0 0 8px rgba(169,213,107,0.18); }
+      .assistant {
+        height: 560px;
+        border-radius: 18px;
+        background: #11150e;
+        color: #f5f8f0;
+        padding: 26px;
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+      }
+      .chat { max-width: 82%; padding: 17px 19px; border-radius: 16px; font-size: 21px; line-height: 1.4; }
+      .chat.user { align-self: flex-end; background: #a9d56b; color: #16210d; }
+      .chat.ai { align-self: flex-start; background: #20281a; color: #f5f8f0; }
+      .diff {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 14px;
+      }
+      .diff-card { border-radius: 14px; background: #f5f8f0; padding: 18px; min-height: 180px; }
+      .diff-card b { font-size: 19px; color: #56693f; }
+      .templates {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 22px;
+        align-items: end;
+      }
+      .mini-paper {
+        height: 440px;
+        padding: 24px;
+        background: #fffdf8;
+        box-shadow: 0 24px 54px -36px rgba(31,33,26,0.5);
+        border: 1px solid #e5e1d4;
+        font-family: serif;
+      }
+      .mini-paper:nth-child(2) { height: 470px; }
+      .mini-paper:nth-child(3) { height: 500px; }
+      .mini-paper:nth-child(4) { height: 455px; display: grid; grid-template-columns: 32% 1fr; gap: 14px; }
+      .swatch-row { display: flex; gap: 12px; margin-top: 18px; }
+      .swatch { width: 42px; height: 42px; border-radius: 12px; border: 1px solid rgba(86,105,63,0.18); }
+      .export-row {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 24px;
+      }
+      .export-card {
+        min-height: 240px;
+        border-radius: 18px;
+        border: 1px solid #dfe7d5;
+        background: #ffffff;
+        padding: 28px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+      }
+      .export-card strong { font-size: 43px; letter-spacing: 0; }
+      .export-card span { color: #4d5545; font-size: 22px; line-height: 1.35; }
+      .cta {
+        flex: 1;
+        display: grid;
+        place-items: center;
+        text-align: center;
+      }
+      .cta-inner { display: flex; flex-direction: column; align-items: center; gap: 28px; }
+      .cta h2 { font-size: 98px; max-width: 1120px; }
+      .transition-wipe {
+        position: absolute;
+        inset: 0;
+        z-index: 20;
+        pointer-events: none;
+        background: #a9d56b;
+        transform: translateX(-105%);
+      }
+      .transition-wipe.alt { background: #11150e; }
+      .transition-wipe.soft { background: #fbfcf8; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="28" data-width="1920" data-height="1080">
+      <div id="scene1" class="scene">
+        <div class="noise"></div><div class="glow glow-a" data-layout-ignore></div><div class="glow glow-b" data-layout-ignore></div>
+        <div class="scene-content">
+          <div class="topbar s1-top"><div class="brand"><div class="mark">R</div>OpenResume</div><div class="nav"><span>导入</span><span>编辑</span><span>预览</span><span class="pill primary">导出</span></div></div>
+          <div class="hero">
+            <div class="hero-copy">
+              <div class="kicker s1-kicker">AI RESUME WORKSPACE</div>
+              <h1 class="s1-title">把简历从草稿变成可投递作品</h1>
+              <p class="lead s1-lead">导入、编辑、预览、优化、导出，集中在一个流畅的简历工作台。</p>
+              <div class="tabline s1-actions"><span class="pill primary">开始整理</span><span class="pill">查看模板</span></div>
+            </div>
+            <div class="workspace s1-workspace">
+              <div class="workspace-head"><div class="tabline"><span class="tab active">Markdown</span><span class="tab">区块编辑</span></div><span class="pill">画布缩放 92%</span></div>
+              <div class="workspace-body">
+                <div class="editor-pane">
+                  <div class="md-line dark mid"></div><div class="md-line"></div><div class="md-line short"></div><div class="md-line dark"></div><div class="md-line mid"></div><div class="md-line"></div><div class="md-line short"></div><div class="md-line dark mid"></div><div class="md-line"></div><div class="md-line mid"></div><div class="md-line short"></div>
+                </div>
+                <div class="preview-pane">
+                  <div class="paper"><h3>张 明</h3><div class="role">全栈工程师 · AI 产品方向</div><div class="rule"></div><div class="paper-line w88"></div><div class="paper-line"></div><div class="paper-line w70"></div><div class="rule"></div><div class="paper-line"></div><div class="paper-line w88"></div><div class="paper-line"></div><div class="paper-line w70"></div><div class="rule"></div><div class="paper-line w88"></div><div class="paper-line"></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="scene2" class="scene">
+        <div class="noise"></div><div class="glow glow-a" data-layout-ignore></div><div class="glow glow-b" data-layout-ignore></div>
+        <div class="scene-content">
+          <div class="copy-stack"><div class="kicker s2-kicker">完整工作流</div><h2 class="s2-title">从已有文件开始，不必重新排版</h2><p class="lead s2-lead">支持 PDF、Word、Markdown、TXT 导入，自动提取文本并整理为可编辑结构。</p></div>
+          <div class="panel-row">
+            <div class="side-panel s2-panel"><span class="pill primary">导入文件</span><div class="step"><span class="dot"></span>提取文本</div><div class="step"><span class="dot"></span>自动解析区块</div><div class="step"><span class="dot"></span>AI 整理内容</div><div class="step"><span class="dot"></span>回退保护与提示</div></div>
+            <div class="large-panel s2-large"><div class="paper"><h3>候选人简历</h3><div class="role">原始内容导入</div><div class="rule"></div><div class="paper-line"></div><div class="paper-line w88"></div><div class="paper-line w70"></div><div class="rule"></div><div class="paper-line"></div><div class="paper-line w88"></div><div class="paper-line"></div></div><div class="import-stack"><div class="feature"><b>解析成结构</b><span>姓名、职位、联系方式、项目经历和技能自动归类。</span></div><div class="feature"><b>保留可控编辑</b><span>AI 只帮助整理，最终内容由用户确认。</span></div></div></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="scene3" class="scene">
+        <div class="noise"></div><div class="glow glow-a" data-layout-ignore></div><div class="glow glow-b" data-layout-ignore></div>
+        <div class="scene-content">
+          <div class="copy-stack"><div class="kicker s3-kicker">AI 简历助手</div><h2 class="s3-title">优化措辞，也能直接生成修改对比</h2></div>
+          <div class="panel-row">
+            <div class="assistant s3-assistant"><div class="chat user">帮我把项目经历改得更匹配前端工程师岗位。</div><div class="chat ai">我会突出 React、性能优化、组件化和业务结果，并生成可回滚修改。</div><div class="chat user">应用前先让我确认差异。</div><div class="chat ai">已生成修改版，可在对比视图中检查。</div></div>
+            <div class="side-panel s3-diff"><div class="diff"><div class="diff-card"><b>修改前</b><div class="paper-line"></div><div class="paper-line w70"></div><div class="paper-line w88"></div></div><div class="diff-card"><b>修改后</b><div class="paper-line dark"></div><div class="paper-line dark w88"></div><div class="paper-line dark"></div></div></div><div class="feature"><b>风险提示</b><span>检测高风险改动，避免 AI 误删经历或虚构内容。</span></div><span class="pill primary">应用到简历</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="scene4" class="scene">
+        <div class="noise"></div><div class="glow glow-a" data-layout-ignore></div><div class="glow glow-b" data-layout-ignore></div>
+        <div class="scene-content">
+          <div class="copy-stack"><div class="kicker s4-kicker">样式与模板</div><h2 class="s4-title">内容稳定，视觉可以快速切换</h2><p class="lead s4-lead">经典、极简、标准、侧栏四套模板，颜色、字体、字号、行高、页边距都可调整。</p></div>
+          <div class="templates s4-templates">
+            <div class="mini-paper"><h3>经典</h3><div class="rule"></div><div class="paper-line"></div><div class="paper-line w70"></div><div class="swatch-row"><span class="swatch" style="background:#a9d56b"></span><span class="swatch" style="background:#56693f"></span></div></div>
+            <div class="mini-paper"><h3>极简</h3><div class="rule"></div><div class="paper-line w88"></div><div class="paper-line"></div><div class="paper-line w70"></div></div>
+            <div class="mini-paper"><h3>标准</h3><div class="rule"></div><div class="paper-line"></div><div class="paper-line w88"></div><div class="paper-line"></div><div class="paper-line w70"></div></div>
+            <div class="mini-paper"><div style="background:#f2efe5"></div><div><h3>侧栏</h3><div class="rule"></div><div class="paper-line"></div><div class="paper-line w70"></div></div></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="scene5" class="scene">
+        <div class="noise"></div><div class="glow glow-a" data-layout-ignore></div><div class="glow glow-b" data-layout-ignore></div>
+        <div class="scene-content">
+          <div class="copy-stack"><div class="kicker s5-kicker">交付能力</div><h2 class="s5-title">编辑完成后，直接导出可交付文件</h2></div>
+          <div class="export-row s5-exports"><div class="export-card"><strong>PDF</strong><span>适合投递、打印和归档，保持 A4 页面效果。</span><span class="pill primary">导出 PDF</span></div><div class="export-card"><strong>Word</strong><span>便于继续协作修改，保留简历内容结构。</span><span class="pill">导出 Word</span></div><div class="export-card"><strong>HTML</strong><span>将简历保存为网页版本，适合在线展示。</span><span class="pill">导出 HTML</span></div></div>
+          <div class="feature-grid s5-grid"><div class="feature"><b>多项目管理</b><span>不同岗位保存不同版本。</span></div><div class="feature"><b>中英界面</b><span>中文与 English 快速切换。</span></div><div class="feature"><b>本地配置</b><span>AI 供应商与模型由用户掌控。</span></div></div>
+        </div>
+      </div>
+
+      <div id="scene6" class="scene">
+        <div class="noise"></div><div class="glow glow-a" data-layout-ignore></div><div class="glow glow-b" data-layout-ignore></div>
+        <div class="scene-content">
+          <div class="topbar s6-top"><div class="brand"><div class="mark">R</div>OpenResume</div><div class="nav"><span>编辑</span><span>优化</span><span>导出</span></div></div>
+          <div class="cta"><div class="cta-inner"><div class="kicker s6-kicker">OPENRESUME</div><h2 class="s6-title">让每一份简历更清晰、更可信、更好交付</h2><p class="lead s6-lead">一个面向真实求职流程的 AI 简历工作台。</p><span class="pill primary s6-pill">开始制作你的下一版简历</span></div></div>
+        </div>
+      </div>
+
+      <div id="wipe" class="transition-wipe"></div>
+    </div>
+
+    <script>
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+      const D = 28;
+
+      function ambient() {
+        tl.to(".glow-a", { scale: 1.08, x: 24, y: 18, duration: 6, ease: "sine.inOut", repeat: 4, yoyo: true }, 0);
+        tl.fromTo(".glow-b", { scale: 0.9 }, { scale: 1.04, x: -18, y: -24, duration: 7, ease: "sine.inOut", repeat: 3, yoyo: true }, 0);
+      }
+      function reveal(scene, at) {
+        if (scene !== "#scene1") tl.set(scene, { opacity: 1, zIndex: 3 }, at);
+      }
+      function wipeTo(next, at, tone) {
+        tl.set("#wipe", { className: "transition-wipe " + (tone || ""), x: "-105%" }, at - 0.01);
+        tl.to("#wipe", { x: "0%", duration: 0.34, ease: "power3.inOut", overwrite: "auto" }, at);
+        tl.set(next, { opacity: 1, zIndex: 4 }, at + 0.34);
+        tl.to("#wipe", { x: "105%", duration: 0.38, ease: "power2.inOut", overwrite: "auto" }, at + 0.38);
+      }
+      function enterScene1() {
+        tl.from(".s1-top", { y: -46, opacity: 0, duration: 0.55, ease: "power3.out" }, 0.18);
+        tl.from(".s1-kicker", { x: -34, opacity: 0, duration: 0.42, ease: "expo.out" }, 0.42);
+        tl.from(".s1-title", { y: 54, opacity: 0, duration: 0.72, ease: "power4.out" }, 0.56);
+        tl.from(".s1-lead", { y: 32, opacity: 0, duration: 0.5, ease: "sine.out" }, 0.86);
+        tl.from(".s1-actions .pill", { scale: 0.92, opacity: 0, duration: 0.42, stagger: 0.08, ease: "back.out(1.5)" }, 1.1);
+        tl.from(".s1-workspace", { x: 70, y: 28, opacity: 0, scale: 0.96, duration: 0.75, ease: "power3.out" }, 0.62);
+        tl.from(".s1-workspace .paper", { y: 36, opacity: 0, scale: 0.94, duration: 0.6, ease: "expo.out" }, 1.18);
+      }
+      function enterScene2() {
+        reveal("#scene2", 5.0);
+        tl.from(".s2-kicker", { x: -42, opacity: 0, duration: 0.42, ease: "expo.out" }, 5.08);
+        tl.from(".s2-title", { y: 50, opacity: 0, duration: 0.65, ease: "power3.out" }, 5.22);
+        tl.from(".s2-lead", { y: 26, opacity: 0, duration: 0.46, ease: "sine.out" }, 5.52);
+        tl.from(".s2-panel", { x: -58, opacity: 0, duration: 0.56, ease: "power2.out" }, 5.74);
+        tl.from(".s2-panel .step", { x: -24, opacity: 0, duration: 0.38, stagger: 0.12, ease: "back.out(1.4)" }, 6.02);
+        tl.from(".s2-large", { x: 64, opacity: 0, scale: 0.97, duration: 0.62, ease: "expo.out" }, 5.86);
+      }
+      function enterScene3() {
+        reveal("#scene3", 9.6);
+        tl.from(".s3-kicker", { y: -30, opacity: 0, duration: 0.4, ease: "power2.out" }, 9.72);
+        tl.from(".s3-title", { y: 52, opacity: 0, duration: 0.65, ease: "power4.out" }, 9.86);
+        tl.from(".s3-assistant", { x: -66, opacity: 0, scale: 0.97, duration: 0.58, ease: "expo.out" }, 10.16);
+        tl.from(".s3-assistant .chat", { y: 24, opacity: 0, duration: 0.34, stagger: 0.18, ease: "back.out(1.35)" }, 10.52);
+        tl.from(".s3-diff", { x: 58, opacity: 0, duration: 0.52, ease: "power3.out" }, 10.36);
+        tl.from(".s3-diff .diff-card", { y: 28, opacity: 0, duration: 0.38, stagger: 0.1, ease: "sine.out" }, 10.8);
+      }
+      function enterScene4() {
+        reveal("#scene4", 14.2);
+        tl.from(".s4-kicker", { x: -38, opacity: 0, duration: 0.4, ease: "expo.out" }, 14.32);
+        tl.from(".s4-title", { y: 50, opacity: 0, duration: 0.62, ease: "power3.out" }, 14.46);
+        tl.from(".s4-lead", { y: 24, opacity: 0, duration: 0.45, ease: "sine.out" }, 14.76);
+        tl.from(".s4-templates .mini-paper", { y: 70, opacity: 0, scale: 0.94, duration: 0.58, stagger: 0.12, ease: "back.out(1.2)" }, 15.06);
+        tl.from(".s4-templates .swatch", { scale: 0.5, opacity: 0, duration: 0.32, stagger: 0.08, ease: "back.out(2)" }, 15.82);
+      }
+      function enterScene5() {
+        reveal("#scene5", 18.8);
+        tl.from(".s5-kicker", { y: -28, opacity: 0, duration: 0.4, ease: "power2.out" }, 18.92);
+        tl.from(".s5-title", { y: 48, opacity: 0, duration: 0.62, ease: "power4.out" }, 19.08);
+        tl.from(".s5-exports .export-card", { y: 56, opacity: 0, scale: 0.96, duration: 0.54, stagger: 0.12, ease: "expo.out" }, 19.54);
+        tl.from(".s5-grid .feature", { y: 36, opacity: 0, duration: 0.44, stagger: 0.1, ease: "back.out(1.25)" }, 20.32);
+      }
+      function enterScene6() {
+        reveal("#scene6", 23.4);
+        tl.from(".s6-top", { y: -44, opacity: 0, duration: 0.5, ease: "power3.out" }, 23.52);
+        tl.from(".s6-kicker", { scale: 0.92, opacity: 0, duration: 0.38, ease: "back.out(1.4)" }, 23.82);
+        tl.from(".s6-title", { y: 58, opacity: 0, duration: 0.72, ease: "expo.out" }, 24.02);
+        tl.from(".s6-lead", { y: 26, opacity: 0, duration: 0.46, ease: "sine.out" }, 24.5);
+        tl.from(".s6-pill", { y: 22, opacity: 0, scale: 0.94, duration: 0.42, ease: "back.out(1.6)" }, 24.82);
+        tl.to("#scene6", { opacity: 0, duration: 0.8, ease: "sine.inOut" }, D - 0.9);
+        tl.set("#scene6", { visibility: "hidden" }, D - 0.08);
+      }
+
+      ambient();
+      enterScene1();
+      wipeTo("#scene2", 4.72, "");
+      enterScene2();
+      wipeTo("#scene3", 9.32, "alt");
+      enterScene3();
+      wipeTo("#scene4", 13.92, "soft");
+      enterScene4();
+      wipeTo("#scene5", 18.52, "");
+      enterScene5();
+      wipeTo("#scene6", 23.12, "alt");
+      enterScene6();
+      window.__timelines["main"] = tl;
+    </script>
+  </body>
+</html>

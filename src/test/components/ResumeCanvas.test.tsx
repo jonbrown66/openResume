@@ -12,13 +12,11 @@ describe('ResumeCanvas', () => {
       </ResumeCanvas>,
     );
 
-    const paper = screen.getByText('Resume content').parentElement;
+    const instances = screen.getAllByText('Resume content');
+    expect(instances.length).toBe(2); // 离线测量 + 多页卡片预览共2份
 
-    expect(paper).toHaveClass('resume-paper', 'flex', 'flex-col', '[contain:layout_paint_style]');
-    expect(paper).toHaveStyle({
-      width: `${pageWidthPx}px`,
-      height: 'auto',
-    });
-    expect(paper).not.toHaveStyle({ minHeight: '1123px' });
+    const previewContainer = instances[1].closest('.resume-canvas-screen-preview');
+    expect(previewContainer).toBeTruthy();
+    expect(previewContainer).toHaveClass('resume-canvas-screen-preview', 'print:flex');
   });
 });

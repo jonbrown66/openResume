@@ -17,3 +17,8 @@ tsconfig.tsbuildinfo
 filelist.txt
 .playwright-mcp/
 nul
+
+# HyperFrames render artifacts
+promo-video/work-*/
+promo-video/*.mp4
+promo-video/*.webm

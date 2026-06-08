@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, BorderStyle } from 'docx';
+import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, BorderStyle, Table, TableRow, TableCell, WidthType } from 'docx';
 
 interface ResumeFrontmatter {
   name: string;
@@ -28,6 +28,106 @@ interface ResumeDraft {
   sections: ResumeSection[];
 }
 
+type DocxBlock = Paragraph | Table;
+
+function parseMarkdownContent(content: string): DocxBlock[] {
+  const blocks: DocxBlock[] = [];
+  const lines = content.split('\n');
+
+  let i = 0;
+  while (i < lines.length) {
+    const line = lines[i];
+
+    // 检测是否为表格行
+    if (line.trim().startsWith('|') && i + 1 < lines.length) {
+      const nextLine = lines[i + 1].trim();
+      const isSeparator = nextLine.startsWith('|') && nextLine.replace(/[|:\s-]/g, '').length === 0;
+
+      if (isSeparator) {
+        const tableRowsData: string[][] = [];
+
+        // 解析表头
+        const headers = line.split('|')
+          .map(cell => cell.trim())
+          .filter((_, idx, arr) => idx > 0 && idx < arr.length - 1);
+        tableRowsData.push(headers);
+
+        i += 2; // 跳过表头和分割线
+
+        // 解析内容行
+        while (i < lines.length && lines[i].trim().startsWith('|')) {
+          const bodyCells = lines[i].split('|')
+            .map(cell => cell.trim())
+            .filter((_, idx, arr) => idx > 0 && idx < arr.length - 1);
+          tableRowsData.push(bodyCells);
+          i++;
+        }
+
+        if (tableRowsData.length > 0) {
+          const docxTable = new Table({
+            width: {
+              size: 100,
+              type: WidthType.PERCENTAGE,
+            },
+            rows: tableRowsData.map((rowData, rowIndex) => {
+              const isHeader = rowIndex === 0;
+              return new TableRow({
+                children: rowData.map(cellText => {
+                  return new TableCell({
+                    width: {
+                      size: Math.round(100 / rowData.length),
+                      type: WidthType.PERCENTAGE,
+                    },
+                    shading: isHeader ? { fill: "F2F2F2" } : undefined,
+                    children: [
+                      new Paragraph({
+                        spacing: { before: 100, after: 100 },
+                        children: [
+                          new TextRun({
+                            text: cellText,
+                            bold: isHeader,
+                            size: 20,
+                          }),
+                        ],
+                      }),
+                    ],
+                  });
+                }),
+              });
+            }),
+          });
+
+          blocks.push(docxTable);
+          blocks.push(new Paragraph({ spacing: { before: 100, after: 100 } }));
+        }
+        continue;
+      }
+    }
+
+    // 普通文本或列表
+    const cleanedLine = line.replace(/^[-*]\s*/, '').trim();
+    if (cleanedLine) {
+      const isBullet = line.trim().startsWith('-') || line.trim().startsWith('*');
+      blocks.push(
+        new Paragraph({
+          spacing: { before: 50, after: 50 },
+          indent: isBullet ? { left: 720 } : undefined,
+          children: [
+            new TextRun({
+              text: isBullet ? "• " + cleanedLine : cleanedLine,
+              size: 20,
+            }),
+          ],
+        })
+      );
+    }
+
+    i++;
+  }
+
+  return blocks;
+}
+
 function isChineseText(value: string): boolean {
   return /[\u4e00-\u9fa5]/.test(value);
 }
@@ -53,49 +153,37 @@ function createSectionTitle(title: string): Paragraph {
   });
 }
 
-function createEntry(heading: string, meta: string, organization: string, content: string): Paragraph[] {
-  const children: Paragraph[] = [];
-  
-  children.push(
-    new Paragraph({
-      spacing: { before: 200, after: 100 },
-      children: [
-        new TextRun({ text: heading, bold: true, size: 22 }),
-        ...(organization
-          ? [
-              new TextRun({ text: " / ", size: 22, color: "888888" }),
-              new TextRun({ text: organization, size: 22, color: "888888" }),
-            ]
-          : []),
-        new TextRun({ text: "  ", size: 22 }),
-        new TextRun({ text: meta, italics: true, size: 20, color: "666666" }),
-      ],
-    })
-  );
+function createEntry(heading: string, meta: string, organization: string, content: string): DocxBlock[] {
+  const children: DocxBlock[] = [];
+
+  if (heading || organization || meta) {
+    children.push(
+      new Paragraph({
+        spacing: { before: 200, after: 100 },
+        children: [
+          new TextRun({ text: heading, bold: true, size: 22 }),
+          ...(organization
+            ? [
+                new TextRun({ text: " / ", size: 22, color: "888888" }),
+                new TextRun({ text: organization, size: 22, color: "888888" }),
+              ]
+            : []),
+          new TextRun({ text: "  ", size: 22 }),
+          new TextRun({ text: meta, italics: true, size: 20, color: "666666" }),
+        ],
+      })
+    );
+  }
 
   if (content) {
-    const lines = content.split('\n').filter(line => line.trim());
-    for (const line of lines) {
-      const cleanedLine = line.replace(/^[-*]\s*/, '').trim();
-      if (cleanedLine) {
-        children.push(
-          new Paragraph({
-            spacing: { before: 50, after: 50 },
-            indent: { left: 720 },
-            children: [
-              new TextRun({ text: "• " + cleanedLine, size: 20 }),
-            ],
-          })
-        );
-      }
-    }
+    children.push(...parseMarkdownContent(content));
   }
 
   return children;
 }
 
-function buildDocx(draft: ResumeDraft, template: string = 'classic') {
-  const children: Paragraph[] = [];
+function buildDocx(draft: ResumeDraft, template: string = 'classic'): DocxBlock[] {
+  const children: DocxBlock[] = [];
   const { frontmatter } = draft;
   const primaryColor = "1a1a1a";
   const secondaryColor = "666666";
@@ -193,34 +281,14 @@ function buildDocx(draft: ResumeDraft, template: string = 'classic') {
   const summaryTitle = draft.summaryTitle || (isChineseText(`${draft.frontmatter.name} ${draft.summary}`) ? '个人简介' : 'PROFESSIONAL SUMMARY');
   if (draft.summary) {
     children.push(createSectionTitle(summaryTitle));
-    const summaryLines = draft.summary.split('\n').filter(line => line.trim());
-    for (const line of summaryLines) {
-      children.push(
-        new Paragraph({
-          spacing: { before: 100, after: 100 },
-          children: [
-            new TextRun({ text: line.trim(), size: 20 }),
-          ],
-        })
-      );
-    }
+    children.push(...parseMarkdownContent(draft.summary));
   }
 
   for (const section of draft.sections) {
     children.push(createSectionTitle(section.title));
-    
+
     if (section.content) {
-      const lines = section.content.split('\n').filter(line => line.trim());
-      for (const line of lines) {
-        children.push(
-          new Paragraph({
-            spacing: { before: 100, after: 100 },
-            children: [
-              new TextRun({ text: line.trim(), size: 20 }),
-            ],
-          })
-        );
-      }
+      children.push(...parseMarkdownContent(section.content));
     }
 
     for (const entry of section.entries) {
