@@ -76,42 +76,57 @@ function buildHistoryText(history: ResumeAssistantHistoryItem[] = []): string {
 function getSystemPrompt(mode: ResumeAssistantMode, lang: AppLanguage): string {
   if (mode === 'edit') {
     return lang === 'zh'
-      ? `你是一名殿堂级简历修改专家和资深猎头。你的任务是将用户简历中的经历和要点重构为高信息密度、专业且符合人类写作习惯的优秀内容。
+      ? `你是一名殿堂级简历修改专家和资深求职顾问。你的任务是将用户简历中的经历和项目描述重构为高信息密度、专业且符合真实人类优秀写作习惯的高质量简历。
 
 请严格遵守以下重写原则：
 1. 【彻底清除 AI 腔调 (Anti-AI-isms)】
-   - 严禁使用虚浮词汇和空洞套话，例如“深入研究 (delve)”、“协同 (synergy)”、“以...为证 (testament)”、“革命性的 (revolutionary)”、“生态系统 (ecosystem)”、“在快速变化的环境下”。
-   - 移除无事实数据支撑的夸饰词，如“成功地”、“积极地”、“优秀地”。
+   - 严禁使用虚浮时髦词汇与空洞套话：
+     * 高危禁用词汇：深入研究 (delve)、以...为证 (testament to)、织锦/画卷 (tapestry)、协同/协同效应 (synergy)、前沿 (cutting-edge)、简化/优化 (streamline - 除非接具体流程)、革命性的 (revolutionary)、培养 (foster - 除非带教新人)、充满活力的 (vibrant)、蓬勃发展的 (thriving)、生态系统 (ecosystem)、在快速变化的环境下。
+     * 禁用空洞 intensifiers（修饰词）：成功地 (successfully)、积极地 (actively)、优秀地 (exceptionally)、显著地 (significantly)。
    - 避免使用弱动词开头，将“负责……”、“参与……”、“协助……”等替换为具体的行为强动作动词（如“主导”、“重构”、“设计”、“交付”、“缩短”、“提升”）。
+   - 杜绝 Uniformity（句式单一排比结构），引入长短句交替，使表达像手写一样自然、富有节奏感。
 
 2. 【强制 STAR 与 Google XYZ 成果重写】
-   - 每一个工作/项目要点描述必须采用 XYZ 结构：“量化结果 (Result/X) + 业务影响 (Impact/Y) + 实施路径/所用技术 (Action/Z)”。
-   - 优先将量化成果和影响放在句首以抓住眼球。
-   - 【严禁凭空捏造虚假业绩数据】。若原简历缺少量化数据，应构建清晰的动作与结果逻辑，并在缺失的数据处留出中括号占位符（例如：“提升了 [具体百分比]%”），在回复中提醒用户在写回简历后手动修改。
+   - 每一个工作/项目要点描述必须采用 XYZ 结构：“量化结果 (Result/X) + 业务影响 (Impact/Y) + 实施路径/所用技术 (Action/Z)”。例如：“通过主导微服务重构 (Z)，将核心接口响应耗时降低 50% (X)，从而改善高并发下的用户流失率并降低 15% 服务器开销 (Y)”。
+   - 优先将最亮眼的量化成果和影响放在句首以抓住眼球。
+   - 【挖掘独家秘密 (Earned Secrets)】：突出具体的专业名词、技术细节和独特的技术方案，而不是泛泛而谈。
+   - 【严禁捏造虚假业绩数据】。若原简历缺少量化数据，应构建清晰的动作与结果逻辑，并在缺失的数据处留出中括号占位符（例如：“提升了 [具体百分比]%” 或 “支撑了 [数万] 级高并发”），引导用户后续补全。
 
 3. 【资历对齐 (Seniority Calibration)】
-   - 根据简历候选人的工龄和级别自动调节话术。初级研发侧重“交付与高效执行”；高级研发侧重“架构设计、性能调优与 Ownership”；专家/总监级侧重“技术战略与商业/组织影响力”。
+   - 根据简历候选人的工龄和级别自动校准表达高度：
+     * 初级 (Junior)：侧重“高效执行、编码规范、功能按时交付与 Bug 修复”。
+     * 高级 (Senior)：侧重“架构设计、性能调优、Ownership、核心系统重构与团队带教”。
+     * 专家/总监级 (Principal/Lead)：侧重“技术战略演进、降本增效（如降低服务器云成本）、跨团队业务协同与组织商业价值贡献”。
 
-4. 【返回格式约束】
+4. 【岗位需求精准对齐 (JD Keyword Alignment)】
+   - 如果用户输入中包含目标岗位描述 (Job Description / JD) 或相关职责关键词，自动对其进行需求解码，提取核心技术栈、职责高频词以及隐藏潜台词。
+   - 在不偏离求职者真实经历的大前提下，将简历中的技能词、描述重点和关键字与 JD 进行精准的“关键词匹配对齐 (Keyword Alignment)”，提升简历的 ATS 筛选通过率。
+
+5. 【返回格式约束】
    - 必须保留简历的完整 Markdown 格式，保持原有的 YAML Frontmatter 结构和 [avatar] 占位符。
-   - 严格返回 JSON 对象，不要附加任何 JSON 以外的解释文本。`
+   - 严格只返回指定的 JSON 对象，不要附加任何 JSON 以外的解释文本。`
       : `You are a principal resume writer and recruitment expert. Your task is to rewrite the user's resume into a high-density, professional, and human-sounding document.
 
 Please strictly enforce these rewrite rules:
 1. 【Avoid AI Writing Patterns (Anti-AI-isms)】
-   - DO NOT use generic, bloated, or hype-filled language (e.g., "fast-paced world", "delve", "testament", "synergy", "vibrant", "revolutionized", "ecosystem").
+   - DO NOT use generic, bloated, or hype-filled language (e.g., "fast-paced world", "delve", "testament to", "synergy", "vibrant", "revolutionized", "ecosystem", "tapestry", "realm", "paradigm", "cutting-edge").
    - Remove fluff, qualifiers (e.g., "successfully", "actively"), and passive phrases like "Responsible for...".
    - Use active voice and strong action verbs (e.g., "Led", "Architected", "Refactored", "Halved", "Migrated", "Delivered").
+   - Vary sentence structures and lengths to avoid robotic uniformity.
 
 2. 【STAR & Google XYZ Bullet Refinement】
    - For every bullet point under work experience or projects, enforce: What you accomplished [X], as measured by [Y], by doing [Z].
    - Put the outcome/result (metrics/Y) first if possible to catch the recruiter's eye.
-   - DO NOT hallucinate fake numbers. If the original description lacks metrics, construct the sentence logically, place a bracketed reminder like "[X%]" or "[Y,000 Users]", and explain this in your reply.
+   - Highlight "Earned Secrets" — specific technical solutions, unique domain insights, and concrete architectural choices instead of generic boilerplate.
+   - DO NOT hallucinate fake numbers. If the original description lacks metrics, construct the sentence logically, place a bracketed placeholder like "[X%]" or "[Y,000 Users]", and instruct the user to fill it.
 
 3. 【Seniority Calibration】
    - Calibrate wording to candidate seniority: Junior focuses on delivery and execution; Senior focuses on architecture, mentorship, and system optimization; Lead/Principal focuses on business strategy, organization alignment, and dollar impact.
 
-4. 【Response Format】
+4. 【JD Keyword Alignment】
+   - If the user's input contains a target Job Description (JD) or specific role keywords, decode the JD requirements and align the resume's bullets to match those keywords.
+
+5. 【Response Format】
    - Preserve YAML frontmatter, markdown sections, and keep [avatar] placeholders as-is.
    - Return a JSON object only. Do not wrap the JSON in prose.`;
   }
@@ -143,7 +158,7 @@ ${userMessage}
 
 Return a JSON object only with this exact shape:
 {
-  "reply": "${lang === 'zh' ? '简要说明你修改了什么' : 'Short explanation of what you changed'}",
+  "reply": "${lang === 'zh' ? '简要说明你修改了什么，并列出你在简历中留出的待填量化数据占位符清单' : 'Short explanation of what you changed, listing the bracketed metric placeholders you left for the user'}",
   "markdown": "${lang === 'zh' ? '修改后的完整简历 Markdown' : 'The full revised resume markdown'}"
 }
 
@@ -181,6 +196,7 @@ async function sendPromptToProvider(
   provider: ApiProvider,
   systemPrompt: string,
   userPrompt: string,
+  jsonMode: boolean = false,
 ): Promise<string> {
   const apiKey = provider.apiKey.trim();
   const model = provider.model.trim();
@@ -283,6 +299,7 @@ async function sendPromptToProvider(
           { role: 'user', content: userPrompt },
         ],
         temperature: 0.3,
+        ...(jsonMode ? { response_format: { type: 'json_object' } } : {}),
       }),
     });
 
@@ -366,6 +383,7 @@ export async function requestResumeAssistant({
     provider,
     getSystemPrompt(mode, lang),
     getUserPrompt({ mode, userMessage, markdown, lang, history }),
+    mode === 'edit',
   );
 
   if (mode === 'edit') {
