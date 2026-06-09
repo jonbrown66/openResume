@@ -138,7 +138,10 @@ export function AssistantWidget({
         })),
       });
 
-      const riskWarnings = result.proposedMarkdown
+      const normalizeLines = (text: string) => text.replace(/\r\n/g, '\n').trim();
+      const hasChanges = result.proposedMarkdown && normalizeLines(result.proposedMarkdown) !== normalizeLines(markdown);
+
+      const riskWarnings = hasChanges && result.proposedMarkdown
         ? getResumeAssistantRiskWarnings(markdown, result.proposedMarkdown)
         : [];
 
@@ -148,8 +151,8 @@ export function AssistantWidget({
           id: createId('assistant'),
           role: 'assistant',
           content: result.reply,
-          proposedMarkdown: result.proposedMarkdown,
-          diff: result.proposedMarkdown
+          proposedMarkdown: hasChanges ? result.proposedMarkdown : undefined,
+          diff: hasChanges && result.proposedMarkdown
             ? buildResumeDiff(markdown, result.proposedMarkdown)
             : undefined,
           riskWarnings,

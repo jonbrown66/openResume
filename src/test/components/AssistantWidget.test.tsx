@@ -466,4 +466,45 @@ contact: jane@example.com
     expect(screen.queryByText('Revise project A summary.')).not.toBeInTheDocument();
     expect(screen.getByText('I am your resume editing assistant. How can I help you?')).toBeInTheDocument();
   });
+
+  it('hides diff preview and apply button when the AI response has no markdown changes (advice-only mode)', async () => {
+    requestResumeAssistant.mockResolvedValue({
+      reply: 'Here are some suggestions: 1. Add metrics; 2. Use stronger verbs.',
+      proposedMarkdown: '---\nname: Jane Doe\ntitle: Product Designer\ncontact: jane@example.com\n---\n\n## PROFESSIONAL SUMMARY\nOriginal summary',
+    });
+
+    render(
+      <AssistantWidget
+        lang="en"
+        markdown={
+          '---\nname: Jane Doe\ntitle: Product Designer\ncontact: jane@example.com\n---\n\n## PROFESSIONAL SUMMARY\nOriginal summary'
+        }
+        projectId="project-advice-only"
+        settings={createSettings({
+          activeProvider: 'openai',
+          providers: {
+            ...DEFAULT_SETTINGS.providers,
+            openai: {
+              ...DEFAULT_SETTINGS.providers.openai,
+              apiKey: 'demo-key',
+              model: 'gpt-5.2',
+            },
+          },
+        })}
+        translations={translations.en}
+        onApplyMarkdown={vi.fn()}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Open AI assistant' }));
+    fireEvent.change(screen.getByPlaceholderText('Describe how the assistant should revise your resume...'), {
+      target: { value: 'How can I optimize my summary?' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Send' }));
+
+    expect(await screen.findByText('Here are some suggestions: 1. Add metrics; 2. Use stronger verbs.')).toBeInTheDocument();
+    expect(screen.queryByText('Before')).not.toBeInTheDocument();
+    expect(screen.queryByText('After')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Apply to Resume' })).not.toBeInTheDocument();
+  });
 });
