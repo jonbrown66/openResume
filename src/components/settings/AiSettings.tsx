@@ -32,15 +32,18 @@ const PROVIDERS: { id: ApiProviderId; nameKey: string; icon: React.ReactNode }[]
 ];
 
 const DEFAULT_MODELS: Record<ApiProviderId, string[]> = {
-  openai: ['gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo', 'o1-mini'],
-  anthropic: ['claude-3-5-sonnet-latest', 'claude-3-5-haiku-latest', 'claude-3-opus-latest'],
-  gemini: ['gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-2.0-flash', 'gemini-2.0-pro-exp'],
-  deepseek: ['deepseek-chat', 'deepseek-reasoner'],
+  openai: ['gpt-5.2', 'gpt-5.2-pro', 'gpt-5.1', 'gpt-5-mini', 'gpt-5-nano'],
+  anthropic: ['claude-opus-4-8', 'claude-sonnet-4-6', 'claude-haiku-4-5-20251001'],
+  gemini: ['gemini-3-pro-preview', 'gemini-3-flash-preview'],
+  deepseek: ['deepseek-v4-pro', 'deepseek-v4-flash'],
   openrouter: [
-    'google/gemini-flash-1.5',
-    'anthropic/claude-3.5-sonnet',
-    'openai/gpt-4o-mini',
-    'deepseek/deepseek-chat',
+    'anthropic/claude-opus-4.8',
+    'openai/gpt-5.5',
+    'openai/gpt-5.4',
+    'google/gemini-3.5-flash',
+    'google/gemini-3-pro-preview',
+    'deepseek/deepseek-v4-pro',
+    'deepseek/deepseek-v4-flash',
   ],
 };
 
