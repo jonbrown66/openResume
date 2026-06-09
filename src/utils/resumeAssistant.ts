@@ -388,6 +388,9 @@ export async function requestResumeAssistant({
 
   if (mode === 'edit') {
     const result = parseAssistantEditResponse(rawText);
+    if (result.reply) {
+      result.reply = sanitizeMarkdownImagesForAi(result.reply);
+    }
     if (result.proposedMarkdown) {
       result.proposedMarkdown = restoreAvatarInMarkdown(result.proposedMarkdown, markdown);
     }
@@ -395,6 +398,6 @@ export async function requestResumeAssistant({
   }
 
   return {
-    reply: stripCodeFence(rawText),
+    reply: sanitizeMarkdownImagesForAi(stripCodeFence(rawText)),
   };
 }

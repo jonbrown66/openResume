@@ -237,4 +237,47 @@ describe('resumeAssistant', () => {
 
     expect(result.proposedMarkdown).toContain('image: "data:image/png;base64,iVBORw0KGgoAAAASDFASF"');
   });
+
+  it('sanitizes base64 avatar images in reply field for both edit and chat modes', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: vi.fn().mockResolvedValue({
+        choices: [
+          {
+            message: {
+              content: JSON.stringify({
+                reply: 'Look at this avatar: data:image/png;base64,iVBORw0KGgoAAAASDFASF',
+                markdown: '---\\nname: Demo\\nimage: "[avatar]"\\n---\\n## Experience',
+              }),
+            },
+          },
+        ],
+      }),
+    });
+
+    vi.stubGlobal('fetch', fetchMock);
+
+    const result = await requestResumeAssistant({
+      mode: 'edit',
+      userMessage: 'Polish.',
+      markdown: '---\nname: Demo\n---',
+      lang: 'en',
+      settings: {
+        ...DEFAULT_SETTINGS,
+        activeProvider: 'openrouter',
+        providers: {
+          ...DEFAULT_SETTINGS.providers,
+          openrouter: {
+            ...DEFAULT_SETTINGS.providers.openrouter,
+            apiKey: 'sk-or-v1-demo',
+            model: 'openai/gpt-5-mini',
+            baseUrl: 'https://openrouter.ai/api/v1',
+          },
+        },
+      },
+    });
+
+    expect(result.reply).toContain('[avatar]');
+    expect(result.reply).not.toContain('iVBORw0KGgo');
+  });
 });

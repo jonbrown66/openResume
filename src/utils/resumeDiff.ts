@@ -1,3 +1,5 @@
+import { sanitizeMarkdownImagesForAi } from '@/utils/aiMarkdownSanitizer';
+
 export type ResumeDiffLineType = 'unchanged' | 'added' | 'removed';
 
 export interface ResumeDiffLine {
@@ -29,8 +31,10 @@ function buildLcsMatrix(before: string[], after: string[]) {
 }
 
 export function buildResumeDiff(beforeText: string, afterText: string): ResumeDiffResult {
-  const beforeLines = beforeText.split('\n');
-  const afterLines = afterText.split('\n');
+  const sanitizedBefore = sanitizeMarkdownImagesForAi(beforeText);
+  const sanitizedAfter = sanitizeMarkdownImagesForAi(afterText);
+  const beforeLines = sanitizedBefore.split('\n');
+  const afterLines = sanitizedAfter.split('\n');
   const lcs = buildLcsMatrix(beforeLines, afterLines);
 
   const before: ResumeDiffLine[] = [];

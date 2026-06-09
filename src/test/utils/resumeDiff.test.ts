@@ -9,4 +9,15 @@ describe('buildResumeDiff', () => {
     expect(diff.before.some((line) => line.type === 'removed' && line.text === 'line two')).toBe(true);
     expect(diff.after.some((line) => line.type === 'added' && line.text === 'line three')).toBe(true);
   });
+
+  it('sanitizes base64 avatar images in the diff output', () => {
+    const before = 'image: "data:image/png;base64,iVBORw0KGgoAAAASDFASF"\nline two';
+    const after = 'image: "data:image/png;base64,iVBORw0KGgoAAAASDFASF"\nline three';
+    const diff = buildResumeDiff(before, after);
+
+    expect(diff.before.some((line) => line.text.includes('[avatar]'))).toBe(true);
+    expect(diff.after.some((line) => line.text.includes('[avatar]'))).toBe(true);
+    expect(diff.before.some((line) => line.text.includes('iVBORw0KGgo'))).toBe(false);
+    expect(diff.after.some((line) => line.text.includes('iVBORw0KGgo'))).toBe(false);
+  });
 });
