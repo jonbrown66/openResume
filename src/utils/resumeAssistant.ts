@@ -361,13 +361,13 @@ export function parseAssistantEditResponse(text: string): ResumeAssistantRespons
 }
 
 function restoreAvatarInMarkdown(proposedMarkdown: string, originalMarkdown: string): string {
-  const avatarMatch = originalMarkdown.match(/image:\s*(data:image\/[^;]+;base64,[^\n]+)/);
+  const avatarMatch = originalMarkdown.match(/image:\s*(['"]?data:image\/[^;]+;base64,[A-Za-z0-9+/=\s\r\n]+['"]?)/i);
   if (!avatarMatch) {
     return proposedMarkdown;
   }
   
   const originalAvatar = avatarMatch[1];
-  return proposedMarkdown.replace(/image:\s*\[avatar\]/g, `image: ${originalAvatar}`);
+  return proposedMarkdown.replace(/image:\s*['"]?\[avatar\]['"]?/g, `image: ${originalAvatar}`);
 }
 
 export async function requestResumeAssistant({
