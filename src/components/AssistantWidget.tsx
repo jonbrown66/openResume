@@ -185,10 +185,8 @@ export function AssistantWidget({
   };
 
   const handleClearHistory = () => {
-    if (window.confirm(t.assistantClearConfirm)) {
-      setMessages([]);
-      addToast(t.assistantClearSuccess, 'success');
-    }
+    setMessages([]);
+    addToast(t.assistantClearSuccess, 'success');
   };
 
   const providerLabel = needsAiConfig

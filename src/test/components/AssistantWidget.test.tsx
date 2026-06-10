@@ -509,8 +509,6 @@ contact: jane@example.com
   });
 
   it('allows the user to clear chat history and clears assistant messages', async () => {
-    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
-
     requestResumeAssistant.mockResolvedValue({
       reply: 'Sure, here is the suggestion.',
       proposedMarkdown: '---\nname: Jane Doe\n---\n\n## PROFESSIONAL SUMMARY\nNew summary',
@@ -553,20 +551,24 @@ contact: jane@example.com
 
     fireEvent.click(clearBtn);
 
-    expect(confirmSpy).toHaveBeenCalledWith('Are you sure you want to clear all chat history?');
+    expect(screen.queryByRole('button', { name: 'Clear History' })).not.toBeInTheDocument();
+
+    const confirmBtn = screen.getByRole('button', { name: '确认清空' });
+    const cancelBtn = screen.getByRole('button', { name: '取消' });
+    expect(confirmBtn).toBeInTheDocument();
+    expect(cancelBtn).toBeInTheDocument();
+
+    fireEvent.click(confirmBtn);
 
     expect(screen.queryByText('Revise summary.')).not.toBeInTheDocument();
     expect(screen.queryByText('Sure, here is the suggestion.')).not.toBeInTheDocument();
     expect(addToast).toHaveBeenCalledWith('Chat history cleared.', 'success');
 
     expect(screen.queryByRole('button', { name: 'Clear History' })).not.toBeInTheDocument();
-
-    confirmSpy.mockRestore();
+    expect(screen.queryByRole('button', { name: '确认清空' })).not.toBeInTheDocument();
   });
 
   it('does not clear history if the user cancels confirmation', async () => {
-    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(false);
-
     requestResumeAssistant.mockResolvedValue({
       reply: 'Sure, here is the suggestion.',
       proposedMarkdown: '---\nname: Jane Doe\n---\n\n## PROFESSIONAL SUMMARY\nNew summary',
@@ -605,10 +607,11 @@ contact: jane@example.com
     const clearBtn = screen.getByRole('button', { name: 'Clear History' });
     fireEvent.click(clearBtn);
 
-    expect(confirmSpy).toHaveBeenCalled();
+    const cancelBtn = screen.getByRole('button', { name: '取消' });
+    fireEvent.click(cancelBtn);
+
     expect(screen.getByText('Revise summary.')).toBeInTheDocument();
     expect(screen.getByText('Sure, here is the suggestion.')).toBeInTheDocument();
-
-    confirmSpy.mockRestore();
+    expect(screen.getByRole('button', { name: 'Clear History' })).toBeInTheDocument();
   });
 });
