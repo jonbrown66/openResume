@@ -3,9 +3,11 @@ import { type RefObject, useCallback, useLayoutEffect, useMemo, useRef, useState
 import { pageWidthPx } from '../constants';
 
 function getContainerWidth(element: HTMLDivElement) {
-  const isMobile = window.innerWidth < 640;
-  const padding = isMobile ? 24 : 64;
-  return Math.max(300, element.clientWidth - padding);
+  if (typeof window === 'undefined') return 300;
+  const style = window.getComputedStyle(element);
+  const paddingLeft = parseFloat(style.paddingLeft) || 0;
+  const paddingRight = parseFloat(style.paddingRight) || 0;
+  return Math.max(300, element.clientWidth - paddingLeft - paddingRight);
 }
 
 function getInitialZoom(): number {

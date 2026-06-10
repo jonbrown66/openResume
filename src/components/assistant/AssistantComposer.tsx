@@ -55,6 +55,17 @@ export function AssistantComposer({
         <textarea
           value={input}
           onChange={(event) => onInputChange(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter' && !event.shiftKey) {
+              if (event.nativeEvent.isComposing) {
+                return;
+              }
+              event.preventDefault();
+              if (input.trim() && !isSubmitting) {
+                onSubmit();
+              }
+            }
+          }}
           placeholder={placeholder}
           rows={2}
           className="min-h-[72px] w-full resize-none bg-transparent px-2 py-1 text-sm leading-6 text-zinc-700 outline-none placeholder:text-zinc-400 dark:text-zinc-100 dark:placeholder:text-zinc-500"

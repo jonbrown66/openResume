@@ -126,7 +126,7 @@ export const ResumeCanvas = memo(function ResumeCanvas({
       {/* 2. 屏幕预览与打印/导出统一多页卡片容器 */}
       <div
         ref={setCanvasRefs}
-        className="resume-canvas-screen-preview shrink-0 flex flex-col items-center print:flex"
+        className="resume-canvas-screen-preview shrink-0 flex flex-col items-start print:flex mx-auto"
         style={{
           width: `${pageWidthPx * scale}px`,
           height: `${(pageCount * pageHeightPx + (pageCount - 1) * gapPx) * scale}px`,
