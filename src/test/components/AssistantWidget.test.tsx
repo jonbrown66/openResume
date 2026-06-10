@@ -507,4 +507,108 @@ contact: jane@example.com
     expect(screen.queryByText('After')).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Apply to Resume' })).not.toBeInTheDocument();
   });
+
+  it('allows the user to clear chat history and clears assistant messages', async () => {
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
+
+    requestResumeAssistant.mockResolvedValue({
+      reply: 'Sure, here is the suggestion.',
+      proposedMarkdown: '---\nname: Jane Doe\n---\n\n## PROFESSIONAL SUMMARY\nNew summary',
+    });
+
+    render(
+      <AssistantWidget
+        lang="en"
+        markdown={'---\nname: Jane Doe\n---\n\n## PROFESSIONAL SUMMARY\nOriginal summary'}
+        projectId="project-clear-test"
+        settings={createSettings({
+          activeProvider: 'openai',
+          providers: {
+            ...DEFAULT_SETTINGS.providers,
+            openai: {
+              ...DEFAULT_SETTINGS.providers.openai,
+              apiKey: 'demo-key',
+              model: 'gpt-5.2',
+            },
+          },
+        })}
+        translations={translations.en}
+        onApplyMarkdown={vi.fn()}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Open AI assistant' }));
+
+    expect(screen.queryByRole('button', { name: 'Clear History' })).not.toBeInTheDocument();
+
+    fireEvent.change(screen.getByPlaceholderText('Describe how the assistant should revise your resume...'), {
+      target: { value: 'Revise summary.' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Send' }));
+
+    expect(await screen.findByText('Sure, here is the suggestion.')).toBeInTheDocument();
+
+    const clearBtn = screen.getByRole('button', { name: 'Clear History' });
+    expect(clearBtn).toBeInTheDocument();
+
+    fireEvent.click(clearBtn);
+
+    expect(confirmSpy).toHaveBeenCalledWith('Are you sure you want to clear all chat history?');
+
+    expect(screen.queryByText('Revise summary.')).not.toBeInTheDocument();
+    expect(screen.queryByText('Sure, here is the suggestion.')).not.toBeInTheDocument();
+    expect(addToast).toHaveBeenCalledWith('Chat history cleared.', 'success');
+
+    expect(screen.queryByRole('button', { name: 'Clear History' })).not.toBeInTheDocument();
+
+    confirmSpy.mockRestore();
+  });
+
+  it('does not clear history if the user cancels confirmation', async () => {
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(false);
+
+    requestResumeAssistant.mockResolvedValue({
+      reply: 'Sure, here is the suggestion.',
+      proposedMarkdown: '---\nname: Jane Doe\n---\n\n## PROFESSIONAL SUMMARY\nNew summary',
+    });
+
+    render(
+      <AssistantWidget
+        lang="en"
+        markdown={'---\nname: Jane Doe\n---\n\n## PROFESSIONAL SUMMARY\nOriginal summary'}
+        projectId="project-clear-cancel"
+        settings={createSettings({
+          activeProvider: 'openai',
+          providers: {
+            ...DEFAULT_SETTINGS.providers,
+            openai: {
+              ...DEFAULT_SETTINGS.providers.openai,
+              apiKey: 'demo-key',
+              model: 'gpt-5.2',
+            },
+          },
+        })}
+        translations={translations.en}
+        onApplyMarkdown={vi.fn()}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Open AI assistant' }));
+
+    fireEvent.change(screen.getByPlaceholderText('Describe how the assistant should revise your resume...'), {
+      target: { value: 'Revise summary.' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Send' }));
+
+    expect(await screen.findByText('Sure, here is the suggestion.')).toBeInTheDocument();
+
+    const clearBtn = screen.getByRole('button', { name: 'Clear History' });
+    fireEvent.click(clearBtn);
+
+    expect(confirmSpy).toHaveBeenCalled();
+    expect(screen.getByText('Revise summary.')).toBeInTheDocument();
+    expect(screen.getByText('Sure, here is the suggestion.')).toBeInTheDocument();
+
+    confirmSpy.mockRestore();
+  });
 });

@@ -184,6 +184,13 @@ export function AssistantWidget({
     setWidgetView('chat');
   };
 
+  const handleClearHistory = () => {
+    if (window.confirm(t.assistantClearConfirm)) {
+      setMessages([]);
+      addToast(t.assistantClearSuccess, 'success');
+    }
+  };
+
   const providerLabel = needsAiConfig
     ? t.assistantAiNotConfigured
     : `${activeProvider.name} · ${providerModel}`;
@@ -219,6 +226,8 @@ export function AssistantWidget({
               onClose={handleClose}
               onBack={widgetView === 'settings' ? () => setWidgetView('chat') : undefined}
               backLabel={t.assistantBackToChat}
+              onClear={widgetView === 'chat' && messages.length > 0 ? handleClearHistory : undefined}
+              clearLabel={t.assistantClearHistory}
             />
             {widgetView === 'settings' ? (
               <div className="flex-1 overflow-y-auto px-4 py-4 sm:px-5">
