@@ -141,28 +141,6 @@ src/utils/                   resume parsing, AI, import, and export utilities
 - keeping preview output close to the final export result
 - leaving clean extension points for future templates, themes, and richer block editing
 
-## Recommended GitHub Topics
-
-Add these topics in the repository About panel to improve GitHub discovery:
-
-```text
-resume-builder
-resume
-markdown-resume
-ai-resume
-resume-editor
-nextjs
-react
-typescript
-pdf-export
-docx
-local-first
-openai
-job-search
-career
-tailwindcss
-```
-
 ## Notes
 
 - The first PDF export can be slower while browser-side dependencies initialize

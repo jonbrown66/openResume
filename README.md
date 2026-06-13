@@ -141,26 +141,6 @@ src/utils/                   简历提取、AI 差异计算、导出生成等工
 `openResume` 致力于成为体验最好的、可自由编辑和迭代的个人本地简历工作台。
 如果您在使用过程中有任何建议或发现了 Bug，欢迎提交 Issue 或 Pull Request！
 
-建议为仓库添加以下 GitHub Topics，帮助更多用户通过 GitHub 搜索发现本项目：
-
-```text
-resume-builder
-resume
-markdown-resume
-ai-resume
-resume-editor
-nextjs
-react
-typescript
-pdf-export
-docx
-local-first
-openai
-job-search
-career
-tailwindcss
-```
-
 *   **PDF 导出提示**：首次 PDF 导出可能稍慢，因为无头浏览器相关二进制文件在后台需要初始化。
 *   **扫描版 PDF**：对于非文本型的扫描版 PDF，文本提取功能可能会受限于 OCR 识别。
 *   **候选修改机制**：AI 助手对简历内容的修改默认会先生成高亮候选稿，只有当您手动点击“应用修改”后才会写入实际文档。
