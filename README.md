@@ -1,13 +1,14 @@
 <div align="center">
-  <img src="https://raw.githubusercontent.com/jonbrown66/openResume/main/.github/assets/openresume.png" alt="openResume Logo" width="100%" style="border-radius: 12px; margin-bottom: 20px;" />
+  <img src="./.github/assets/openresume.png" alt="openResume 演示图" width="100%" style="border-radius: 12px; margin-bottom: 20px;" />
   
   # openResume
 
-  **本地优先的开源 AI 智能 Markdown 简历工作台** 🚀
+  **本地优先的开源 AI 简历生成器与 Markdown 简历编辑器** 🚀
 
   A4 实时排版 | 像素级防切断 | 零配置本地解析 | 双模式无缝编辑 | 100% 隐私安全
   
   [![GitHub License](https://img.shields.io/github/license/jonbrown66/openResume?color=a9d56b&style=flat-square)](https://github.com/jonbrown66/openResume/blob/main/LICENSE)
+  [![CI](https://img.shields.io/github/actions/workflow/status/jonbrown66/openResume/ci.yml?branch=main&label=CI&style=flat-square)](https://github.com/jonbrown66/openResume/actions/workflows/ci.yml)
   [![Next.js Version](https://img.shields.io/badge/Next.js-15-black?style=flat-square&logo=next.js)](https://nextjs.org)
   [![React Version](https://img.shields.io/badge/React-19-blue?style=flat-square&logo=react)](https://react.dev)
   [![TailwindCSS Version](https://img.shields.io/badge/TailwindCSS-4-38bdf8?style=flat-square&logo=tailwindcss)](https://tailwindcss.com)
@@ -17,6 +18,12 @@
   
   🎯 [**在线演示 (Demo)**](https://open-resume-dun.vercel.app/) | 💻 [**GitHub 仓库**](https://github.com/jonbrown66/openResume)
 </div>
+
+---
+
+`openResume` 是一个开源 AI 简历生成器、Markdown 简历编辑器和本地优先的简历工作台。它支持 A4 实时预览、PDF / DOCX / HTML 导出、Markdown / TXT / PDF / DOCX 导入，以及 OpenAI、Anthropic Claude、Google Gemini、DeepSeek、OpenRouter 等模型辅助优化简历。
+
+适合需要可长期维护简历内容、精确控制导出排版、保护隐私数据，并希望用 AI 快速迭代求职材料的开发者、设计师、产品经理和求职者。
 
 ---
 
@@ -133,6 +140,26 @@ src/utils/                   简历提取、AI 差异计算、导出生成等工
 
 `openResume` 致力于成为体验最好的、可自由编辑和迭代的个人本地简历工作台。
 如果您在使用过程中有任何建议或发现了 Bug，欢迎提交 Issue 或 Pull Request！
+
+建议为仓库添加以下 GitHub Topics，帮助更多用户通过 GitHub 搜索发现本项目：
+
+```text
+resume-builder
+resume
+markdown-resume
+ai-resume
+resume-editor
+nextjs
+react
+typescript
+pdf-export
+docx
+local-first
+openai
+job-search
+career
+tailwindcss
+```
 
 *   **PDF 导出提示**：首次 PDF 导出可能稍慢，因为无头浏览器相关二进制文件在后台需要初始化。
 *   **扫描版 PDF**：对于非文本型的扫描版 PDF，文本提取功能可能会受限于 OCR 识别。

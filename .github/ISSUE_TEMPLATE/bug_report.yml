@@ -1,0 +1,75 @@
+name: Bug report
+description: Report a reproducible problem in openResume.
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a bug. Please remove any private resume content, API keys, or personal data before submitting.
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: What went wrong?
+      placeholder: Describe the issue clearly.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: List the exact steps needed to reproduce the issue.
+      placeholder: |
+        1. Open ...
+        2. Import ...
+        3. Click ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: What should have happened?
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: What happened instead?
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Affected area
+      options:
+        - Import
+        - Editor
+        - Preview
+        - AI assistant
+        - PDF export
+        - DOCX export
+        - HTML export
+        - Settings
+        - Mobile layout
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: browser
+    attributes:
+      label: Browser and version
+      placeholder: Chrome 126, Edge 126, Firefox 127, Safari 18
+  - type: input
+    id: deployment
+    attributes:
+      label: Deployment
+      placeholder: Local dev, Vercel demo, self-hosted
+  - type: textarea
+    id: notes
+    attributes:
+      label: Additional context
+      description: Add screenshots, logs, or sample data only after removing private information.

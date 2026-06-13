@@ -1,12 +1,20 @@
 # openResume
 
-A local-first resume workspace with Markdown editing, block editing, A4 live preview, an AI resume assistant, and export to PDF / Word / HTML.
+An open-source AI resume builder and Markdown resume editor with local-first storage, block editing, A4 live preview, resume import, and export to PDF / DOCX / HTML.
+
+openResume helps developers, designers, product managers, and job seekers keep resume content editable over time, preview final A4 output while writing, protect private resume data, and iterate faster with AI assistance.
 
 [中文](./README.md) | [English](./README.en.md)
 
 Live Demo: [https://open-resume-dun.vercel.app/](https://open-resume-dun.vercel.app/)
 
 GitHub: [https://github.com/jonbrown66/openResume](https://github.com/jonbrown66/openResume)
+
+[![License](https://img.shields.io/github/license/jonbrown66/openResume?style=flat-square)](https://github.com/jonbrown66/openResume/blob/main/LICENSE)
+[![CI](https://img.shields.io/github/actions/workflow/status/jonbrown66/openResume/ci.yml?branch=main&label=CI&style=flat-square)](https://github.com/jonbrown66/openResume/actions/workflows/ci.yml)
+[![Next.js](https://img.shields.io/badge/Next.js-15-black?style=flat-square&logo=next.js)](https://nextjs.org)
+[![React](https://img.shields.io/badge/React-19-blue?style=flat-square&logo=react)](https://react.dev)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.8-3178c6?style=flat-square&logo=typescript)](https://www.typescriptlang.org/)
 
 ![openResume preview](./.github/assets/openresume.png)
 
@@ -132,6 +140,28 @@ src/utils/                   resume parsing, AI, import, and export utilities
 - keeping resume content editable over time
 - keeping preview output close to the final export result
 - leaving clean extension points for future templates, themes, and richer block editing
+
+## Recommended GitHub Topics
+
+Add these topics in the repository About panel to improve GitHub discovery:
+
+```text
+resume-builder
+resume
+markdown-resume
+ai-resume
+resume-editor
+nextjs
+react
+typescript
+pdf-export
+docx
+local-first
+openai
+job-search
+career
+tailwindcss
+```
 
 ## Notes
 
