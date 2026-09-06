@@ -2,8 +2,6 @@ import { memo, useMemo, useId } from 'react';
 import ReactMarkdown from 'react-markdown';
 import rehypeRaw from 'rehype-raw';
 import remarkGfm from 'remark-gfm';
-import { User } from 'lucide-react';
-
 import type { ResumeDraft, ResumeEntry, ResumeSection } from '../types/resume';
 import { parseMarkdownToResumeDraft } from '../utils/resumeDocument';
 import type { ResumeThemeConfig } from '../types/theme';
@@ -18,38 +16,25 @@ interface AvatarProps {
 }
 
 const Avatar = memo(({ src, alt = 'Profile', size = 'md', shape = 'circle', className = '' }: AvatarProps) => {
+  if (!src) return null;
+
   const sizeClasses = {
-    sm: 'w-12 h-12',
-    md: 'w-20 h-20',
-    lg: 'w-28 h-28',
-    xl: 'w-36 h-36',
+    sm: 'w-10 h-10',
+    md: 'w-16 h-16',
+    lg: 'w-20 h-20',
+    xl: 'w-24 h-24',
   };
-  
-  const iconSizes = {
-    sm: 16,
-    md: 24,
-    lg: 32,
-    xl: 40,
-  };
-  
+
   const shapeClass = shape === 'circle' ? 'rounded-full' : 'rounded-lg';
-  
-  if (src) {
-    return (
-      <img
-        src={src}
-        alt={alt}
-        className={`${sizeClasses[size]} ${shapeClass} object-cover ${className}`}
-        referrerPolicy="no-referrer"
-        crossOrigin="anonymous"
-      />
-    );
-  }
-  
+
   return (
-    <div className={`${sizeClasses[size]} ${shapeClass} bg-gray-200 dark:bg-gray-700 flex items-center justify-center ${className}`}>
-      <User size={iconSizes[size]} className="text-gray-400 dark:text-gray-500" />
-    </div>
+    <img
+      src={src}
+      alt={alt}
+      className={`${sizeClasses[size]} ${shapeClass} object-cover ${className}`}
+      referrerPolicy="no-referrer"
+      crossOrigin="anonymous"
+    />
   );
 });
 Avatar.displayName = 'Avatar';
@@ -104,7 +89,7 @@ const MarkdownRenderer = memo(({ content, isSkills = false }: { content: string;
           return (
             <div className="resume-h3-split">
               <h3 {...props}>{left.trim()}</h3>
-              <span>{right.trim()}</span>
+              <span className="resume-entry-meta">{right.trim()}</span>
             </div>
           );
         }
@@ -159,50 +144,73 @@ const SectionItem = memo(({ section, index }: { section: ResumeSection; index: n
 });
 SectionItem.displayName = 'SectionItem';
 
-const HeaderClassic = memo(({ frontmatter }: { frontmatter: ResumeDraft['frontmatter'] }) => (
-  <div className="resume-header resume-header-classic">
-    <div className="resume-header-main">
-      <p className="resume-kicker">{frontmatter.title || 'Title'}</p>
-      <h1>
-        {(frontmatter.name || 'NAME').split(' ').map((word) => (
-          <span key={word} className="block">{word}</span>
-        ))}
-      </h1>
-      <p className="resume-contact">
-        {frontmatter.contact || 'Contact Info'}
-      </p>
+const HeaderClassic = memo(({ frontmatter }: { frontmatter: ResumeDraft['frontmatter'] }) => {
+  const hasImage = Boolean(frontmatter.image);
+  return (
+    <div className={`resume-header resume-header-classic ${hasImage ? 'has-avatar' : 'no-avatar'}`}>
+      {hasImage && (
+        <div className="resume-header-media">
+          <Avatar src={frontmatter.image} size="lg" shape="circle" className="resume-avatar" />
+        </div>
+      )}
+      <div className="resume-header-main">
+        <h1>{frontmatter.name || 'NAME'}</h1>
+        {frontmatter.title && <p className="resume-kicker">{frontmatter.title}</p>}
+        {frontmatter.contact && (
+          <p className="resume-contact">
+            {frontmatter.contact.split('|').map((item) => item.trim()).join('  ·  ')}
+          </p>
+        )}
+      </div>
     </div>
-    <div className="resume-header-media">
-      <Avatar src={frontmatter.image} size="xl" shape="square" className="resume-avatar" />
-    </div>
-  </div>
-));
+  );
+});
 HeaderClassic.displayName = 'HeaderClassic';
 
-const HeaderStandard = memo(({ frontmatter }: { frontmatter: ResumeDraft['frontmatter'] }) => (
-  <div className="resume-header resume-header-standard">
-    <div>
-      <h1>{frontmatter.name || 'NAME'}</h1>
-      <p className="resume-kicker">{frontmatter.title || 'Title'}</p>
+const HeaderStandard = memo(({ frontmatter }: { frontmatter: ResumeDraft['frontmatter'] }) => {
+  const hasImage = Boolean(frontmatter.image);
+  return (
+    <div className={`resume-header resume-header-standard ${hasImage ? 'has-avatar' : 'no-avatar'}`}>
+      <div className="resume-header-main">
+        <div className="resume-name-row">
+          <h1>{frontmatter.name || 'NAME'}</h1>
+          {frontmatter.title && <span className="resume-kicker-badge">{frontmatter.title}</span>}
+        </div>
+        {frontmatter.contact && (
+          <p className="resume-contact">
+            {frontmatter.contact.split('|').map((item) => item.trim()).join('  ·  ')}
+          </p>
+        )}
+      </div>
+      {hasImage && (
+        <Avatar src={frontmatter.image} size="md" shape="circle" className="resume-avatar" />
+      )}
     </div>
-    <p className="resume-contact">
-      {frontmatter.contact?.split('|').map((item) => item.trim()).join('  ·  ') || 'Contact Info'}
-    </p>
-    <Avatar src={frontmatter.image} size="md" shape="circle" className="resume-avatar" />
-  </div>
-));
+  );
+});
 HeaderStandard.displayName = 'HeaderStandard';
 
-const HeaderMinimal = memo(({ frontmatter }: { frontmatter: ResumeDraft['frontmatter'] }) => (
-  <div className="resume-header resume-header-minimal">
-    <Avatar src={frontmatter.image} size="md" shape="circle" className="resume-avatar" />
-    <p className="resume-kicker">{frontmatter.title || 'Title'}</p>
-    <h1>{frontmatter.name || 'NAME'}</h1>
-    <p className="resume-contact">
-      {frontmatter.contact || 'Contact Info'}
-    </p>
-  </div>
-));
+const HeaderMinimal = memo(({ frontmatter }: { frontmatter: ResumeDraft['frontmatter'] }) => {
+  const hasImage = Boolean(frontmatter.image);
+  return (
+    <div className={`resume-header resume-header-minimal ${hasImage ? 'has-avatar' : 'no-avatar'}`}>
+      {hasImage && (
+        <Avatar src={frontmatter.image} size="md" shape="square" className="resume-avatar" />
+      )}
+      <div className="resume-header-main">
+        <div className="resume-minimal-title-group">
+          <h1>{frontmatter.name || 'NAME'}</h1>
+          {frontmatter.title && <span className="resume-minimal-role">{frontmatter.title}</span>}
+        </div>
+        {frontmatter.contact && (
+          <p className="resume-contact">
+            {frontmatter.contact.split('|').map((item) => item.trim()).join('  ·  ')}
+          </p>
+        )}
+      </div>
+    </div>
+  );
+});
 HeaderMinimal.displayName = 'HeaderMinimal';
 
 function renderHeader(draft: ResumeDraft, template: string) {
@@ -211,49 +219,108 @@ function renderHeader(draft: ResumeDraft, template: string) {
   return <HeaderClassic frontmatter={draft.frontmatter} />;
 }
 
-const SidebarTemplate = memo(({ draft, style }: { draft: ResumeDraft; style: React.CSSProperties }) => (
-  <div style={style} className="template-sidebar resume-template h-full p-[var(--page-margin)] flex flex-col box-border">
-    <div className="resume-header resume-header-sidebar">
-      <Avatar src={draft.frontmatter.image} size="md" shape="circle" className="resume-avatar" />
-      <div>
-        <h1>
-          {draft.frontmatter.name || 'NAME'}
-        </h1>
-        <p className="resume-kicker">
-          {draft.frontmatter.title || 'Title'}
-        </p>
-      </div>
-      <p className="resume-contact">
-        {draft.frontmatter.contact?.split('|').map((item) => item.trim()).join('  |  ') || 'Contact Info'}
-      </p>
-    </div>
-    <div className="resume-content flex-1">
-      {draft.summary && (
-        <div className="sidebar-section">
-          <div className="sidebar-title">
-            <h2>{getSummaryTitle(draft)}</h2>
-          </div>
-          <div className="sidebar-content">
-            <MarkdownRenderer content={draft.summary} />
-          </div>
-        </div>
-      )}
-      {draft.sections.map((section, index) => (
-        <div key={`${section.title}-${index}`} className="sidebar-section">
-          <div className="sidebar-title">
-            <h2>{section.title}</h2>
-          </div>
-          <div className="sidebar-content">
-            {section.content && <MarkdownRenderer content={section.content} isSkills={isSkillsSection(section.title)} />}
-            {section.entries.map((entry, entryIndex) => (
-              <EntryItem key={`${section.title}-${entryIndex}`} entry={entry} />
+const SidebarTemplate = memo(({ draft, style, fontFamily }: { draft: ResumeDraft; style: React.CSSProperties; fontFamily?: string }) => {
+  const hasImage = Boolean(draft.frontmatter.image);
+
+  const isSidebarCategory = (title: string) =>
+    /skill|技能|能力|education|教育|certif|证书|language|语言|award|荣誉/i.test(title);
+
+  const sidebarSections = draft.sections.filter((s) => isSidebarCategory(s.title));
+  const mainSections = draft.sections.filter((s) => !isSidebarCategory(s.title));
+
+  const summaryInSidebar = sidebarSections.length === 0 && Boolean(draft.summary);
+  const summaryInMain = Boolean(draft.summary) && !summaryInSidebar;
+
+  const contactItems = draft.frontmatter.contact
+    ? draft.frontmatter.contact.split('|').map((item) => item.trim()).filter(Boolean)
+    : [];
+
+  return (
+    <div style={style} data-font-family={fontFamily} className="template-sidebar resume-template h-full box-border">
+      <div className="sidebar-grid h-full min-h-full">
+        {/* 左侧独立侧边栏 */}
+        <aside className="sidebar-aside p-[var(--page-margin)]">
+          {hasImage && (
+            <div className="sidebar-avatar-wrapper">
+              <Avatar src={draft.frontmatter.image} size="xl" shape="circle" className="resume-avatar" />
+            </div>
+          )}
+
+          {contactItems.length > 0 && (
+            <div className="sidebar-block">
+              <h2 className="sidebar-heading">CONTACT</h2>
+              <div className="sidebar-contact-list">
+                {contactItems.map((item, idx) => (
+                  <div key={idx} className="sidebar-contact-item">
+                    {item}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {summaryInSidebar && (
+            <div className="sidebar-block">
+              <h2 className="sidebar-heading">{getSummaryTitle(draft)}</h2>
+              <div className="sidebar-summary-content">
+                <MarkdownRenderer content={draft.summary} />
+              </div>
+            </div>
+          )}
+
+          {sidebarSections.map((section, idx) => (
+            <div key={`${section.title}-${idx}`} className="sidebar-block">
+              <h2 className="sidebar-heading">{section.title}</h2>
+              {section.content && (
+                <div className="sidebar-block-content">
+                  <MarkdownRenderer content={section.content} isSkills={isSkillsSection(section.title)} />
+                </div>
+              )}
+              {section.entries.map((entry, entryIdx) => (
+                <div key={`${section.title}-${entryIdx}`} className="sidebar-entry">
+                  <div className="sidebar-entry-heading">{entry.heading}</div>
+                  {entry.organization && (
+                    <div className="sidebar-entry-org">{entry.organization}</div>
+                  )}
+                  {entry.meta && (
+                    <div className="sidebar-entry-meta">{entry.meta}</div>
+                  )}
+                  {entry.content && (
+                    <div className="sidebar-entry-content">
+                      <MarkdownRenderer content={entry.content} />
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          ))}
+        </aside>
+
+        {/* 右侧主内容区 */}
+        <main className="sidebar-main p-[var(--page-margin)]">
+          <header className="sidebar-main-header">
+            <h1>{draft.frontmatter.name || 'NAME'}</h1>
+            {draft.frontmatter.title && (
+              <p className="resume-kicker">{draft.frontmatter.title}</p>
+            )}
+          </header>
+
+          <div className="resume-content flex-1">
+            {summaryInMain && (
+              <div className="resume-summary-block">
+                <h2>{getSummaryTitle(draft)}</h2>
+                <MarkdownRenderer content={draft.summary} />
+              </div>
+            )}
+            {mainSections.map((section, index) => (
+              <SectionItem key={`${section.title}-${index}`} section={section} index={index} />
             ))}
           </div>
-        </div>
-      ))}
+        </main>
+      </div>
     </div>
-  </div>
-));
+  );
+});
 SidebarTemplate.displayName = 'SidebarTemplate';
 
 export const ResumeRenderer = memo(({ markdown, draft, template = 'classic', theme }: ResumeRendererProps) => {
@@ -278,13 +345,13 @@ export const ResumeRenderer = memo(({ markdown, draft, template = 'classic', the
     return (
       <>
         <CustomCssInjector css={theme.customCss} id={customCssId} />
-        <SidebarTemplate draft={resumeDraft} style={style} />
+        <SidebarTemplate draft={resumeDraft} style={style} fontFamily={theme.fontFamily} />
       </>
     );
   }
 
   return (
-    <div style={style} className={`template-${template} resume-template h-full p-[var(--page-margin)] flex flex-col box-border`}>
+    <div style={style} data-font-family={theme.fontFamily} className={`template-${template} resume-template h-full p-[var(--page-margin)] flex flex-col box-border`}>
       <CustomCssInjector css={theme.customCss} id={customCssId} />
       {renderHeader(resumeDraft, template)}
       <div className="resume-content text-[var(--font-size)] leading-[var(--line-height)] flex-1">

@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Fira+Mono:wght@400;500;700&family=Noto+Mono:wght@400;700&family=Noto+Sans:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif:wght@400;700&family=Noto+Serif+SC:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fira+Mono:wght@400;500;700&family=Noto+Mono:wght@400;700&family=Noto+Sans:wght@400;500;700&family=Noto+Sans+SC:wght@300;400;500;700&family=Noto+Serif:wght@400;700&family=Noto+Serif+SC:wght@400;700&display=swap');
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "@fontsource-variable/geist";
@@ -291,31 +291,28 @@ html, body {
 
 /* Base Resume Content Styling */
 .resume-template {
-  --resume-paper: #faf9f3;
-  --resume-ivory: #fffdf8;
-  --resume-ink: #1f211a;
-  --resume-body: #44483c;
-  --resume-muted: #77786d;
-  --resume-line: #e5e1d4;
-  --resume-soft: #f2efe5;
-  background:
-    linear-gradient(180deg, rgba(255,255,255,0.58), rgba(255,255,255,0)),
-    var(--resume-paper);
+  --resume-paper: #ffffff;
+  --resume-ivory: #ffffff;
+  --resume-ink: #111827;
+  --resume-body: #374151;
+  --resume-muted: #6b7280;
+  --resume-line: #e5e7eb;
+  --resume-soft: #f9fafb;
+  background: var(--resume-paper);
   color: var(--resume-ink);
   font-family: var(--font-family, "Source Han Serif SC", "Noto Serif SC", Georgia, serif);
-  box-shadow: inset 0 0 0 1px rgba(88, 82, 62, 0.08);
 }
 
 .resume-content {
   font-family: var(--font-family, "Source Han Serif SC", "Noto Serif SC", Georgia, serif);
   font-size: var(--font-size, 10pt);
-  line-height: var(--line-height, 1.5);
+  line-height: var(--line-height, 1.45);
   color: var(--resume-body);
   letter-spacing: 0.01em;
 }
 
 .resume-content > div {
-  margin-top: var(--section-spacing, 1rem);
+  margin-top: var(--section-spacing, 0.95rem);
 }
 
 .resume-content > div:first-child {
@@ -326,13 +323,13 @@ html, body {
   position: relative;
   display: flex;
   align-items: center;
-  gap: 0.7rem;
-  margin: 0 0 0.78rem;
-  color: var(--resume-ink);
-  font-size: 1.04rem;
-  font-weight: 800;
-  line-height: 1.18;
-  letter-spacing: 0.1em;
+  gap: 0.65rem;
+  margin: 0 0 0.55rem;
+  color: var(--primary-color, var(--resume-ink));
+  font-size: 1.02rem;
+  font-weight: 750;
+  line-height: 1.2;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
 }
 
@@ -340,16 +337,16 @@ html, body {
   content: "";
   height: 1px;
   flex: 1;
-  background: linear-gradient(90deg, color-mix(in srgb, var(--primary-color) 55%, var(--resume-line)), transparent);
+  background: color-mix(in srgb, var(--primary-color) 45%, var(--resume-line));
 }
 
 .resume-h3-split {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  gap: 1rem;
-  margin-top: 0.68rem;
-  margin-bottom: 0.24rem;
+  gap: 0.75rem;
+  margin-top: 0.52rem;
+  margin-bottom: 0.2rem;
 }
 
 .resume-h3-split h3,
@@ -357,9 +354,9 @@ html, body {
   margin: 0;
   min-width: 0;
   color: var(--secondary-color, var(--resume-ink));
-  font-size: 0.94rem;
-  font-weight: 700;
-  line-height: 1.28;
+  font-size: 0.92rem;
+  font-weight: 650;
+  line-height: 1.32;
 }
 
 .resume-h3-split h3 {
@@ -367,25 +364,28 @@ html, body {
 }
 
 .resume-entry-organization {
-  color: color-mix(in srgb, var(--resume-muted) 82%, var(--resume-body));
+  color: var(--resume-muted);
   font-weight: 500;
+  margin-left: 0.35rem;
 }
 
 .resume-h3-split .resume-entry-meta {
   flex-shrink: 0;
   color: var(--resume-muted);
-  font-size: 0.78rem;
+  font-size: 0.8rem;
   font-weight: 500;
   line-height: 1.35;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 .resume-content h3 {
-  margin-top: 0.68rem;
-  margin-bottom: 0.24rem;
+  margin-top: 0.52rem;
+  margin-bottom: 0.2rem;
 }
 
 .resume-content p {
-  margin-bottom: 0.42rem;
+  margin-bottom: 0.35rem;
   color: var(--resume-body);
 }
 
@@ -403,34 +403,41 @@ html, body {
 
 .resume-list {
   list-style-type: disc;
-  padding-left: 1.05rem;
-  margin-bottom: 0.65rem;
+  padding-left: 1rem;
+  margin-bottom: 0.45rem;
   display: flex;
   flex-direction: column;
-  gap: 0.28rem;
+  gap: 0.22rem;
 }
 
 .resume-list li {
   color: var(--resume-body);
   padding-left: 0.1rem;
+  line-height: 1.45;
 }
 
-.resume-list li::marker,
-.skills-list li::marker {
+.resume-list li::marker {
   color: var(--primary-color);
+  font-size: 0.85em;
 }
 
 .skills-list {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.42rem 1.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.28rem 1.2rem;
   list-style-type: disc;
-  padding-left: 1.05rem;
-  margin-bottom: 0.65rem;
+  padding-left: 1rem;
+  margin-bottom: 0.45rem;
 }
 
 .skills-list li {
   color: var(--resume-body);
+  line-height: 1.42;
+}
+
+.skills-list li::marker {
+  color: var(--primary-color);
+  font-size: 0.85em;
 }
 
 /* -----------------------------------------
@@ -439,22 +446,22 @@ html, body {
 .resume-table-wrapper {
   width: 100%;
   overflow-x: auto;
-  margin: 0.68rem 0;
-  border-radius: 0.38rem;
+  margin: 0.55rem 0;
+  border-radius: 0.25rem;
   background-color: transparent;
 }
 
 .resume-content table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.88em;
-  line-height: 1.4;
+  font-size: 0.86em;
+  line-height: 1.38;
   color: var(--resume-body);
 }
 
 .resume-content th,
 .resume-content td {
-  padding: 0.42rem 0.6rem;
+  padding: 0.38rem 0.55rem;
   border-bottom: 1px solid var(--resume-line);
   text-align: left;
 }
@@ -462,7 +469,7 @@ html, body {
 .resume-content th {
   font-weight: 700;
   color: var(--resume-ink);
-  border-bottom: 2px solid color-mix(in srgb, var(--primary-color) 60%, var(--resume-line));
+  border-bottom: 1.5px solid color-mix(in srgb, var(--primary-color) 60%, var(--resume-line));
 }
 
 .resume-content tr:last-child td {
@@ -485,316 +492,538 @@ html, body {
 .resume-header h1 {
   margin: 0;
   color: var(--resume-ink);
-  font-weight: 700;
-  line-height: 1.05;
+  font-weight: 750;
+  line-height: 1.15;
 }
 
 .resume-kicker {
   margin: 0;
   color: var(--secondary-color, var(--resume-muted));
   font-size: 0.82rem;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  line-height: 1.45;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  line-height: 1.35;
   text-transform: uppercase;
 }
 
 .resume-contact {
   margin: 0;
   color: var(--resume-muted);
-  font-size: 0.76rem;
-  line-height: 1.55;
+  font-size: 0.78rem;
+  line-height: 1.45;
   word-break: break-word;
 }
 
 .resume-avatar {
-  border: 1px solid color-mix(in srgb, var(--primary-color) 28%, var(--resume-line));
-  box-shadow: 0 18px 36px -28px rgba(31, 33, 26, 0.5);
+  border: 1px solid color-mix(in srgb, var(--primary-color) 25%, var(--resume-line));
+  box-shadow: 0 4px 12px -4px rgba(0, 0, 0, 0.08);
 }
 
-.resume-header-classic {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 1.4rem;
-  align-items: stretch;
-  margin-bottom: 1.05rem;
-  padding: 1.15rem 1.25rem;
-  border: 1px solid var(--resume-line);
-  border-radius: 1.05rem;
-  background: linear-gradient(135deg, color-mix(in srgb, var(--primary-color) 13%, var(--resume-ivory)), var(--resume-ivory));
+/* =========================================
+   Resume Template Archetypes
+   ========================================= */
+
+/* -----------------------------------------
+   1. Classic (传统沉稳 · 常春藤与外企高管风)
+   特征：对称居中头部、大写贯通细线分割、庄重典雅、经典斜体机构
+----------------------------------------- */
+.template-classic {
+  --resume-paper: #ffffff;
 }
 
-.resume-header-classic .resume-header-main {
-  display: flex;
-  min-width: 0;
-  flex-direction: column;
-  justify-content: center;
-  gap: 0.62rem;
-}
-
-.resume-header-classic h1 {
-  font-size: 2.38rem;
-  letter-spacing: 0.035em;
-  text-transform: uppercase;
-}
-
-.resume-header-classic .resume-header-media {
-  display: flex;
-  align-items: center;
-}
-
-.resume-header-standard {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 0.52rem 1.15rem;
-  align-items: center;
-  margin-bottom: 0.86rem;
-  padding-bottom: 0.62rem;
-  border-bottom: 2px solid color-mix(in srgb, var(--primary-color) 60%, var(--resume-line));
-}
-
-.resume-header-standard h1 {
-  font-size: 2rem;
-  letter-spacing: 0.01em;
-  line-height: 1.02;
-  text-transform: uppercase;
-}
-
-.resume-header-standard .resume-kicker {
-  margin-top: 0.32rem;
-  max-width: 34rem;
-  font-size: 0.78rem;
-  line-height: 1.38;
-}
-
-.resume-header-standard .resume-avatar {
-  grid-column: 2;
-  grid-row: 1;
-  align-self: center;
-  width: 4.25rem;
-  height: 4.25rem;
-}
-
-.resume-header-standard .resume-contact {
-  grid-column: 1 / -1;
-  grid-row: 2;
-  padding-top: 0;
-  border-top: 0;
-  letter-spacing: 0.025em;
-  line-height: 1.38;
-}
-
-.resume-header-minimal {
+.template-classic .resume-header-classic {
   display: flex;
   flex-direction: column;
   align-items: center;
+  text-align: center;
   margin-bottom: 1.15rem;
-  padding-bottom: 1.15rem;
+  padding-bottom: 0.85rem;
+  border-bottom: 1.5px solid var(--primary-color, var(--resume-ink));
+}
+
+.template-classic .resume-header-media {
+  margin-bottom: 0.65rem;
+}
+
+.template-classic .resume-header-classic .resume-header-main {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   text-align: center;
-  border-bottom: 1px solid color-mix(in srgb, var(--primary-color) 42%, var(--resume-line));
+  gap: 0.25rem;
 }
 
-.resume-header-minimal .resume-avatar {
-  margin-bottom: 0.75rem;
-}
-
-.resume-header-minimal h1 {
-  margin-top: 0.5rem;
-  margin-bottom: 0.56rem;
-  font-size: 2.22rem;
+.template-classic .resume-header-classic h1 {
+  font-size: 2.1rem;
+  font-weight: 750;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+  color: var(--resume-ink);
 }
 
-.resume-header-minimal .resume-contact {
-  max-width: 38rem;
-  color: color-mix(in srgb, var(--secondary-color) 58%, var(--resume-muted));
+.template-classic .resume-header-classic .resume-kicker {
+  font-size: 0.84rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--primary-color, var(--resume-muted));
 }
 
-.template-minimal {
-  --resume-paper: #fbfaf5;
-  text-align: left;
+.template-classic .resume-header-classic .resume-contact {
+  margin-top: 0.35rem;
+  font-size: 0.78rem;
+  letter-spacing: 0.03em;
+  color: var(--resume-muted);
 }
 
-.template-minimal .resume-content h2 {
-  justify-content: center;
-  text-align: center;
-  color: var(--primary-color);
-  letter-spacing: 0.18em;
-}
-
-.template-minimal .resume-content h2::before,
-.template-minimal .resume-content h2::after {
-  content: "";
-  height: 1px;
-  flex: 1;
-  max-width: 5rem;
-  background: color-mix(in srgb, var(--primary-color) 48%, var(--resume-line));
-}
-
-.template-minimal .resume-content h2::after {
-  background: color-mix(in srgb, var(--primary-color) 48%, var(--resume-line));
-}
-
-.template-standard {
-  --resume-paper: #fffdf8;
-}
-
-.template-standard .resume-content h2 {
-  gap: 0.42rem;
-  margin-bottom: 0.68rem;
-  color: var(--primary-color);
-  font-size: 1.06rem;
-  font-weight: 800;
-  line-height: 1.18;
+.template-classic .resume-content h2 {
+  display: block;
+  color: var(--primary-color, var(--resume-ink));
+  font-size: 0.96rem;
+  font-weight: 750;
   letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border-bottom: 1px solid color-mix(in srgb, var(--primary-color) 45%, var(--resume-line));
+  padding-bottom: 0.28rem;
+  margin-top: 1.1rem;
+  margin-bottom: 0.55rem;
 }
 
-.template-standard .resume-content h2::before {
-  content: "#";
-  flex-shrink: 0;
-  color: color-mix(in srgb, var(--primary-color) 62%, var(--resume-muted));
-  font-family: var(--font-family, "Source Han Serif SC", "Noto Serif SC", Georgia, serif);
-  font-size: 0.92rem;
-  font-weight: 400;
-  letter-spacing: 0;
-}
-
-.template-standard .resume-content h2::after {
+.template-classic .resume-content h2::after,
+.template-classic .resume-content h2::before {
   display: none;
 }
 
-.template-standard .resume-h3-split h3,
-.template-standard .resume-content h3 {
+.template-classic .resume-h3-split h3 {
   font-size: 0.92rem;
-  font-weight: 650;
+  font-weight: 700;
+  color: var(--resume-ink);
 }
 
-.template-standard .resume-h3-split {
+.template-classic .resume-entry-organization {
+  font-style: italic;
+  font-weight: 500;
+  color: var(--resume-body);
+}
+
+.template-classic .resume-entry-meta {
+  font-style: italic;
+  font-size: 0.8rem;
+  color: var(--resume-muted);
+}
+
+/* -----------------------------------------
+   2. Minimal (极致极简 · 现代瑞士留白风)
+   特征：0线条！0边框！纯靠字阶与字间距！安静高级的现代出版物排版
+----------------------------------------- */
+.template-minimal {
+  --resume-paper: #ffffff;
+  text-align: left;
+}
+
+.template-minimal .resume-header-minimal {
+  display: flex;
+  align-items: flex-start;
+  gap: 1.25rem;
+  margin-bottom: 1.35rem;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.template-minimal .resume-minimal-title-group {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.template-minimal .resume-header-minimal h1 {
+  font-size: 1.85rem;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+  color: var(--resume-ink);
+  line-height: 1.15;
+}
+
+.template-minimal .resume-minimal-role {
+  font-size: 0.9rem;
+  font-weight: 400;
+  color: var(--primary-color, var(--resume-muted));
+  letter-spacing: 0.02em;
+}
+
+.template-minimal .resume-minimal-role::before {
+  content: "/ ";
+  opacity: 0.5;
+  margin-right: 0.25rem;
+}
+
+.template-minimal .resume-header-minimal .resume-contact {
+  margin-top: 0.35rem;
+  font-size: 0.76rem;
+  color: #94a3b8;
+  letter-spacing: 0.02em;
+}
+
+.template-minimal .resume-avatar {
+  border-radius: 4px;
+  border: none;
+  box-shadow: none;
+}
+
+/* 极简的核心：完全没有横线，纯粹文字层级 */
+.template-minimal .resume-content h2 {
+  display: block;
+  color: var(--primary-color, #64748b);
+  font-size: 0.72rem;
+  font-weight: 750;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  border: none;
+  margin-top: 1.45rem;
+  margin-bottom: 0.65rem;
+}
+
+.template-minimal .resume-content h2::after,
+.template-minimal .resume-content h2::before {
+  display: none;
+}
+
+.template-minimal .resume-h3-split {
   margin-top: 0.62rem;
   margin-bottom: 0.22rem;
 }
 
-.template-standard .resume-content p {
-  margin-bottom: 0.38rem;
-}
-
-.template-standard .resume-list,
-.template-standard .skills-list {
-  gap: 0.24rem;
-  margin-bottom: 0.58rem;
-}
-
-.template-standard .resume-content > div {
-  padding-top: 0;
-  border-top: 0;
-}
-
-.template-standard .resume-content > div:first-child {
-  padding-top: 0;
-  border-top: 0;
-}
-
-.template-classic .resume-content h2 {
-  color: var(--primary-color);
-  font-size: 1.08rem;
-  font-weight: 800;
-  letter-spacing: 0.1em;
-}
-
-.template-classic .resume-content h2::after {
-  height: 2px;
-  background: linear-gradient(90deg, color-mix(in srgb, var(--primary-color) 78%, var(--resume-line)), transparent);
-}
-
-.template-classic .resume-h3-split h3,
-.template-classic .resume-content h3 {
+.template-minimal .resume-h3-split h3 {
   font-size: 0.92rem;
-  font-weight: 650;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--resume-ink);
+}
+
+.template-minimal .resume-entry-organization {
+  font-weight: 400;
+  color: #64748b;
+}
+
+.template-minimal .resume-entry-meta {
+  font-size: 0.76rem;
+  color: #94a3b8;
+  font-variant-numeric: tabular-nums;
+}
+
+.template-minimal .resume-list {
+  padding-left: 0.95rem;
+  gap: 0.2rem;
+}
+
+.template-minimal .resume-list li::marker {
+  color: #cbd5e1;
+  font-size: 0.65em;
 }
 
 /* -----------------------------------------
-   Sidebar Template Overrides
+   3. Standard (现代标准 · 互联网大厂与科技风)
+   特征：结构分明、左侧品牌色指示竖条、职位胶囊徽标、技能Tag标签
 ----------------------------------------- */
-.template-sidebar {
-  --resume-paper: #f7f4ea;
+.template-standard {
+  --resume-paper: #ffffff;
 }
 
-.resume-header-sidebar {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  gap: 0.38rem 1rem;
+.template-standard .resume-header-standard {
+  display: flex;
+  justify-content: space-between;
   align-items: center;
-  margin-bottom: 1.25rem;
-  padding: 0 0 1rem;
-  border-bottom: 1px solid var(--resume-line);
+  gap: 1.25rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1.5px solid var(--resume-line);
 }
 
-.resume-header-sidebar h1 {
-  font-size: 2rem;
-  letter-spacing: 0.08em;
-  line-height: 1.12;
-  text-transform: uppercase;
-}
-
-.resume-header-sidebar .resume-kicker {
-  margin-top: 0.44rem;
-}
-
-.resume-header-sidebar .resume-contact {
-  grid-column: 2;
-  margin-top: 0.08rem;
-}
-
-.template-sidebar .sidebar-section {
-  display: grid;
-  grid-template-columns: 7.6rem minmax(0, 1fr);
-  gap: 1rem;
-  margin-bottom: var(--section-spacing, 1.25rem);
-}
-
-.template-sidebar .sidebar-title {
-  padding-top: 0.1rem;
-  border-right: 1px solid color-mix(in srgb, var(--primary-color) 45%, var(--resume-line));
-  padding-right: 0.8rem;
-  text-align: right;
-}
-
-.template-sidebar .sidebar-title h2 {
-  margin: 0;
-  padding: 0;
-  color: var(--primary-color);
-  font-size: 0.98rem;
-  font-weight: 800;
-  line-height: 1.2;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  border: none;
-}
-
-.template-sidebar .sidebar-title h2::after {
-  display: none;
-}
-
-.template-sidebar .sidebar-content {
+.template-standard .resume-header-main {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  flex: 1;
   min-width: 0;
 }
 
-.template-sidebar .resume-h3-split {
-  margin-top: 0;
+.template-standard .resume-name-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.template-standard h1 {
+  font-size: 1.82rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
+  color: var(--resume-ink);
+}
+
+.template-standard .resume-kicker-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.15rem 0.55rem;
+  border-radius: 9999px;
+  font-size: 0.74rem;
+  font-weight: 650;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  background: color-mix(in srgb, var(--primary-color) 12%, transparent);
+  color: var(--primary-color);
+}
+
+.template-standard .resume-contact {
+  font-size: 0.78rem;
+  color: var(--resume-muted);
+}
+
+.template-standard .resume-content h2 {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  color: var(--resume-ink);
+  font-size: 0.98rem;
+  font-weight: 750;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding-left: 0.55rem;
+  border-left: 3.5px solid var(--primary-color);
+  margin-top: 1.05rem;
+  margin-bottom: 0.55rem;
+}
+
+.template-standard .resume-content h2::before {
+  display: none;
+}
+
+.template-standard .resume-content h2::after {
+  content: "";
+  height: 1px;
+  flex: 1;
+  background: var(--resume-line);
+}
+
+.template-standard .skills-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.38rem;
+  list-style-type: none;
+  padding-left: 0;
+  margin-bottom: 0.5rem;
+}
+
+.template-standard .skills-list li {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.58rem;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--primary-color) 7%, #f8fafc);
+  border: 1px solid color-mix(in srgb, var(--primary-color) 16%, var(--resume-line));
+  color: var(--resume-ink);
+  font-size: 0.8rem;
+  font-weight: 550;
+  line-height: 1.35;
+}
+
+.template-standard .skills-list li::marker {
+  display: none;
+}
+
+/* -----------------------------------------
+   4. Sidebar (真实左右双栏 · 复合分流)
+   特征：独立左栏背景卡片（放头像/联系/技能/教育）、右栏开阔经历专栏
+----------------------------------------- */
+.template-sidebar {
+  --resume-paper: #ffffff;
+  padding: 0 !important; /* 保证左栏底色铺满边沿 */
+}
+
+/* 贯穿卡片纸张的真正通栏全高左侧背景（彻底杜绝预览和导出时上下两端的白色断层） */
+.resume-paper-page-card.template-sidebar::before,
+.resume-pdf-page.template-sidebar::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 32%;
+  background: color-mix(in srgb, var(--primary-color) 4%, #f8fafc);
+  border-right: 1px solid color-mix(in srgb, var(--primary-color) 14%, var(--resume-line));
+  pointer-events: none;
+  z-index: 1;
+  box-sizing: border-box;
+  -webkit-print-color-adjust: exact !important;
+  print-color-adjust: exact !important;
+}
+
+.resume-paper-page-card.template-sidebar .template-sidebar,
+.resume-pdf-page.template-sidebar .template-sidebar {
+  background: transparent !important;
+}
+
+.resume-paper-page-card.template-sidebar .sidebar-aside,
+.resume-pdf-page.template-sidebar .sidebar-aside {
+  background: transparent !important;
+  border-right-color: transparent !important;
+}
+
+.template-sidebar .sidebar-grid {
+  display: grid;
+  grid-template-columns: 32% 68%;
+  min-height: 100%;
+  box-sizing: border-box;
+}
+
+.template-sidebar .sidebar-aside {
+  background: color-mix(in srgb, var(--primary-color) 4%, #f8fafc);
+  border-right: 1px solid color-mix(in srgb, var(--primary-color) 14%, var(--resume-line));
+  padding: var(--page-margin, 15mm);
+  padding-right: 1.15rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.15rem;
+  box-sizing: border-box;
+}
+
+.template-sidebar .sidebar-avatar-wrapper {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 0.2rem;
+}
+
+.template-sidebar .sidebar-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.template-sidebar .sidebar-heading {
+  color: var(--primary-color, var(--resume-ink));
+  font-size: 0.82rem;
+  font-weight: 750;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  border-bottom: 1.5px solid color-mix(in srgb, var(--primary-color) 30%, var(--resume-line));
+  padding-bottom: 0.22rem;
+  margin: 0;
+}
+
+.template-sidebar .sidebar-contact-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.76rem;
+  color: var(--resume-body);
+  line-height: 1.4;
+}
+
+.template-sidebar .sidebar-contact-item {
+  word-break: break-word;
+}
+
+.template-sidebar .sidebar-entry {
+  margin-bottom: 0.45rem;
+}
+
+.template-sidebar .sidebar-entry:last-child {
+  margin-bottom: 0;
+}
+
+.template-sidebar .sidebar-entry-heading {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--resume-ink);
+  line-height: 1.3;
+}
+
+.template-sidebar .sidebar-entry-org {
+  font-size: 0.76rem;
+  color: var(--resume-muted);
+}
+
+.template-sidebar .sidebar-entry-meta {
+  font-size: 0.72rem;
+  color: var(--primary-color);
+  font-variant-numeric: tabular-nums;
+}
+
+.template-sidebar .sidebar-entry-content {
+  font-size: 0.76rem;
+  margin-top: 0.15rem;
+  color: var(--resume-body);
+}
+
+.template-sidebar .sidebar-block-content {
+  font-size: 0.78rem;
+  color: var(--resume-body);
+}
+
+.template-sidebar .sidebar-summary-content {
+  font-size: 0.76rem;
+  line-height: 1.45;
+  color: var(--resume-body);
+}
+
+.template-sidebar .sidebar-main {
+  padding: var(--page-margin, 15mm);
+  padding-left: 1.4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.95rem;
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+.template-sidebar .sidebar-main-header {
+  padding-bottom: 0.65rem;
+  border-bottom: 1.5px solid var(--resume-line);
+}
+
+.template-sidebar .sidebar-main-header h1 {
+  margin: 0;
+  font-size: 1.85rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--resume-ink);
+}
+
+.template-sidebar .sidebar-main-header .resume-kicker {
+  margin-top: 0.25rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--primary-color);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.template-sidebar .sidebar-main .resume-content h2 {
+  color: var(--primary-color);
+  font-size: 0.96rem;
+  font-weight: 750;
+  letter-spacing: 0.06em;
+  margin-bottom: 0.48rem;
+}
+
+.template-sidebar .sidebar-main .resume-content h2::after {
+  content: "";
+  height: 1px;
+  flex: 1;
+  background: var(--resume-line);
 }
 
 /* -----------------------------------------
    Template-Specific Table Style Customizations
    ----------------------------------------- */
-
-/* Classic (Card/Classic) Customizations */
 .template-classic .resume-content table {
   border: none;
 }
 .template-classic .resume-content th {
-  background-color: color-mix(in srgb, var(--primary-color) 6%, var(--resume-ivory));
-  border-bottom: 1px solid color-mix(in srgb, var(--primary-color) 15%, var(--resume-line));
+  background-color: color-mix(in srgb, var(--primary-color) 6%, #ffffff);
+  border-bottom: 1.5px solid color-mix(in srgb, var(--primary-color) 20%, var(--resume-line));
 }
 .template-classic .resume-content td {
   border-bottom: 1px solid color-mix(in srgb, var(--resume-line) 60%, transparent);
@@ -803,45 +1032,42 @@ html, body {
   border-bottom: none;
 }
 
-/* Standard (Modern Academic Light Style) Customizations */
 .template-standard .resume-content table {
   border-top: none;
   border-bottom: none;
 }
 .template-standard .resume-content th {
-  border-bottom: 1px solid color-mix(in srgb, var(--primary-color) 30%, var(--resume-line));
+  border-bottom: 1.5px solid color-mix(in srgb, var(--primary-color) 35%, var(--resume-line));
   background-color: color-mix(in srgb, var(--primary-color) 4%, transparent);
   color: var(--resume-ink);
 }
 .template-standard .resume-content td {
-  border-bottom: 1px solid color-mix(in srgb, var(--resume-line) 40%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--resume-line) 50%, transparent);
 }
 .template-standard .resume-content tr:last-child td {
   border-bottom: none;
 }
 
-/* Minimal (Lightweight & Spacious Table) Customizations */
 .template-minimal .resume-content table {
   border-top: none;
   border-bottom: none;
 }
 .template-minimal .resume-content th {
-  border-bottom: 1.5px solid var(--primary-color);
+  border-bottom: 1px solid #cbd5e1;
   background-color: transparent;
   color: var(--resume-ink);
-  font-weight: 700;
+  font-weight: 600;
 }
 .template-minimal .resume-content td {
-  border-bottom: 1px solid color-mix(in srgb, var(--resume-line) 30%, transparent);
-  padding: 0.52rem 0.4rem;
+  border-bottom: 1px solid #f1f5f9;
+  padding: 0.42rem 0.4rem;
 }
 .template-minimal .resume-content tr:last-child td {
   border-bottom: none;
 }
 
-/* Sidebar (Narrow Columns / Dense Table) Customizations */
 .template-sidebar .resume-content table {
-  font-size: 0.8em;
+  font-size: 0.82em;
   table-layout: auto;
   border-top: none;
   border-bottom: none;
@@ -860,6 +1086,68 @@ html, body {
 }
 .template-sidebar .resume-content tr:last-child td {
   border-bottom: none;
+}
+
+/* -----------------------------------------
+   思源黑体 (细圆) / 柔黑变体微调 (偏细偏大、亲和圆润)
+----------------------------------------- */
+[data-font-family*="细圆"],
+[data-font-family*="柔黑"],
+[data-font-family*="Rounded"] {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+[data-font-family*="细圆"] .resume-content,
+[data-font-family*="柔黑"] .resume-content,
+[data-font-family*="Rounded"] .resume-content {
+  /* 偏细偏大：字重 300 纤细呼吸感，字号轻微微调放大 4%，字间距更舒展 */
+  font-size: calc(var(--font-size, 10pt) * 1.04);
+  font-weight: 300;
+  letter-spacing: 0.02em;
+}
+
+[data-font-family*="细圆"] .resume-content p,
+[data-font-family*="柔黑"] .resume-content p,
+[data-font-family*="Rounded"] .resume-content p,
+[data-font-family*="细圆"] .resume-content li,
+[data-font-family*="柔黑"] .resume-content li,
+[data-font-family*="Rounded"] .resume-content li {
+  font-weight: 300;
+}
+
+[data-font-family*="细圆"] .resume-header h1,
+[data-font-family*="柔黑"] .resume-header h1,
+[data-font-family*="Rounded"] .resume-header h1,
+[data-font-family*="细圆"] .sidebar-main-header h1,
+[data-font-family*="柔黑"] .sidebar-main-header h1,
+[data-font-family*="Rounded"] .sidebar-main-header h1 {
+  font-weight: 600;
+  letter-spacing: 0.025em;
+}
+
+[data-font-family*="细圆"] .resume-content h2,
+[data-font-family*="柔黑"] .resume-content h2,
+[data-font-family*="Rounded"] .resume-content h2,
+[data-font-family*="细圆"] .sidebar-heading,
+[data-font-family*="柔黑"] .sidebar-heading,
+[data-font-family*="Rounded"] .sidebar-heading {
+  font-weight: 600;
+}
+
+[data-font-family*="细圆"] .resume-content h3,
+[data-font-family*="柔黑"] .resume-content h3,
+[data-font-family*="Rounded"] .resume-content h3,
+[data-font-family*="细圆"] .sidebar-entry-heading,
+[data-font-family*="柔黑"] .sidebar-entry-heading,
+[data-font-family*="Rounded"] .sidebar-entry-heading {
+  font-weight: 550;
+}
+
+[data-font-family*="细圆"] strong,
+[data-font-family*="柔黑"] strong,
+[data-font-family*="Rounded"] strong {
+  font-weight: 600;
 }
 
 @theme inline {

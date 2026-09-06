@@ -146,6 +146,7 @@ export const ResumeCanvas = memo(function ResumeCanvas({
               key={index}
               className={`resume-paper-page-card template-${template || 'classic'} resume-template shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] dark:shadow-[0_20px_60px_-15px_rgba(0,0,0,0.5)] rounded-sm relative overflow-hidden`}
               data-content-offset={getPageOffset(index)}
+              data-font-family={theme?.fontFamily}
               style={{
                 width: `${pageWidthPx}px`,
                 height: `${pageHeightPx}px`,
@@ -167,6 +168,7 @@ export const ResumeCanvas = memo(function ResumeCanvas({
                   width: `${pageWidthPx}px`,
                   height: `${contentViewportHeight}px`,
                   overflow: 'hidden',
+                  zIndex: 2,
                 }}
               >
                 {/* 简历投射：通过安全断点偏移实现多页分割，不会切割文字行 */}

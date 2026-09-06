@@ -7,6 +7,7 @@ describe('font constants', () => {
     expect(FONT_OPTIONS).toEqual([
       'Geist',
       'Source Han Sans SC',
+      '思源黑体 (细圆)',
       'Source Han Serif SC',
       'Noto Sans SC',
       'Noto Serif SC',
@@ -28,6 +29,8 @@ describe('font constants', () => {
   it('maps Source Han font labels to practical local and web fallbacks', () => {
     expect(FONT_STYLES['Source Han Sans SC'].family).toContain('Source Han Sans SC');
     expect(FONT_STYLES['Source Han Sans SC'].family).toContain('Noto Sans SC');
+    expect(FONT_STYLES['思源黑体 (细圆)'].family).toContain('思源柔黑体');
+    expect(FONT_STYLES['思源黑体 (细圆)'].family).toContain('Noto Sans SC');
     expect(FONT_STYLES['Source Han Serif SC'].family).toContain('Source Han Serif SC');
     expect(FONT_STYLES['Source Han Serif SC'].family).toContain('Noto Serif SC');
   });

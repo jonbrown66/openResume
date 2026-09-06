@@ -10,8 +10,43 @@ describe('ResumeRenderer', () => {
   it('renders from markdown input', () => {
     render(<ResumeRenderer markdown={defaultMarkdownEn} template="classic" theme={DEFAULT_THEME_CONFIG} />);
 
-    expect(screen.getByText((_, element) => element?.textContent === 'EMMASANCHEZ')).toBeInTheDocument();
+    expect(screen.getByText((_, element) => element?.textContent === 'EMMA SANCHEZ')).toBeInTheDocument();
     expect(screen.getByText('WORK EXPERIENCE')).toBeInTheDocument();
+  });
+
+  it('hides avatar container when no image is provided in frontmatter', () => {
+    const markdownWithoutImage = `---
+name: JOHN DOE
+title: Software Engineer
+---
+
+## EXPERIENCE
+`;
+    const { container } = render(
+      <ResumeRenderer markdown={markdownWithoutImage} template="standard" theme={DEFAULT_THEME_CONFIG} />
+    );
+
+    expect(container.querySelector('img')).toBeNull();
+    expect(container.querySelector('.resume-header')).toHaveClass('no-avatar');
+  });
+
+  it('renders avatar image when image is provided in frontmatter', () => {
+    const markdownWithImage = `---
+name: JOHN DOE
+title: Software Engineer
+image: https://example.com/avatar.jpg
+---
+
+## EXPERIENCE
+`;
+    const { container } = render(
+      <ResumeRenderer markdown={markdownWithImage} template="standard" theme={DEFAULT_THEME_CONFIG} />
+    );
+
+    const img = container.querySelector('img');
+    expect(img).toBeInTheDocument();
+    expect(img).toHaveAttribute('src', 'https://example.com/avatar.jpg');
+    expect(container.querySelector('.resume-header')).toHaveClass('has-avatar');
   });
 
   it('renders from draft input without requiring markdown', () => {

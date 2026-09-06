@@ -285,12 +285,53 @@ async function buildExportHtml(
       background: var(--resume-paper) !important;
       box-shadow: none !important;
     }
+    [data-export-mode="pdf"] .resume-paper-page-card.template-sidebar::before,
+    [data-export-mode="pdf"] .resume-pdf-page.template-sidebar::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      width: 32%;
+      background: color-mix(in srgb, var(--primary-color) 4%, #f8fafc);
+      border-right: 1px solid color-mix(in srgb, var(--primary-color) 14%, var(--resume-line));
+      pointer-events: none;
+      z-index: 1;
+      box-sizing: border-box;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+    [data-export-mode="pdf"] .resume-paper-page-card.template-sidebar .template-sidebar,
+    [data-export-mode="pdf"] .resume-pdf-page.template-sidebar .template-sidebar,
+    [data-export-mode="pdf"] .template-sidebar.resume-template {
+      background: transparent !important;
+    }
+    [data-export-mode="pdf"] .resume-paper-page-card.template-sidebar .sidebar-aside,
+    [data-export-mode="pdf"] .resume-pdf-page.template-sidebar .sidebar-aside {
+      background: transparent !important;
+      border-right-color: transparent !important;
+    }
     [data-export-mode="pdf"] .resume-header-classic {
       background: var(--resume-ivory) !important;
     }
     [data-export-mode="pdf"] .resume-content h2::after,
     [data-export-mode="pdf"] .template-classic .resume-content h2::after {
       background: color-mix(in srgb, var(--primary-color) 68%, var(--resume-line)) !important;
+    }
+    [data-export-mode="pdf"] [data-font-family*="细圆"] .resume-content,
+    [data-export-mode="pdf"] [data-font-family*="柔黑"] .resume-content,
+    [data-export-mode="pdf"] [data-font-family*="Rounded"] .resume-content {
+      font-size: calc(var(--font-size, 10pt) * 1.04) !important;
+      font-weight: 300 !important;
+      letter-spacing: 0.02em !important;
+    }
+    [data-export-mode="pdf"] [data-font-family*="细圆"] .resume-content p,
+    [data-export-mode="pdf"] [data-font-family*="柔黑"] .resume-content p,
+    [data-export-mode="pdf"] [data-font-family*="Rounded"] .resume-content p,
+    [data-export-mode="pdf"] [data-font-family*="细圆"] .resume-content li,
+    [data-export-mode="pdf"] [data-font-family*="柔黑"] .resume-content li,
+    [data-export-mode="pdf"] [data-font-family*="Rounded"] .resume-content li {
+      font-weight: 300 !important;
     }
     [data-export-mode="pdf"] .origin-top-left {
       transform: none !important;
