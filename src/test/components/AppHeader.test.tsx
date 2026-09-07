@@ -20,6 +20,7 @@ import { translations } from '@/config/ui';
 import { parseMarkdownToResumeDraft } from '@/utils/resumeDocument';
 import { defaultMarkdownZh } from '@/constants';
 import { DEFAULT_THEME_CONFIG } from '@/types/theme';
+import { ToastProvider } from '@/components/ui/Toast';
 
 describe('AppHeader', () => {
   it('renders the brand title before the project selector and keeps the GitHub link', () => {
@@ -153,5 +154,55 @@ describe('AppHeader', () => {
     await waitFor(() => {
       expect(screen.queryByRole('menu', { name: '更多操作' })).not.toBeInTheDocument();
     });
+  });
+
+  it('keeps API settings open when interacting with a portaled select', () => {
+    render(
+      <ToastProvider>
+        <AppHeader
+          fileInputRef={createRef<HTMLInputElement>()}
+          onFileChange={vi.fn()}
+          isImporting={false}
+          importStep="idle"
+          lang="en"
+          theme="system"
+          resolvedTheme="light"
+          translations={translations.en}
+          canvasRef={createRef<HTMLDivElement>()}
+          draft={parseMarkdownToResumeDraft(defaultMarkdownZh)}
+          onImportClick={vi.fn()}
+          onLanguageToggle={vi.fn()}
+          onThemeToggle={vi.fn()}
+          settings={DEFAULT_SETTINGS}
+          onUpdateProvider={vi.fn()}
+          onSetActiveProvider={vi.fn()}
+          resumeTheme={DEFAULT_THEME_CONFIG}
+          onThemeChange={vi.fn()}
+          onThemeReset={vi.fn()}
+          template="classic"
+          onUpdateSettings={vi.fn()}
+          projects={[]}
+          currentProject={undefined}
+          onProjectSwitch={vi.fn()}
+          onProjectCreate={vi.fn()}
+          onProjectRename={vi.fn()}
+          onProjectDelete={vi.fn()}
+        />
+      </ToastProvider>,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'API Settings' }));
+    expect(screen.getByRole('heading', { name: 'Settings' })).toBeInTheDocument();
+
+    const selectContent = document.createElement('div');
+    selectContent.setAttribute('data-slot', 'select-content');
+    document.body.appendChild(selectContent);
+
+    try {
+      fireEvent.mouseDown(selectContent);
+      expect(screen.getByRole('heading', { name: 'Settings' })).toBeInTheDocument();
+    } finally {
+      selectContent.remove();
+    }
   });
 });

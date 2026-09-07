@@ -112,7 +112,7 @@ export const ProjectSelector = memo(function ProjectSelector({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -4, scale: 0.96, filter: 'blur(4px)' }}
             transition={{ ...dynamicIslandSpring, stiffness: 300 }}
-            className="app-panel absolute top-full left-0 mt-2 w-64 rounded-xl border p-1.5 z-50 overflow-hidden"
+            className="app-panel absolute top-full right-0 mt-2 w-64 rounded-xl border p-1.5 z-50 overflow-hidden"
           >
             {projects.map(project => {
               const isConfirmingThis = deleteConfirmId === project.id;

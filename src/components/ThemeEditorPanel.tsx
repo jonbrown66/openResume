@@ -52,12 +52,16 @@ export const ThemeEditorPanel = memo(function ThemeEditorPanel({
     };
     
     const handleClickOutside = (e: MouseEvent) => {
-      const target = e.target as HTMLElement;
+      const target = e.target;
+      const targetNode = target instanceof Node ? target : null;
+      const targetElement = target instanceof Element ? target : null;
       const panel = panelRef.current;
       const trigger = triggerRef.current;
-      const select = target.closest('[data-radix-portal]');
+      const isSelectPortal = Boolean(
+        targetElement?.closest('[data-radix-portal], [data-slot="select-content"]'),
+      );
       
-      if (!panel?.contains(target) && !trigger?.contains(target) && !select) {
+      if (!panel?.contains(targetNode) && !trigger?.contains(targetNode) && !isSelectPortal) {
         onClose();
       }
     };

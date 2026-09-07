@@ -128,10 +128,17 @@ export const AppHeader = memo(function AppHeader({
   useEffect(() => {
     if (!isSettingsOpen) return;
     const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target;
+      const targetNode = target instanceof Node ? target : null;
+      const targetElement = target instanceof Element ? target : null;
+      const isSettingsMenuItem = Boolean(targetElement?.closest('[role="menuitem"]'));
+      const isSelectPortal = Boolean(targetElement?.closest('[data-slot="select-content"]'));
+
       if (
-        settingsRef.current && 
-        !settingsRef.current.contains(event.target as Node) &&
-        !(event.target as Element).closest('[role="menuitem"]')
+        settingsRef.current &&
+        (!targetNode || !settingsRef.current.contains(targetNode)) &&
+        !isSettingsMenuItem &&
+        !isSelectPortal
       ) {
         setIsSettingsOpen(false);
       }
@@ -229,12 +236,8 @@ export const AppHeader = memo(function AppHeader({
   const mobileMenuItemClass = 'app-control flex w-full min-h-11 items-center gap-3 rounded-lg px-3 py-2 text-left text-sm font-medium transition-colors';
 
   return (
-    <header className="relative flex shrink-0 items-center justify-between gap-2 border-b border-[var(--app-border)] bg-[var(--app-surface)] px-3 py-2.5 transition-colors duration-200 sm:px-6 sm:py-4 print:hidden z-50">
-      <div className="flex min-w-0 flex-1 items-center gap-1.5 sm:gap-3">
-        <LogoIcon />
-        <span className="hidden text-[10px] font-semibold tracking-wider text-zinc-500 dark:text-zinc-400 sm:inline sm:text-sm sm:tracking-wide">
-          OpenResume
-        </span>
+    <header className="relative grid shrink-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 border-b border-[var(--app-border)] bg-[var(--app-surface)] px-3 py-2.5 transition-colors duration-200 sm:px-6 sm:py-4 print:hidden z-50">
+      <div className="flex min-w-0 items-center">
         <div className="hidden sm:flex items-center gap-2 mr-2">
           <motion.div 
             className="w-3 h-3 rounded-lg bg-red-400 dark:bg-red-500"
@@ -252,6 +255,16 @@ export const AppHeader = memo(function AppHeader({
             transition={springTransition}
           />
         </div>
+      </div>
+
+      <div className="flex shrink-0 items-center gap-1.5 justify-self-center sm:gap-3" aria-label="OpenResume">
+        <LogoIcon />
+        <span className="hidden text-[10px] font-semibold tracking-wider text-zinc-500 dark:text-zinc-400 sm:inline sm:text-sm sm:tracking-wide">
+          OpenResume
+        </span>
+      </div>
+
+      <div className="col-start-3 flex min-w-0 items-center justify-end gap-0.5 sm:gap-2 relative">
         <ProjectSelector
           projects={projects}
           currentProject={currentProject}
@@ -260,9 +273,6 @@ export const AppHeader = memo(function AppHeader({
           onRename={onProjectRename}
           onDelete={onProjectDelete}
         />
-      </div>
-
-      <div className="flex shrink-0 items-center gap-0.5 sm:gap-2 relative">
         <div className="hidden sm:block">
           <motion.button
             ref={styleButtonRef}
