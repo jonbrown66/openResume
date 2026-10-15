@@ -1,14 +1,16 @@
 import type { Variants } from "framer-motion";
 
+export const uiTransition = { duration: 0.18, ease: [0.22, 1, 0.36, 1] as const };
+export const overlayTransition = { ...uiTransition, duration: 0.12 };
+
 export const springTransition = {
   type: "spring",
-  stiffness: 100,
-  damping: 20,
+  stiffness: 500,
+  damping: 38,
 } as const;
 
 export const easeOutTransition = {
-  duration: 0.2,
-  ease: [0.16, 1, 0.3, 1] as const,
+  ...uiTransition,
 };
 
 export const fadeInVariants: Variants = {
@@ -56,22 +58,22 @@ export const cardHoverVariants: Variants = {
 // 源自 cult-ui Dynamic Island: stiffness=400, damping=30
 export const dynamicIslandSpring = {
   type: "spring" as const,
-  stiffness: 400,
-  damping: 30,
+  stiffness: 500,
+  damping: 38,
 };
 
 // Toast 专用 — 胶囊弹入/模糊退出
 export const toastMotionProps = {
-  initial: { opacity: 0, y: -40, scale: 0.85, filter: "blur(8px)" },
-  animate: { opacity: 1, y: 0, scale: 1, filter: "blur(0px)" },
-  exit: { opacity: 0, y: -20, scale: 0.9, filter: "blur(10px)" },
-  transition: dynamicIslandSpring,
+  initial: { opacity: 0, y: -6 },
+  animate: { opacity: 1, y: 0 },
+  exit: { opacity: 0, y: -4 },
+  transition: uiTransition,
 };
 
 // 弹出面板 — 弹簧入场
 export const popoverSpringProps = {
   initial: { opacity: 0, y: -8, scale: 0.96 },
   animate: { opacity: 1, y: 0, scale: 1 },
-  exit: { opacity: 0, y: -4, scale: 0.96, filter: "blur(4px)" },
-  transition: { ...dynamicIslandSpring, stiffness: 300 },
+  exit: { opacity: 0, y: -2, scale: 0.98 },
+  transition: uiTransition,
 };

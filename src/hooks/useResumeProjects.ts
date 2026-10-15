@@ -1,195 +1,102 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import type { ResumeProject, StorageSchema } from '@/types/resumeProject';
 import { STORAGE_KEY, generateId } from '@/types/resumeProject';
 import { parseMarkdownToResumeDraft } from '@/utils/resumeDocument';
 import { defaultMarkdownEn } from '@/constants';
-import type { ResumeDraft } from '@/types/resume';
 import { DEFAULT_THEME_CONFIG } from '@/types/theme';
+import { isResumeDraft, normalizeTheme } from '@/utils/validation';
 
-const DEFAULT_DRAFT: ResumeDraft = parseMarkdownToResumeDraft(defaultMarkdownEn);
-
-function getDefaultProject(): ResumeProject {
-  return {
-    id: generateId(),
-    name: '我的简历1',
-    data: { ...DEFAULT_DRAFT },
-    theme: { ...DEFAULT_THEME_CONFIG },
-    layout: {},
-    templateId: 'classic',
-    createdAt: Date.now(),
-    updatedAt: Date.now(),
-  };
+function defaultProject(language: 'zh' | 'en' = 'zh'): ResumeProject {
+  return { id: generateId(), name: language === 'en' ? 'Resume 1' : '我的简历1', data: parseMarkdownToResumeDraft(defaultMarkdownEn),
+    markdown: defaultMarkdownEn, theme: { ...DEFAULT_THEME_CONFIG }, layout: {}, templateId: 'classic',
+    createdAt: Date.now(), updatedAt: Date.now() };
 }
-
-function loadFromStorage(): StorageSchema {
+function load(language: 'zh' | 'en') {
+  const fallback = defaultProject(language);
+  const empty = { projects: [fallback], currentProjectId: fallback.id };
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) {
-      const defaultProject = getDefaultProject();
-      return { projects: [defaultProject], currentProjectId: defaultProject.id };
+      // Assistant history needs a stable project ID even before the first resume edit.
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(empty));
+      return { data: empty, error: '' };
     }
-    const parsed = JSON.parse(raw) as StorageSchema;
-    if (!parsed.projects?.length) {
-      const defaultProject = getDefaultProject();
-      return { projects: [defaultProject], currentProjectId: defaultProject.id };
+    try {
+      const parsed = JSON.parse(raw) as StorageSchema;
+      if (!Array.isArray(parsed.projects) || !parsed.projects.length || !parsed.projects.every(p =>
+        p && typeof p.id === 'string' && typeof p.name === 'string' && isResumeDraft(p.data) &&
+        (p.markdown === undefined || typeof p.markdown === 'string'))) throw new Error('Invalid project storage');
+      if (new Set(parsed.projects.map(p => p.id)).size !== parsed.projects.length) throw new Error('Duplicate project IDs');
+      return { data: { projects: parsed.projects.map(p => ({ ...p, theme: normalizeTheme(p.theme),
+        templateId: ['classic', 'minimal', 'standard', 'sidebar'].includes(p.templateId) ? p.templateId : 'classic',
+      })), currentProjectId: parsed.projects.some(p => p.id === parsed.currentProjectId) ? parsed.currentProjectId : parsed.projects[0].id } as StorageSchema, error: '' };
+    } catch {
+      // Preserve the original bytes before allowing a fresh workspace to be saved.
+      const recoveryKey = `${STORAGE_KEY}-recovery-${Date.now()}`;
+      localStorage.setItem(recoveryKey, raw);
+      if (localStorage.getItem(recoveryKey) !== raw) throw new Error('Recovery backup failed');
+      return { data: empty, error: 'recovered' };
     }
-    return parsed;
   } catch {
-    const defaultProject = getDefaultProject();
-    return { projects: [defaultProject], currentProjectId: defaultProject.id };
+    return { data: empty, error: 'unavailable' };
   }
 }
-
-function saveToStorage(data: StorageSchema): void {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-  } catch (e) {
-    console.error('Failed to save to localStorage:', e);
-  }
-}
-
-function isSameProjectValue<T>(currentValue: T, nextValue: T) {
-  if (typeof currentValue === 'object' && currentValue !== null) {
-    return JSON.stringify(currentValue) === JSON.stringify(nextValue);
-  }
-
-  return currentValue === nextValue;
-}
-
-export function useResumeProjects() {
-  const [storageData, setStorageData] = useState<StorageSchema>(() => loadFromStorage());
-  const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => {
-    if (saveTimeoutRef.current) {
-      clearTimeout(saveTimeoutRef.current);
-    }
-    saveTimeoutRef.current = setTimeout(() => {
-      saveToStorage(storageData);
-    }, 1000);
-    return () => {
-      if (saveTimeoutRef.current) {
-        clearTimeout(saveTimeoutRef.current);
+export function useResumeProjects(language: 'zh' | 'en' = 'zh') {
+  const [initial] = useState(() => load(language));
+  const [storageData, setStorageData] = useState<StorageSchema>(initial.data);
+  const [storageError, setStorageError] = useState(initial.error);
+  const latest = useRef(storageData);
+  const mustBackup = useRef(initial.error === 'unavailable');
+  const commit = useCallback((data: StorageSchema) => {
+    latest.current = data;
+    setStorageData(data);
+    try {
+      if (mustBackup.current) {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          const key = `${STORAGE_KEY}-recovery-${Date.now()}`;
+          localStorage.setItem(key, raw);
+          if (localStorage.getItem(key) !== raw) throw new Error('Backup failed');
+        }
+        mustBackup.current = false;
       }
-    };
-  }, [storageData]);
-
-  const immediateSave = useCallback((data: StorageSchema) => {
-    if (saveTimeoutRef.current) {
-      clearTimeout(saveTimeoutRef.current);
-    }
-    saveToStorage(data);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      setStorageError('');
+    } catch { setStorageError('save-failed'); }
   }, []);
-
-  const currentProject = storageData.projects.find(
-    p => p.id === storageData.currentProjectId
-  ) ?? storageData.projects[0];
-
+  const currentProject = storageData.projects.find(p => p.id === storageData.currentProjectId) ?? storageData.projects[0];
   const createProject = useCallback((copyFrom?: string) => {
-    const existingNames = storageData.projects
-      .map(p => p.name)
-      .filter(name => /^我的简历\d+$/.test(name));
-    
-    let nextNum = 1;
-    if (existingNames.length > 0) {
-      const nums = existingNames
-        .map(name => parseInt(name.replace('我的简历', ''), 10))
-        .filter(n => !isNaN(n));
-      nextNum = nums.length > 0 ? Math.max(...nums) + 1 : 1;
-    }
-    const newName = `我的简历${nextNum}`;
-
-    let newData: ResumeDraft = { ...DEFAULT_DRAFT };
-    if (copyFrom) {
-      const source = storageData.projects.find(p => p.id === copyFrom);
-      if (source) {
-        newData = { ...source.data };
-      }
-    }
-
-    const newProject: ResumeProject = {
-      id: generateId(),
-      name: newName,
-      data: newData,
-      theme: { ...DEFAULT_THEME_CONFIG },
-      layout: {},
-      templateId: 'classic',
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
-    };
-
-    const newStorageData: StorageSchema = {
-      projects: [...storageData.projects, newProject],
-      currentProjectId: newProject.id,
-    };
-    immediateSave(newStorageData);
-    setStorageData(newStorageData);
-    return newProject;
-  }, [storageData, immediateSave]);
-
+    const previous = latest.current;
+    const source = previous.projects.find(p => p.id === copyFrom);
+    const project = defaultProject(language);
+    const number = Math.max(0, ...previous.projects.map(p => Number(p.name.match(/^(?:我的简历|Resume )(\d+)$/)?.[1]) || 0)) + 1;
+    project.name = language === 'en' ? `Resume ${number}` : `我的简历${number}`;
+    if (source) Object.assign(project, { data: structuredClone(source.data), markdown: source.markdown,
+      theme: { ...source.theme }, templateId: source.templateId });
+    commit({ projects: [...previous.projects, project], currentProjectId: project.id });
+    return project;
+  }, [commit, language]);
   const switchProject = useCallback((id: string) => {
-    const newData: StorageSchema = {
-      ...storageData,
-      currentProjectId: id,
-    };
-    immediateSave(newData);
-    setStorageData(newData);
-  }, [storageData, immediateSave]);
-
+    if (latest.current.projects.some(p => p.id === id)) commit({ ...latest.current, currentProjectId: id });
+  }, [commit]);
   const updateProject = useCallback((id: string, updates: Partial<Omit<ResumeProject, 'id' | 'createdAt'>>) => {
-    setStorageData(prev => {
-      let hasChanges = false;
-
-      const newProjects = prev.projects.map(p => {
-        if (p.id !== id) {
-          return p;
-        }
-
-        const changedEntries = Object.entries(updates).filter(([key, value]) => {
-          const projectKey = key as keyof typeof updates & keyof ResumeProject;
-          return !isSameProjectValue(p[projectKey], value as ResumeProject[typeof projectKey]);
-        });
-
-        if (changedEntries.length === 0) {
-          return p;
-        }
-
-        hasChanges = true;
-        return { ...p, ...updates, updatedAt: Date.now() };
-      });
-
-      return hasChanges ? { ...prev, projects: newProjects } : prev;
-    });
-  }, []);
-
+    const previous = latest.current;
+    const project = previous.projects.find(p => p.id === id);
+    if (!project || Object.entries(updates).every(([key, value]) => {
+      const previous = project[key as keyof ResumeProject];
+      return Object.is(previous, value) || (typeof value === 'object' && typeof previous === 'object' && JSON.stringify(previous) === JSON.stringify(value));
+    })) return;
+    commit({ ...previous, projects: previous.projects.map(p => p.id === id ? { ...p, ...updates, updatedAt: Date.now() } : p) });
+  }, [commit]);
   const deleteProject = useCallback((id: string) => {
-    if (storageData.projects.length <= 1) {
-      return;
-    }
-    const newProjects = storageData.projects.filter(p => p.id !== id);
-    const newCurrentId = storageData.currentProjectId === id
-      ? newProjects[0]?.id ?? null
-      : storageData.currentProjectId;
-    
-    const newData: StorageSchema = {
-      projects: newProjects,
-      currentProjectId: newCurrentId,
-    };
-    immediateSave(newData);
-    setStorageData(newData);
-  }, [storageData, immediateSave]);
-
-  const renameProject = useCallback((id: string, newName: string) => {
-    updateProject(id, { name: newName });
+    const previous = latest.current;
+    if (previous.projects.length <= 1) return;
+    const projects = previous.projects.filter(p => p.id !== id);
+    commit({ projects, currentProjectId: previous.currentProjectId === id ? projects[0].id : previous.currentProjectId });
+  }, [commit]);
+  const renameProject = useCallback((id: string, name: string) => {
+    if (name.trim()) updateProject(id, { name: name.trim() });
   }, [updateProject]);
-
-  return {
-    projects: storageData.projects,
-    currentProject,
-    createProject,
-    switchProject,
-    updateProject,
-    deleteProject,
-    renameProject,
-  };
+  return { projects: storageData.projects, currentProject, createProject, switchProject,
+    updateProject, deleteProject, renameProject, storageError };
 }

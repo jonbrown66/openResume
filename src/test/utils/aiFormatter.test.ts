@@ -28,7 +28,7 @@ describe('aiFormatResume', () => {
   it('uses the documented OpenRouter title header when formatting resumes', async () => {
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,
-      json: vi.fn().mockResolvedValue({
+      text: vi.fn().mockResolvedValue(JSON.stringify({
         choices: [
           {
             message: {
@@ -36,7 +36,7 @@ describe('aiFormatResume', () => {
             },
           },
         ],
-      }),
+      })),
     });
 
     vi.stubGlobal('fetch', fetchMock);
@@ -70,7 +70,7 @@ describe('aiFormatResume', () => {
   it('removes base64 avatar images before sending formatter prompts to AI', async () => {
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,
-      json: vi.fn().mockResolvedValue({
+      text: vi.fn().mockResolvedValue(JSON.stringify({
         choices: [
           {
             message: {
@@ -78,7 +78,7 @@ describe('aiFormatResume', () => {
             },
           },
         ],
-      }),
+      })),
     });
 
     vi.stubGlobal('fetch', fetchMock);

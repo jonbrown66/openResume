@@ -19,12 +19,25 @@ import type { AppLanguage, AppTheme, TranslationSet, ResumeTemplate } from '@/co
 import type { AppSettings, ApiProviderId } from '@/config/settings';
 import type { ResumeDraft } from '@/types/resume';
 import type { ResumeProject } from '@/types/resumeProject';
-import { AiSettings } from './settings/AiSettings';
+import { deferredComponent, useIdlePreload } from '@/lib/deferredComponent';
+import type { AiSettingsProps } from './settings/AiSettings';
+import type { ThemeEditorPanelProps } from './ThemeEditorPanel';
+const AiSettings = deferredComponent<AiSettingsProps>(
+  () => import('./settings/AiSettings').then(module => ({ default: module.AiSettings })),
+  props => <p role="status">{props.settings.language === 'zh' ? '加载设置…' : 'Loading settings…'}</p>,
+);
 import { ExportMenu } from './ExportMenu';
 import { ProjectSelector } from './ProjectSelector';
+import { AnchoredPanel } from './ui/AnchoredPanel';
 import type { ResumeThemeConfig } from '@/types/theme';
-import { ThemeEditorPanel } from './ThemeEditorPanel';
-import { buttonHoverVariants, springTransition, dynamicIslandSpring } from '@/lib/motion';
+const ThemeEditorPanel = deferredComponent<ThemeEditorPanelProps>(
+  () => import('./ThemeEditorPanel').then(module => ({ default: module.ThemeEditorPanel })),
+  props => <AnchoredPanel title={props.lang === 'zh' ? '样式编辑器' : 'Style Editor'} closeLabel={props.lang === 'zh' ? '关闭' : 'Close'} triggerRef={props.triggerRef} anchorRect={props.anchorRect} onClose={props.onClose}>
+    <p role="status">{props.lang === 'zh' ? '加载样式…' : 'Loading styles…'}</p>
+  </AnchoredPanel>,
+);
+const headerPreloads = [AiSettings.preload, ThemeEditorPanel.preload];
+import { springTransition, overlayTransition } from '@/lib/motion';
 
 const PROJECT_GITHUB_URL = 'https://github.com/jonbrown66/openResume';
 
@@ -64,7 +77,7 @@ interface AppHeaderProps {
   onLanguageToggle: () => void;
   onThemeToggle: () => void;
   settings: AppSettings;
-  onUpdateProvider: (id: ApiProviderId, updates: any) => void;
+  onUpdateProvider: (id: ApiProviderId, updates: Partial<AppSettings['providers'][ApiProviderId]>) => void;
   onSetActiveProvider: (id: ApiProviderId) => void;
   resumeTheme: ResumeThemeConfig;
   onThemeChange: (newConfig: Partial<ResumeThemeConfig>) => void;
@@ -100,7 +113,7 @@ export const AppHeader = memo(function AppHeader({
   onThemeChange,
   onThemeReset,
   template,
-  onUpdateSettings,
+  onUpdateSettings: _onUpdateSettings,
   projects,
   currentProject,
   onProjectSwitch,
@@ -109,6 +122,7 @@ export const AppHeader = memo(function AppHeader({
   onProjectDelete,
 }: AppHeaderProps) {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  useIdlePreload(headerPreloads);
   const [isStylePanelOpen, setIsStylePanelOpen] = useState(false);
   const [isMobileMoreOpen, setIsMobileMoreOpen] = useState(false);
   const styleButtonRef = useRef<HTMLButtonElement>(null);
@@ -118,8 +132,12 @@ export const AppHeader = memo(function AppHeader({
   const mobileStyleTriggerRef = useRef<HTMLButtonElement>(null);
   const [mobileMoreRect, setMobileMoreRect] = useState<DOMRect | null>(null);
   const [styleAnchorRect, setStyleAnchorRect] = useState<DOMRect | null>(null);
+  const settingsTriggerRef = useRef<HTMLElement>(null);
+  const styleReturnFocusRef = useRef<HTMLElement>(null);
 
   const handleToggleSettings = useCallback(() => {
+    settingsTriggerRef.current = window.innerWidth >= 1024 ? settingsRef.current?.querySelector('button') ?? null : mobileMoreButtonRef.current;
+    setIsStylePanelOpen(false);
     setIsMobileMoreOpen(false);
     setIsSettingsOpen(prev => !prev);
   }, []);
@@ -138,7 +156,7 @@ export const AppHeader = memo(function AppHeader({
         settingsRef.current &&
         (!targetNode || !settingsRef.current.contains(targetNode)) &&
         !isSettingsMenuItem &&
-        !isSelectPortal
+        !isSelectPortal && !targetElement?.closest('[data-overlay-portal]')
       ) {
         setIsSettingsOpen(false);
       }
@@ -147,11 +165,15 @@ export const AppHeader = memo(function AppHeader({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isSettingsOpen]);
   const handleToggleStylePanel = useCallback(() => {
+    styleReturnFocusRef.current = styleButtonRef.current;
+    setIsSettingsOpen(false);
     setStyleAnchorRect(styleButtonRef.current?.getBoundingClientRect() ?? null);
     setIsStylePanelOpen(prev => !prev);
   }, []);
   const handleMobileStylePanelOpen = useCallback(() => {
-    setStyleAnchorRect(mobileStyleTriggerRef.current?.getBoundingClientRect() ?? null);
+    styleReturnFocusRef.current = mobileMoreButtonRef.current;
+    setIsSettingsOpen(false);
+    setStyleAnchorRect(mobileMoreButtonRef.current?.getBoundingClientRect() ?? null);
     setIsStylePanelOpen(true);
     setIsMobileMoreOpen(false);
   }, []);
@@ -176,13 +198,23 @@ export const AppHeader = memo(function AppHeader({
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
+        event.preventDefault();
         setIsMobileMoreOpen(false);
+        mobileMoreButtonRef.current?.focus();
+      } else if (['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) {
+        event.preventDefault();
+        const items = Array.from(mobileMoreMenuRef.current?.querySelectorAll<HTMLElement>('[role=menuitem]') ?? []);
+        const index = items.indexOf(document.activeElement as HTMLElement);
+        const next = event.key === 'Home' ? 0 : event.key === 'End' ? items.length - 1 : (index + (event.key === 'ArrowDown' ? 1 : items.length - 1)) % items.length;
+        items[next]?.focus();
       }
     };
 
+    const frame = requestAnimationFrame(() => mobileMoreMenuRef.current?.querySelector<HTMLElement>('[role=menuitem]')?.focus());
     document.addEventListener('pointerdown', handlePointerDown);
     document.addEventListener('keydown', handleKeyDown);
     return () => {
+      cancelAnimationFrame(frame);
       document.removeEventListener('pointerdown', handlePointerDown);
       document.removeEventListener('keydown', handleKeyDown);
     };
@@ -205,7 +237,7 @@ export const AppHeader = memo(function AppHeader({
   }, [isMobileMoreOpen]);
 
   const stylePanelProps = useMemo(() => ({
-    triggerRef: styleButtonRef,
+    triggerRef: styleReturnFocusRef,
     anchorRect: isStylePanelOpen ? styleAnchorRect : null,
     theme: resumeTheme,
     lang,
@@ -233,25 +265,22 @@ export const AppHeader = memo(function AppHeader({
     return t.themeLight;
   }, [theme, t]);
 
-  const mobileMenuItemClass = 'app-control flex w-full min-h-11 items-center gap-3 rounded-lg px-3 py-2 text-left text-sm font-medium transition-colors';
+  const mobileMenuItemClass = 'app-control ui-menu-item';
 
   return (
-    <header className="relative grid shrink-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 border-b border-[var(--app-border)] bg-[var(--app-surface)] px-3 py-2.5 transition-colors duration-200 sm:px-6 sm:py-4 print:hidden z-50">
-      <div className="flex min-w-0 items-center">
-        <div className="hidden sm:flex items-center gap-2 mr-2">
-          <motion.div 
+    <header className="app-header relative flex shrink-0 items-center gap-2 border-b border-[var(--app-border)] bg-[var(--app-surface)] px-3 py-2.5 transition-colors duration-200 2xl:grid 2xl:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] sm:px-6 sm:py-4 print:hidden z-50">
+      <div className="hidden min-w-0 items-center 2xl:flex">
+        <div className="hidden 2xl:flex items-center gap-2 mr-2">
+          <motion.div
             className="w-3 h-3 rounded-lg bg-red-400 dark:bg-red-500"
-            whileHover={{ scale: 1.2 }}
             transition={springTransition}
           />
-          <motion.div 
+          <motion.div
             className="w-3 h-3 rounded-lg bg-amber-400 dark:bg-amber-500"
-            whileHover={{ scale: 1.2 }}
             transition={springTransition}
           />
-          <motion.div 
+          <motion.div
             className="w-3 h-3 rounded-lg bg-green-400 dark:bg-green-500"
-            whileHover={{ scale: 1.2 }}
             transition={springTransition}
           />
         </div>
@@ -259,13 +288,14 @@ export const AppHeader = memo(function AppHeader({
 
       <div className="flex shrink-0 items-center gap-1.5 justify-self-center sm:gap-3" aria-label="OpenResume">
         <LogoIcon />
-        <span className="hidden text-[10px] font-semibold tracking-wider text-zinc-500 dark:text-zinc-400 sm:inline sm:text-sm sm:tracking-wide">
+        <span className="hidden text-xs font-semibold tracking-wider text-zinc-500 dark:text-zinc-400 sm:inline sm:text-sm sm:tracking-wide">
           OpenResume
         </span>
       </div>
 
-      <div className="col-start-3 flex min-w-0 items-center justify-end gap-0.5 sm:gap-2 relative">
+      <div className="col-start-3 ms-auto flex min-w-0 items-center justify-end gap-0.5 sm:gap-2 relative">
         <ProjectSelector
+          lang={lang}
           projects={projects}
           currentProject={currentProject}
           onSwitch={onProjectSwitch}
@@ -273,15 +303,13 @@ export const AppHeader = memo(function AppHeader({
           onRename={onProjectRename}
           onDelete={onProjectDelete}
         />
-        <div className="hidden sm:block">
+        <div className="hidden lg:block">
           <motion.button
             ref={styleButtonRef}
             onClick={handleToggleStylePanel}
             className="app-control flex items-center justify-center rounded-lg p-2 transition-colors"
             title={t.style}
             aria-label={t.style}
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.95 }}
           >
             <Palette size={16} />
           </motion.button>
@@ -291,61 +319,45 @@ export const AppHeader = memo(function AppHeader({
             )}
           </AnimatePresence>
         </div>
-        
+
         <motion.button
           onClick={handleToggleTheme}
-          className="app-control hidden items-center justify-center rounded-lg p-2 transition-colors sm:flex"
+          className="app-control hidden items-center justify-center rounded-lg p-2 transition-colors lg:flex"
           title={themeLabel}
           aria-label={themeLabel}
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.95 }}
         >
           {themeIcon}
         </motion.button>
-        
+
         <motion.button
           onClick={handleToggleLanguage}
-          className="app-control hidden items-center justify-center rounded-lg p-2 transition-colors sm:flex"
+          className="app-control hidden items-center justify-center rounded-lg p-2 transition-colors lg:flex"
           title={t.toggleLanguage}
           aria-label={t.toggleLanguage}
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.95 }}
         >
           <TranslationIcon />
-          <span className="ml-1 text-[10px] font-bold uppercase">{lang === 'en' ? '中' : 'EN'}</span>
+          <span className="ml-1 text-xs font-bold uppercase">{lang === 'en' ? '中' : 'EN'}</span>
         </motion.button>
-        
+
         <div className="relative" ref={settingsRef}>
           <motion.button
             onClick={handleToggleSettings}
-            className="app-control hidden items-center justify-center rounded-lg p-2 transition-colors sm:flex"
+            className="app-control hidden items-center justify-center rounded-lg p-2 transition-colors lg:flex"
             title={t.apiSettings}
             aria-label={t.apiSettings}
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.95 }}
           >
             <Settings size={16} />
           </motion.button>
-          
+
           <AnimatePresence>
             {isSettingsOpen && (
-              <motion.div
-                initial={{ opacity: 0, y: -8, scale: 0.96 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: -4, scale: 0.96, filter: 'blur(4px)' }}
-                transition={{ ...dynamicIslandSpring, stiffness: 300 }}
-                className="app-panel fixed inset-x-4 top-16 mx-auto sm:absolute sm:inset-auto sm:right-0 sm:top-full sm:mt-2 w-auto max-w-[320px] sm:w-80 rounded-xl border p-5 z-[100] overflow-hidden text-left"
-              >
-                <h3 className="text-sm font-bold text-[var(--foreground)] mb-4 flex items-center gap-2">
-                  <Settings size={14} />
-                  <span>{t.settingsTitle}</span>
-                </h3>
+              <AnchoredPanel title={t.settingsTitle} closeLabel={t.close} triggerRef={settingsTriggerRef} onClose={() => setIsSettingsOpen(false)}>
                 <AiSettings
                   settings={settings}
                   onUpdateProvider={onUpdateProvider}
                   onSetActiveProvider={onSetActiveProvider}
                 />
-              </motion.div>
+              </AnchoredPanel>
             )}
           </AnimatePresence>
         </div>
@@ -354,16 +366,14 @@ export const AppHeader = memo(function AppHeader({
           href={PROJECT_GITHUB_URL}
           target="_blank"
           rel="noreferrer"
-          className="app-control hidden items-center justify-center rounded-lg p-2 transition-colors sm:flex"
+          className="app-control hidden items-center justify-center rounded-lg p-2 transition-colors lg:flex"
           title={t.githubProject}
           aria-label={t.githubProject}
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.95 }}
         >
           <Github size={16} />
         </motion.a>
 
-        <div className="relative sm:hidden" ref={mobileMoreRef}>
+        <div className="relative lg:hidden" ref={mobileMoreRef}>
           <motion.button
             ref={mobileMoreButtonRef}
             type="button"
@@ -375,8 +385,6 @@ export const AppHeader = memo(function AppHeader({
             className="app-control flex min-h-10 min-w-10 items-center justify-center rounded-lg p-2 transition-colors"
             aria-label={t.moreActions}
             aria-expanded={isMobileMoreOpen}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
           >
             <MoreHorizontal size={18} />
           </motion.button>
@@ -390,13 +398,15 @@ export const AppHeader = memo(function AppHeader({
                 initial={{ opacity: 0, y: -4, scale: 0.98 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: -4, scale: 0.98 }}
-                transition={{ duration: 0.14, ease: 'easeOut' }}
+                transition={overlayTransition}
                 style={{
                   position: 'fixed',
                   top: mobileMoreRect ? mobileMoreRect.bottom + 8 : 56,
                   right: mobileMoreRect ? Math.max(8, window.innerWidth - mobileMoreRect.right) : 8,
+                  maxHeight: Math.max(120, window.innerHeight - (mobileMoreRect?.bottom ?? 56) - 20),
+                  transformOrigin: 'top right',
                 }}
-                className="app-panel z-[120] w-56 rounded-xl border p-1.5"
+                className="app-ui app-panel ui-menu z-[120] w-56 overflow-y-auto rounded-xl border p-1.5"
               >
                 <button
                   ref={mobileStyleTriggerRef}
@@ -452,7 +462,7 @@ export const AppHeader = memo(function AppHeader({
             document.body
           ) : null}
         </div>
-        
+
         <div className="hidden sm:block w-px h-4 bg-[var(--app-border)] mx-1 sm:mx-2"></div>
 
         <input
@@ -466,9 +476,7 @@ export const AppHeader = memo(function AppHeader({
         <motion.button
           onClick={onImportClick}
           disabled={isImporting}
-          className="app-secondary hidden items-center gap-2 rounded-lg border px-4 py-2 text-xs font-medium transition-all disabled:cursor-not-allowed disabled:opacity-50 sm:flex"
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
+          className="app-secondary hidden shrink-0 items-center gap-2 whitespace-nowrap rounded-lg border px-4 py-2 text-xs font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50 lg:flex"
         >
           {isImporting ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />}
           {isImporting && importStep === 'extracting' && t.extracting}
@@ -477,33 +485,27 @@ export const AppHeader = memo(function AppHeader({
           {isImporting && importStep !== 'extracting' && importStep !== 'parsing' && importStep !== 'formatting' && t.importing}
           {!isImporting && t.import}
         </motion.button>
-        
+
         <motion.button
           onClick={onImportClick}
           disabled={isImporting}
-          className="app-control flex min-h-10 min-w-10 items-center justify-center rounded-lg p-2 transition-colors disabled:opacity-50 sm:hidden"
+          className="app-control flex min-h-10 min-w-10 items-center justify-center rounded-lg p-2 transition-colors disabled:opacity-50 lg:hidden"
           aria-label={t.import}
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.95 }}
         >
           {isImporting ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
         </motion.button>
 
         <ExportMenu {...exportMenuProps}>
           <motion.button
-            className="app-primary hidden items-center gap-2 rounded-lg px-4 py-2 text-xs font-semibold transition-all disabled:cursor-not-allowed disabled:opacity-50 sm:flex"
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
+            className="app-primary hidden items-center gap-2 rounded-lg px-4 py-2 text-xs font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50 lg:flex"
           >
             <Printer size={14} />
             {t.export}
             <ChevronDown size={12} />
           </motion.button>
           <motion.button
-            className="app-primary flex min-h-10 min-w-10 items-center justify-center rounded-lg p-2 transition-colors disabled:opacity-50 sm:hidden"
+            className="app-primary flex min-h-10 min-w-10 items-center justify-center rounded-lg p-2 transition-colors disabled:opacity-50 lg:hidden"
             aria-label={t.export}
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.95 }}
           >
             <Printer size={16} />
           </motion.button>

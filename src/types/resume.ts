@@ -6,6 +6,7 @@ export interface ResumeFrontmatter {
 }
 
 export interface ResumeEntry {
+  id?: string;
   heading: string;
   meta: string;
   organization: string;
@@ -13,6 +14,7 @@ export interface ResumeEntry {
 }
 
 export interface ResumeSection {
+  id?: string;
   title: string;
   content: string;
   entries: ResumeEntry[];

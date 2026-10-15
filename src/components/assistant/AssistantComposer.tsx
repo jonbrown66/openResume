@@ -27,7 +27,7 @@ export function AssistantComposer({
 }: AssistantComposerProps) {
   return (
     <div className="shrink-0 border-t border-[var(--app-border)] bg-[var(--app-surface)]/80 px-4 py-3 sm:px-5 sm:py-4">
-      <div className="mb-2.5 flex items-center justify-between gap-3 text-[11px] leading-4 text-[var(--muted-foreground)]">
+      <div className="mb-2.5 flex items-center justify-between gap-3 text-xs leading-4 text-[var(--muted-foreground)]">
         {configureLabel ? (
           <button
             type="button"
@@ -51,8 +51,10 @@ export function AssistantComposer({
           <div className="shrink-0 text-right">{memoryHint}</div>
         )}
       </div>
-      <div className="rounded-[20px] border border-[var(--app-border)] bg-[var(--app-surface-muted)]/70 p-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.45)] transition-colors focus-within:border-[var(--app-accent)]/70 focus-within:bg-[var(--app-surface)]">
+      <div className="ui-composer border border-[var(--app-border)] bg-[var(--app-surface)] p-2.5 transition-colors focus-within:border-[var(--ui-focus)]">
         <textarea
+          data-ui-plain
+          aria-label={placeholder}
           value={input}
           onChange={(event) => onInputChange(event.target.value)}
           onKeyDown={(event) => {

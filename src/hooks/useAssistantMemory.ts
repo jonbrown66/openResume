@@ -10,6 +10,7 @@ export interface AssistantMessage {
   role: 'assistant' | 'user';
   content: string;
   proposedMarkdown?: string;
+  baseMarkdown?: string;
   applied?: boolean;
   diff?: ResumeDiffResult;
   riskWarnings?: string[];

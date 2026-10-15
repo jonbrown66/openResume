@@ -1,38 +1,54 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { type AppSettings, type ApiProviderId, DEFAULT_SETTINGS } from '../config/settings';
 
 const SETTINGS_KEY = 'myresume-settings-v1';
 
 export function useSettings() {
+  const blockedStorage = useRef(false);
+  const [storageError, setStorageError] = useState(false);
   const [settings, setSettings] = useState<AppSettings>(() => {
+    try {
     const saved = localStorage.getItem(SETTINGS_KEY);
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        return {
-          ...DEFAULT_SETTINGS,
-          ...parsed,
-          providers: {
-            ...DEFAULT_SETTINGS.providers,
-            ...(parsed.providers || {}),
-          },
+        const providers = { ...DEFAULT_SETTINGS.providers };
+        for (const id of Object.keys(providers) as ApiProviderId[]) {
+          const raw = parsed?.providers?.[id];
+          providers[id] = { ...providers[id],
+            apiKey: typeof raw?.apiKey === 'string' ? raw.apiKey : providers[id].apiKey,
+            model: typeof raw?.model === 'string' ? raw.model : providers[id].model,
+            baseUrl: typeof raw?.baseUrl === 'string' ? raw.baseUrl : providers[id].baseUrl,
+          };
+        }
+        return { providers,
+          activeProvider: Object.hasOwn(providers, parsed?.activeProvider) ? parsed.activeProvider : DEFAULT_SETTINGS.activeProvider,
+          theme: ['light', 'dark', 'system'].includes(parsed?.theme) ? parsed.theme : DEFAULT_SETTINGS.theme,
+          language: ['zh', 'en'].includes(parsed?.language) ? parsed.language : DEFAULT_SETTINGS.language,
         };
-      } catch (e) {
-        console.error('Failed to parse settings', e);
+      } catch {
+        // Preserve corrupt settings before replacing them with defaults.
+        localStorage.setItem(`${SETTINGS_KEY}-recovery-${Date.now()}`, saved);
       }
     }
+    } catch { blockedStorage.current = true; }
     return DEFAULT_SETTINGS;
   });
 
   useEffect(() => {
-    localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+    document.documentElement.lang = settings.language === 'zh' ? 'zh-CN' : 'en';
+    if (blockedStorage.current) { setStorageError(true); return; }
+    try {
+      localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+      setStorageError(false);
+    } catch { setStorageError(true); }
   }, [settings]);
 
-  const updateSettings = (updates: Partial<AppSettings>) => {
+  const updateSettings = useCallback((updates: Partial<AppSettings>) => {
     setSettings(prev => ({ ...prev, ...updates }));
-  };
+  }, []);
 
-  const updateProvider = (providerId: ApiProviderId, updates: Partial<AppSettings['providers'][keyof AppSettings['providers']]>) => {
+  const updateProvider = useCallback((providerId: ApiProviderId, updates: Partial<AppSettings['providers'][keyof AppSettings['providers']]>) => {
     setSettings(prev => ({
       ...prev,
       providers: {
@@ -43,11 +59,11 @@ export function useSettings() {
         },
       },
     }));
-  };
+  }, []);
 
-  const setActiveProvider = (activeProvider: AppSettings['activeProvider']) => {
+  const setActiveProvider = useCallback((activeProvider: AppSettings['activeProvider']) => {
     setSettings(prev => ({ ...prev, activeProvider }));
-  };
+  }, []);
 
   const setTheme = (theme: AppSettings['theme']) => {
     setSettings(prev => ({ ...prev, theme }));
@@ -64,5 +80,6 @@ export function useSettings() {
     setActiveProvider,
     setTheme,
     setLanguage,
+    storageError,
   };
 }

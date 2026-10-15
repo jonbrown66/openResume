@@ -9,6 +9,7 @@ coverage/
 
 # next.js
 /.next/
+/.next-dev/
 /out/
 
 # build artifacts
@@ -22,3 +23,7 @@ nul
 promo-video/work-*/
 promo-video/*.mp4
 promo-video/*.webm
+
+# E2E artifacts
+/test-results/
+/playwright-report/

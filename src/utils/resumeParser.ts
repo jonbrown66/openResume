@@ -463,7 +463,7 @@ function parseEntryBlock(block: string[]): ResumeEntry | null {
   };
 }
 
-function parseSkillSection(lines: string[], lang: SupportedLanguage): ResumeEntry[] {
+function parseSkillSection(lines: string[], _lang: SupportedLanguage): ResumeEntry[] {
   const hasTable = lines.some((line) => (line.match(/[|｜]/g) || []).length >= 2);
   if (hasTable) {
     return [

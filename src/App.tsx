@@ -1,4 +1,5 @@
 import { useCallback, useMemo } from 'react';
+import { MotionConfig } from 'framer-motion';
 
 import { ToastProvider } from '@/components/ui/Toast';
 import { WorkspaceShell } from '@/components/WorkspaceShell';
@@ -14,7 +15,7 @@ import { useSettings } from '@/hooks/useSettings';
 import { resolveImportNoticeMessage } from '@/utils/importNotice';
 
 export default function App() {
-  const { settings, updateSettings, updateProvider, setActiveProvider } = useSettings();
+  const { settings, updateSettings, updateProvider, setActiveProvider, storageError: settingsStorageError } = useSettings();
   const { resolvedTheme } = useAppTheme(settings.theme);
   const {
     projects,
@@ -24,7 +25,8 @@ export default function App() {
     updateProject,
     renameProject,
     deleteProject,
-  } = useResumeProjects();
+    storageError,
+  } = useResumeProjects(settings.language);
   const {
     markdown,
     setMarkdown,
@@ -73,6 +75,7 @@ export default function App() {
     importStep,
     triggerImport,
   } = useResumeImport({
+    projectId: currentProject?.id,
     lang,
     settings,
     onImportComplete: handleImportComplete,
@@ -92,7 +95,10 @@ export default function App() {
     updateSettings({ theme: nextTheme });
   }, [settings.theme, updateSettings]);
 
-  const noticeMessage = resolveImportNoticeMessage({
+  const storageMessage = settingsStorageError || storageError
+    ? (lang === 'zh' ? (storageError === 'recovered' ? '存储数据损坏：原始数据已备份在 resume_projects-recovery 项中。' : '浏览器存储不可用，修改暂未保存。请先导出备份，避免关闭页面丢失内容。')
+      : (storageError === 'recovered' ? 'Damaged storage was backed up under resume_projects-recovery.' : 'Browser storage is unavailable. Changes are not saved. Export a backup before closing this page.')) : '';
+  const noticeMessage = storageMessage || resolveImportNoticeMessage({
     importError,
     importNotice,
     importNoticeDetail,
@@ -100,7 +106,7 @@ export default function App() {
   });
 
   return (
-    <ToastProvider>
+    <MotionConfig reducedMotion="user"><ToastProvider language={lang}>
       <WorkspaceShell
         settings={settings}
         lang={lang}
@@ -153,6 +159,6 @@ export default function App() {
         onUndo={onUndo}
         onRedo={onRedo}
       />
-    </ToastProvider>
+    </ToastProvider></MotionConfig>
   );
 }

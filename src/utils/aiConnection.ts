@@ -1,29 +1,11 @@
+import { fetchJsonWithTimeout } from '@/utils/fetchWithTimeout';
 import type { ApiProvider } from '@/config/settings';
 
 const CONNECTION_TIMEOUT = 20000;
 
-async function fetchWithTimeout(
-  url: string,
-  options: RequestInit & { timeout?: number },
-): Promise<Response> {
-  const { timeout = CONNECTION_TIMEOUT, signal: existingSignal, ...fetchOptions } = options;
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), timeout);
-
-  try {
-    const response = await fetch(url, {
-      ...fetchOptions,
-      signal: existingSignal || controller.signal,
-    });
-    clearTimeout(timeoutId);
-    return response;
-  } catch (error) {
-    clearTimeout(timeoutId);
-    if (error instanceof Error && error.name === 'AbortError') {
-      throw new Error(`Request timed out after ${timeout}ms`);
-    }
-    throw error;
-  }
+async function fetchWithTimeout(url: string, options: RequestInit & { timeout?: number }): Promise<Response> {
+  const { timeout = CONNECTION_TIMEOUT, ...fetchOptions } = options;
+  return fetchJsonWithTimeout(url, fetchOptions, timeout);
 }
 
 async function readApiError(response: Response, fallbackMessage: string) {

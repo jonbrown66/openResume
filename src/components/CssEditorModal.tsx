@@ -1,5 +1,8 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { createPortal } from 'react-dom';
+import { useOverlayDialog } from '@/hooks/useOverlayDialog';
+import { overlayTransition } from '@/lib/motion';
 import { Code2, Copy, Check, Save, RotateCcw, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { translations } from '@/config/ui';
@@ -16,114 +19,6 @@ interface CssEditorModalProps {
   template: ResumeTemplate;
   currentFont: string;
 }
-
-const BASE_CSS = `/* 基础样式 */
-.resume-content {
-  font-family: var(--font-family);
-  font-size: var(--font-size);
-  line-height: var(--line-height);
-}
-.resume-content h2 {
-  font-size: 1rem;
-  font-weight: 800;
-  color: var(--primary-color);
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  border-bottom: 2px solid var(--primary-color);
-  padding-bottom: 0.5rem;
-  margin: 16px 0 8px;
-}
-.resume-content h3 {
-  font-size: 1rem;
-  font-weight: 700;
-  color: var(--secondary-color);
-  margin-top: 12px;
-}
-.resume-h3-split {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 12px;
-}
-.resume-h3-split h3 {
-  margin-top: 0;
-}
-.resume-h3-split span {
-  font-size: 0.875rem;
-  color: #4B5563;
-}
-.resume-content p {
-  color: #374151;
-  margin-bottom: 4px;
-}
-.resume-content p strong {
-  color: var(--secondary-color);
-}
-.resume-list {
-  list-style: disc;
-  padding-left: 1.25rem;
-  margin-bottom: 8px;
-}
-.resume-list li {
-  color: #374151;
-}
-.skills-list {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  list-style: disc;
-  padding-left: 1.25rem;
-  margin-bottom: 8px;
-}
-.skills-list li {
-  color: #374151;
-}`;
-
-const TEMPLATE_CSS: Record<ResumeTemplate, string> = {
-  classic: `${BASE_CSS}
-
-/* Classic 头部 */
-.bg-\\[\\#EAEAEA\\] {
-  background: #EAEAEA;
-  padding: 24px;
-}`,
-  minimal: `${BASE_CSS}
-
-/* Minimal 模板 */
-.template-minimal .resume-content h2 {
-  font-family: var(--font-serif);
-  text-align: center;
-  border-bottom: 1px solid;
-  letter-spacing: 0.2em;
-  font-weight: 600;
-}
-.template-minimal .resume-content h3 {
-  font-family: var(--font-serif);
-}`,
-  standard: `${BASE_CSS}
-
-/* Standard 模板 */
-.template-standard .resume-content h2 {
-  border-bottom: none;
-}
-.template-standard .resume-h3-split span {
-  color: var(--secondary-color);
-}`,
-  sidebar: `${BASE_CSS}
-
-/* Sidebar 模板 */
-.template-sidebar .sidebar-section {
-  display: flex;
-  margin-bottom: 16px;
-}
-.template-sidebar .sidebar-title {
-  width: 25%;
-  border-right: 1px solid var(--primary-color);
-  padding-right: 12px;
-}
-.template-sidebar .sidebar-content {
-  width: 75%;
-  padding-left: 12px;
-}`,
-};
 
 function getBaseCss(fontFamily: string): string {
   const familyString = FONT_STYLES[fontFamily]?.family || `'${fontFamily}', sans-serif`;
@@ -278,7 +173,9 @@ export function CssEditorModal({
   const [css, setCss] = useState('');
   const [copied, setCopied] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const modalRef = useRef<HTMLDivElement>(null);
   const t = translations[lang];
+  useOverlayDialog(isOpen, modalRef, onClose, true);
 
   const handleSave = useCallback(() => {
     onSave(css);
@@ -306,7 +203,7 @@ export function CssEditorModal({
   }, []);
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Tab') {
+    if (e.key === 'Tab' && !e.shiftKey) {
       e.preventDefault();
       const textarea = e.target as HTMLTextAreaElement;
       const start = textarea.selectionStart;
@@ -337,30 +234,37 @@ export function CssEditorModal({
     setCss(customCss || getTemplateCss(template, currentFont));
   }, [customCss, isOpen, template, currentFont]);
 
-  return (
+  return createPortal(
     <AnimatePresence>
       {isOpen && (
         <motion.div
-          initial={{ opacity: 0 }}
+          initial={false}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.15 }}
-          className="fixed inset-0 z-[100] flex items-center justify-center p-4"
+          transition={overlayTransition}
+          data-overlay-portal
+          className="app-ui fixed inset-0 z-[160] flex items-center justify-center p-4"
         >
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.15 }}
+            transition={overlayTransition}
             className="absolute inset-0 bg-black/50"
             onClick={onClose}
           />
 
           <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+            ref={modalRef}
+            role="dialog"
+            aria-modal="true"
+            data-ui-dialog
+            tabIndex={-1}
+            aria-label={t.customCss}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 4 }}
+            transition={overlayTransition}
             className={cn(
               "relative w-full max-w-2xl max-h-[85vh] flex flex-col",
               "app-panel",
@@ -384,6 +288,7 @@ export function CssEditorModal({
                 </div>
               </div>
               <button
+                aria-label={t.close}
                 onClick={onClose}
                 className="app-control rounded-xl p-2 transition-colors"
               >
@@ -391,13 +296,14 @@ export function CssEditorModal({
               </button>
             </div>
 
-            <div className="flex-1 px-6 py-4 min-h-0" ref={containerRef}>
+            <div className="flex-1 overflow-y-auto px-4 py-4 min-h-0 sm:px-6" ref={containerRef}>
               <div className="relative rounded-xl border border-[var(--app-border)] bg-[var(--app-surface-muted)] overflow-hidden">
-                <pre 
+                <pre
                   className="absolute inset-0 p-4 text-[13px] leading-6 font-mono whitespace-pre-wrap overflow-auto pointer-events-none text-zinc-900 dark:text-zinc-100"
                   dangerouslySetInnerHTML={{ __html: highlightCss(css) }}
                 />
-                <textarea
+                <textarea data-code-editor
+                  aria-label={t.customCss}
                   value={css}
                   onChange={handleInput}
                   onKeyDown={handleKeyDown}
@@ -406,7 +312,7 @@ export function CssEditorModal({
                   className="block w-full h-[400px] p-4 resize-none text-[13px] leading-6 font-mono bg-transparent text-transparent caret-zinc-900 dark:caret-zinc-100 border-0 focus:outline-none whitespace-pre-wrap overflow-auto"
                 />
               </div>
-              
+
               <div className="mt-2 flex items-center justify-between text-xs text-zinc-500 dark:text-zinc-400">
                 <span>
                   {lang === 'zh' ? '⌘/Ctrl + S 保存 | Tab 缩进' : '⌘/Ctrl + S to save | Tab to indent'}
@@ -428,7 +334,7 @@ export function CssEditorModal({
               .dark .css-brace { color: #c9d1d9; }
             `}</style>
 
-            <div className="flex items-center justify-between px-6 py-4 border-t border-[var(--app-border)] bg-[var(--app-surface-muted)]">
+            <div className="ui-dialog-actions flex shrink-0 flex-wrap items-center justify-between gap-3 px-4 py-4 border-t border-[var(--app-border)] bg-[var(--app-surface-muted)]">
               <button
                 onClick={handleReset}
                 className={cn(
@@ -440,8 +346,8 @@ export function CssEditorModal({
                 <RotateCcw className="w-4 h-4" />
                 {t.resetToDefault}
               </button>
-              
-              <div className="flex items-center gap-2">
+
+              <div className="ml-auto flex items-center gap-2">
                 <button
                   onClick={handleCopy}
                   className={cn(
@@ -453,7 +359,7 @@ export function CssEditorModal({
                   {copied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
                   {copied ? t.copied : t.copy}
                 </button>
-                
+
                 <button
                   onClick={handleSave}
                   className={cn(
@@ -470,6 +376,6 @@ export function CssEditorModal({
           </motion.div>
         </motion.div>
       )}
-    </AnimatePresence>
+    </AnimatePresence>, document.body
   );
 }

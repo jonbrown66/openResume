@@ -180,6 +180,11 @@ function splitSegmentsIntoColumns(segments: PdfTextSegment[]) {
     return [segments];
   }
 
+  // Assign gutter fragments to their nearest column instead of dropping them.
+  const gutter = segments.filter(segment => segment.x >= leftBoundary && segment.x < rightBoundary);
+  for (const segment of gutter) {
+    (segment.x < (leftBoundary + rightBoundary) / 2 ? leftColumn : rightColumn).push(segment);
+  }
   return [leftColumn, rightColumn];
 }
 
@@ -226,7 +231,7 @@ export function reconstructPdfPageText(items: PdfTextItemLike[]) {
     .join('\n\n')
     .replace(/\n{3,}/g, '\n\n')
     .trim();
-  
+
   return cleanPdfText(rawText);
 }
 
@@ -281,34 +286,17 @@ export function convertDocxHtmlToText(html: string) {
     .trim();
 }
 
-let pdfjsLoadPromise: Promise<any> | null = null;
+let pdfjsLoadPromise: Promise<typeof import('pdfjs-dist')> | null = null;
 
-async function loadPdfJsFromCdn(): Promise<any> {
+async function loadPdfJs(): Promise<typeof import('pdfjs-dist')> {
   if (pdfjsLoadPromise) {
     return pdfjsLoadPromise;
   }
 
-  pdfjsLoadPromise = new Promise((resolve, reject) => {
-    if (typeof window === 'undefined') {
-      reject(new Error('PDF extraction only works in browser'));
-      return;
-    }
-
-    const script = document.createElement('script');
-    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
-    script.onload = () => {
-      const pdfjsLib = (window as Window & { pdfjsLib?: unknown }).pdfjsLib;
-      if (pdfjsLib) {
-        (pdfjsLib as { GlobalWorkerOptions: { workerSrc: string } }).GlobalWorkerOptions.workerSrc =
-          'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-        resolve(pdfjsLib);
-      } else {
-        reject(new Error('Failed to load pdf.js'));
-      }
-    };
-    script.onerror = () => reject(new Error('Failed to load pdf.js from CDN'));
-    document.head.appendChild(script);
-  });
+  pdfjsLoadPromise = import('pdfjs-dist').then(pdfjs => {
+    pdfjs.GlobalWorkerOptions.workerSrc = new URL('pdfjs-dist/build/pdf.worker.min.mjs', import.meta.url).toString();
+    return pdfjs;
+  }).catch(error => { pdfjsLoadPromise = null; throw error; });
 
   return pdfjsLoadPromise;
 }
@@ -324,11 +312,12 @@ export async function extractTextFromFile(file: File): Promise<string> {
 
   if (ext === 'pdf') {
     const arrayBuffer = await file.arrayBuffer();
-    const pdfjsLib = await loadPdfJsFromCdn();
+    const pdfjsLib = await loadPdfJs();
     const loadingTask = pdfjsLib.getDocument({ data: new Uint8Array(arrayBuffer) });
-    const pdf = await loadingTask.promise;
     const pages: string[] = [];
 
+    try {
+    const pdf = await loadingTask.promise;
     for (let pageNum = 1; pageNum <= pdf.numPages; pageNum += 1) {
       const page = await pdf.getPage(pageNum);
       const textContent = await page.getTextContent();
@@ -336,9 +325,11 @@ export async function extractTextFromFile(file: File): Promise<string> {
       if (pageText) {
         pages.push(pageText);
       }
+      page.cleanup();
     }
 
     return pages.join('\n\n').trim();
+    } finally { await loadingTask.destroy(); }
   }
 
   if (ext === 'docx') {

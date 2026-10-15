@@ -1,6 +1,7 @@
 import { memo, useMemo, useId } from 'react';
 import ReactMarkdown from 'react-markdown';
 import rehypeRaw from 'rehype-raw';
+import rehypeSanitize from 'rehype-sanitize';
 import remarkGfm from 'remark-gfm';
 import type { ResumeDraft, ResumeEntry, ResumeSection } from '../types/resume';
 import { parseMarkdownToResumeDraft } from '../utils/resumeDocument';
@@ -67,6 +68,7 @@ function isChineseText(value: string): boolean {
 }
 
 function getSummaryTitle(draft: ResumeDraft): string {
+  if (draft.summaryTitle) return draft.summaryTitle;
   if (isChineseText(`${draft.frontmatter.name} ${draft.summary}`)) {
     return '个人简介';
   }
@@ -80,7 +82,7 @@ function isSkillsSection(title: string): boolean {
 const MarkdownRenderer = memo(({ content, isSkills = false }: { content: string; isSkills?: boolean }) => (
   <ReactMarkdown
     remarkPlugins={[remarkGfm]}
-    rehypePlugins={[rehypeRaw]}
+    rehypePlugins={[rehypeRaw, rehypeSanitize]}
     components={{
       h3: ({ children, ...props }) => {
         const text = String(children);
@@ -328,7 +330,7 @@ export const ResumeRenderer = memo(({ markdown, draft, template = 'classic', the
     () => draft ?? parseMarkdownToResumeDraft(markdown ?? ''),
     [draft, markdown]
   );
-  
+
   const style = useMemo(() => ({
     '--primary-color': theme.primaryColor,
     '--secondary-color': theme.secondaryColor,

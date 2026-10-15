@@ -31,6 +31,13 @@ function createSettings(overrides?: Partial<AppSettings>): AppSettings {
 }
 
 describe('useResumeImport', () => {
+  it('preserves the existing resume when extraction is empty', async () => {
+    const onImportComplete = vi.fn();
+    const { result } = renderHook(() => useResumeImport({ lang: 'en', settings: DEFAULT_SETTINGS, onImportComplete }));
+    vi.mocked(extractTextFromFile).mockResolvedValue('   ');
+    await act(async () => { await result.current.handleFileChange({ target: { files: [new File([], 'scan.pdf')] } } as unknown as React.ChangeEvent<HTMLInputElement>); });
+    expect(onImportComplete).not.toHaveBeenCalled(); expect(result.current.importError).toContain('No text found');
+  });
   beforeEach(() => {
     vi.clearAllMocks();
     vi.spyOn(console, 'warn').mockImplementation(() => {});

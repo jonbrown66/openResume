@@ -1,4 +1,5 @@
-import { lazy, Suspense, type ChangeEvent, type RefObject } from 'react';
+import { useCallback, useState, type ChangeEvent, type RefObject } from 'react';
+import { Bot, Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 import { AppHeader } from '@/components/AppHeader';
@@ -21,11 +22,17 @@ import type { ResumeDraft } from '@/types/resume';
 import type { ResumeProject } from '@/types/resumeProject';
 import type { ResumeThemeConfig } from '@/types/theme';
 
-const AssistantWidget = lazy(() =>
-  import('@/components/AssistantWidget').then((module) => ({
-    default: module.AssistantWidget,
-  })),
+import { deferredComponent, useIdlePreload } from '@/lib/deferredComponent';
+import type { AssistantWidgetProps } from '@/components/AssistantWidget';
+const AssistantWidget = deferredComponent<AssistantWidgetProps>(
+  () => import('@/components/AssistantWidget').then(module => ({ default: module.AssistantWidget })),
+  props => <div className="app-ui ui-floating-tools pointer-events-none fixed inset-x-2 bottom-[calc(5.25rem+env(safe-area-inset-bottom))] z-[70] flex justify-end sm:inset-x-auto sm:bottom-6 sm:right-6">
+    <button type="button" aria-label={props.lang === 'zh' ? '正在打开 AI 助手' : 'Opening AI assistant'} aria-busy="true" disabled className="app-primary inline-flex h-14 w-14 items-center justify-center rounded-full">
+      <Loader2 size={22} className="animate-spin" />
+    </button>
+  </div>,
 );
+const assistantPreloads = [AssistantWidget.preload];
 
 interface WorkspaceShellProps {
   settings: AppSettings;
@@ -132,10 +139,13 @@ export function WorkspaceShell({
   onUndo,
   onRedo,
 }: WorkspaceShellProps) {
+  const [assistantProject, setAssistantProject] = useState<string | null>(null);
+  useIdlePreload(assistantPreloads);
+  const resetCustomCss = useCallback(() => onCustomCssChange(''), [onCustomCssChange]);
   return (
     <>
       <main
-        className={`flex h-dvh w-full items-center justify-center overflow-hidden font-sans transition-colors duration-200 sm:p-4 md:p-8 ${
+        className={`app-ui flex h-dvh w-full items-center justify-center overflow-hidden font-sans transition-colors duration-200 sm:p-4 md:p-8 ${
           resolvedTheme === 'dark' ? 'bg-[var(--app-bg)]' : 'bg-[var(--app-bg)]'
         }`}
       >
@@ -145,7 +155,7 @@ export function WorkspaceShell({
           animate="visible"
           variants={slideUpVariants}
         >
-          <ErrorBoundary>
+          <ErrorBoundary lang={lang}>
             <AppHeader
               fileInputRef={fileInputRef}
               onFileChange={onFileChange}
@@ -156,7 +166,7 @@ export function WorkspaceShell({
               resolvedTheme={resolvedTheme}
               translations={t}
               canvasRef={canvasRef}
-              draft={activeDraft}
+              draft={draft}
               onImportClick={onImportClick}
               onLanguageToggle={onLanguageToggle}
               onThemeToggle={onThemeToggle}
@@ -181,7 +191,7 @@ export function WorkspaceShell({
 
           <div className="relative flex flex-1 overflow-hidden bg-[var(--app-bg)]">
             <div className={`${activeView === 'editor' ? 'flex' : 'hidden'} w-full lg:flex lg:w-[44%] xl:w-[41%] 2xl:w-[39%]`}>
-              <ErrorBoundary>
+              <ErrorBoundary lang={lang}>
                 <EditorPane
                   containerRef={editorContainerRef}
                   draft={draft}
@@ -203,7 +213,7 @@ export function WorkspaceShell({
             </div>
 
             <div className={`${activeView === 'preview' ? 'flex' : 'hidden'} w-full lg:flex lg:min-w-0 lg:flex-1`}>
-              <ErrorBoundary>
+              <ErrorBoundary lang={lang}>
                 <PreviewPane
                   containerRef={previewContainerRef}
                   draft={activeDraft}
@@ -218,7 +228,7 @@ export function WorkspaceShell({
                   onZoomChange={onZoomChange}
                   onZoomReset={onZoomReset}
                   onCustomCssChange={onCustomCssChange}
-                  onCustomCssReset={() => onCustomCssChange('')}
+                  onCustomCssReset={resetCustomCss}
                   currentFont={resumeTheme.fontFamily}
                 />
               </ErrorBoundary>
@@ -233,9 +243,15 @@ export function WorkspaceShell({
         </motion.div>
       </main>
 
-      <ErrorBoundary>
-        <Suspense fallback={null}>
+      <ErrorBoundary lang={lang}>
+        {assistantProject === null ? <div className="app-ui ui-floating-tools pointer-events-none fixed inset-x-2 bottom-[calc(5.25rem+env(safe-area-inset-bottom))] z-[70] flex justify-end print:hidden sm:inset-x-auto sm:bottom-6 sm:right-6">
+          <button id="assistant-launcher" type="button" aria-label={t.assistantOpen}
+            className="app-primary pointer-events-auto inline-flex h-14 w-14 items-center justify-center rounded-full"
+            onClick={() => setAssistantProject(currentProject?.id ?? 'default-project')}><Bot size={22} /></button>
+        </div> : <>
           <AssistantWidget
+            key={currentProject?.id ?? 'default-project'}
+            initiallyOpen={assistantProject === (currentProject?.id ?? 'default-project')}
             lang={lang}
             markdown={markdown}
             projectId={currentProject?.id ?? 'default-project'}
@@ -246,7 +262,7 @@ export function WorkspaceShell({
             onSetActiveProvider={onSetActiveProvider}
             onUpdateSettings={onUpdateSettings}
           />
-        </Suspense>
+        </>}
       </ErrorBoundary>
     </>
   );

@@ -45,7 +45,7 @@ describe('resumeAssistant', () => {
   it('uses the documented OpenRouter title header for assistant requests', async () => {
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,
-      json: vi.fn().mockResolvedValue({
+      text: vi.fn().mockResolvedValue(JSON.stringify({
         choices: [
           {
             message: {
@@ -53,7 +53,7 @@ describe('resumeAssistant', () => {
             },
           },
         ],
-      }),
+      })),
     });
 
     vi.stubGlobal('fetch', fetchMock);
@@ -93,7 +93,7 @@ describe('resumeAssistant', () => {
   it('removes base64 avatar images before sending assistant prompts to AI', async () => {
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,
-      json: vi.fn().mockResolvedValue({
+      text: vi.fn().mockResolvedValue(JSON.stringify({
         choices: [
           {
             message: {
@@ -101,7 +101,7 @@ describe('resumeAssistant', () => {
             },
           },
         ],
-      }),
+      })),
     });
 
     vi.stubGlobal('fetch', fetchMock);
@@ -143,7 +143,7 @@ describe('resumeAssistant', () => {
   it('removes quoted base64 avatar images before sending assistant prompts to AI', async () => {
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,
-      json: vi.fn().mockResolvedValue({
+      text: vi.fn().mockResolvedValue(JSON.stringify({
         choices: [
           {
             message: {
@@ -151,7 +151,7 @@ describe('resumeAssistant', () => {
             },
           },
         ],
-      }),
+      })),
     });
 
     vi.stubGlobal('fetch', fetchMock);
@@ -193,7 +193,7 @@ describe('resumeAssistant', () => {
   it('restores quoted base64 avatar images in edit responses', async () => {
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,
-      json: vi.fn().mockResolvedValue({
+      text: vi.fn().mockResolvedValue(JSON.stringify({
         choices: [
           {
             message: {
@@ -204,7 +204,7 @@ describe('resumeAssistant', () => {
             },
           },
         ],
-      }),
+      })),
     });
 
     vi.stubGlobal('fetch', fetchMock);
@@ -241,7 +241,7 @@ describe('resumeAssistant', () => {
   it('sanitizes base64 avatar images in reply field for both edit and chat modes', async () => {
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,
-      json: vi.fn().mockResolvedValue({
+      text: vi.fn().mockResolvedValue(JSON.stringify({
         choices: [
           {
             message: {
@@ -252,7 +252,7 @@ describe('resumeAssistant', () => {
             },
           },
         ],
-      }),
+      })),
     });
 
     vi.stubGlobal('fetch', fetchMock);

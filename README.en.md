@@ -21,8 +21,8 @@ GitHub: [https://github.com/jonbrown66/openResume](https://github.com/jonbrown66
 ## Features
 
 - Dual editing modes: Markdown and block editor
-- Unified A4 canvas for both editing and preview
-- Zoomable preview with template switching and style controls (built-in fonts including Geist, Fira Mono, GenSenRounded, TW-Sung, TW-Kai, etc. with font fallback system)
+- Paginated A4 preview with Markdown and block editing
+- Zoomable preview with template switching and style controls (Geist is bundled locally; other font choices use installed fonts and system fallbacks)
 - Import support for `md / txt / pdf / docx`
 - Local fallback parsing when no API key is configured
 - AI-assisted resume editing with before/after diff preview
@@ -42,7 +42,7 @@ GitHub: [https://github.com/jonbrown66/openResume](https://github.com/jonbrown66
 - `pdfjs-dist`
 - `mammoth`
 - `docx`
-- Puppeteer / Chromium
+- Playwright / Chromium
 
 ## Local Development
 
@@ -146,3 +146,11 @@ src/utils/                   resume parsing, AI, import, and export utilities
 - The first PDF export can be slower while browser-side dependencies initialize
 - Scanned PDFs may still have limited text extraction quality
 - Assistant changes are applied only after a manual confirmation click
+
+## Validation and privacy boundaries
+
+Run `pnpm lint`, `pnpm typecheck`, and `pnpm test`. `pnpm test:e2e` builds the app and runs Playwright in isolated desktop and mobile viewport contexts with synthetic resumes and mocked AI responses. Install Chromium with `pnpm exec playwright install chromium`, or set `PLAYWRIGHT_EXECUTABLE_PATH`. Failed runs retain screenshots and traces; CI uploads the report.
+
+Development uses `.next-dev` and production uses `.next`, so a build cannot overwrite a running development server's assets. With `pnpm dev` already running at `http://localhost:3000`, run `pnpm exec playwright test --config=playwright.dev.config.ts` to check development behavior, including runtime and hydration errors.
+
+API keys are stored in plaintext LocalStorage on the current browser. Editing, file extraction, and HTML downloads are local; PDF/DOCX send resume data to the application server. AI sends text directly to the configured provider. Geist is bundled locally; other font choices use installed system fonts and fallbacks. DOCX uses editable Word layout and does not reproduce arbitrary custom CSS. Empty imports preserve the existing resume. Damaged project storage is backed up under `resume_projects-recovery-*`.

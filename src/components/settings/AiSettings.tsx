@@ -3,21 +3,21 @@ import { motion } from 'framer-motion';
 import { Cpu, Eye, EyeOff, Sparkles, Wand2, Globe } from 'lucide-react';
 import type { AppSettings, ApiProviderId } from '@/config/settings';
 import { translations } from '@/config/ui';
-import { 
-  Select, 
+import {
+  Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue 
+  SelectValue
 } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/Toast';
-import { cn } from '@/lib/utils';
+
 import { testAiProviderConnection } from '@/utils/aiConnection';
 
-interface AiSettingsProps {
+export interface AiSettingsProps {
   settings: AppSettings;
   onUpdateProvider: (id: ApiProviderId, updates: Partial<AppSettings['providers'][keyof AppSettings['providers']]>) => void;
   onSetActiveProvider: (id: ApiProviderId) => void;
@@ -126,20 +126,18 @@ export function AiSettings({ settings, onUpdateProvider, onSetActiveProvider }: 
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -10 }}
       className="space-y-6"
     >
       <div className="space-y-2.5">
         <Label className="text-[15px] font-medium text-zinc-900 dark:text-zinc-100">
           {t.aiProvider}
         </Label>
-        <Select 
-          value={currentProviderId} 
+        <Select
+          items={PROVIDERS.map(provider => ({ value: provider.id, label: provider.nameKey }))}
+          value={currentProviderId}
           onValueChange={(val) => onSetActiveProvider(val as ApiProviderId)}
         >
-          <SelectTrigger className="w-full h-12 rounded-lg border-[var(--app-border)] bg-[var(--app-surface)]/70 px-4 focus:ring-1 focus:ring-[var(--app-accent)]/35">
+          <SelectTrigger aria-label={t.aiProvider} className="w-full h-12 rounded-lg border-[var(--app-border)] bg-[var(--app-surface)]/70 px-4 focus:ring-1 focus:ring-[var(--app-accent)]/35">
             <SelectValue />
           </SelectTrigger>
           <SelectContent className="rounded-lg border-[var(--app-border)] bg-[var(--app-surface)]">
@@ -161,14 +159,17 @@ export function AiSettings({ settings, onUpdateProvider, onSetActiveProvider }: 
         </Label>
         <div className="relative">
           <Input
+            aria-label={t.aiApiKey}
             type={showKey ? "text" : "password"}
             value={currentProvider.apiKey}
             onChange={(e) => onUpdateProvider(currentProviderId, { apiKey: e.target.value })}
             placeholder={t.aiApiKeyPlaceholder}
             className="w-full h-12 rounded-lg border-zinc-200/80 dark:border-zinc-800/80 bg-white/50 dark:bg-zinc-950/50 px-4 pr-12 focus:ring-1 focus:ring-zinc-900/10 dark:focus:ring-zinc-100/10"
           />
-          <button 
-            type="button" 
+          <button
+            type="button"
+            aria-label={settings.language === 'zh' ? (showKey ? '隐藏 API Key' : '显示 API Key') : (showKey ? 'Hide API key' : 'Show API key')}
+            aria-pressed={showKey}
             onClick={() => setShowKey(!showKey)}
             className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300"
           >
@@ -185,6 +186,7 @@ export function AiSettings({ settings, onUpdateProvider, onSetActiveProvider }: 
           {t.aiEndpoint}
         </Label>
         <Input
+          aria-label={t.aiEndpoint}
           value={currentProvider.baseUrl || ENDPOINT_PLACEHOLDERS[currentProviderId]}
           onChange={(e) => onUpdateProvider(currentProviderId, { baseUrl: e.target.value })}
           className="w-full h-12 rounded-lg border-zinc-200/80 dark:border-zinc-800/80 bg-white/50 dark:bg-zinc-950/50 px-4 focus:ring-1 focus:ring-zinc-900/10 dark:focus:ring-zinc-100/10"
@@ -195,16 +197,17 @@ export function AiSettings({ settings, onUpdateProvider, onSetActiveProvider }: 
         <Label className="text-[15px] font-medium text-zinc-900 dark:text-zinc-100">
           {t.aiModel}
         </Label>
-        <Select 
+        <Select
+          items={[...availableModels.map(model => ({ value: model, label: model })), { value: CUSTOM_MODEL_VALUE, label: t.aiModelCustomOption }]}
           value={selectedModelValue}
           onValueChange={handleModelChange}
         >
-          <SelectTrigger className="w-full h-12 rounded-lg border-[var(--app-border)] bg-[var(--app-surface)]/70 px-4 focus:ring-1 focus:ring-[var(--app-accent)]/35">
+          <SelectTrigger aria-label={t.aiModel} className="w-full h-12 rounded-lg border-[var(--app-border)] bg-[var(--app-surface)]/70 px-4 focus:ring-1 focus:ring-[var(--app-accent)]/35">
             <SelectValue />
           </SelectTrigger>
           <SelectContent className="rounded-lg border-[var(--app-border)] bg-[var(--app-surface)]">
             {availableModels.map(m => (
-              <SelectItem key={m} value={m} className="rounded-lg">{m}</SelectItem>
+              <SelectItem key={m} value={m} title={m}>{m}</SelectItem>
             ))}
             <SelectItem value={CUSTOM_MODEL_VALUE} className="rounded-lg">
               {t.aiModelCustomOption}
@@ -213,6 +216,7 @@ export function AiSettings({ settings, onUpdateProvider, onSetActiveProvider }: 
         </Select>
         {isCustomModel ? (
           <Input
+            aria-label={t.aiModelCustomPlaceholder}
             value={currentProvider.model || ''}
             onChange={(e) => {
               setCustomModelModes((prev) => ({ ...prev, [currentProviderId]: true }));

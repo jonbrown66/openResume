@@ -11,7 +11,7 @@ describe('testAiProviderConnection', () => {
   it('sends the documented OpenRouter headers for connection checks', async () => {
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,
-      json: vi.fn().mockResolvedValue({}),
+      text: vi.fn().mockResolvedValue(JSON.stringify({})),
     });
 
     vi.stubGlobal('fetch', fetchMock);

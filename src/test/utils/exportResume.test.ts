@@ -26,15 +26,21 @@ describe('exportResume', () => {
       blob: () => Promise.resolve(new Blob(['ok'], { type: 'text/html' })),
     });
     vi.stubGlobal('fetch', fetchMock);
+    let exportedBlob: Blob | undefined;
     vi.stubGlobal('URL', {
-      createObjectURL: vi.fn(() => 'blob:resume'),
+      createObjectURL: vi.fn((blob: Blob) => { exportedBlob = blob; return 'blob:resume'; }),
       revokeObjectURL: vi.fn(),
     });
     vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
 
     await exportToHtml(canvas, parseMarkdownToResumeDraft(defaultMarkdownEn));
 
-    const requestBody = JSON.parse(fetchMock.mock.calls[0][1].body);
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(exportedBlob).toBeDefined();
+    const html = await new Promise<string>(resolve => {
+      const reader = new FileReader(); reader.onload = () => resolve(String(reader.result)); reader.readAsText(exportedBlob!);
+    });
+    const requestBody = { html };
     const bodyHtml = requestBody.html.slice(requestBody.html.indexOf('<body'));
 
     expect(requestBody.html).toContain('.resume-template');

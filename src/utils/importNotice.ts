@@ -16,7 +16,7 @@ export function resolveImportNoticeMessage({
   translations: t,
 }: ResolveImportNoticeMessageOptions) {
   if (importError) {
-    return t.importFailed;
+    return `${t.importFailed} ${importError}`;
   }
 
   if (importNotice === 'missing-api-key') {

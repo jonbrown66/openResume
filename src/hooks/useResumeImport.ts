@@ -10,12 +10,16 @@ type ImportStep = 'idle' | 'extracting' | 'parsing' | 'formatting' | 'done';
 type ImportNotice = '' | 'missing-api-key' | 'missing-model' | 'ai-format-fallback';
 
 interface UseResumeImportOptions {
+  projectId?: string;
   lang: AppLanguage;
   settings: AppSettings;
   onImportComplete: (markdown: string) => void;
 }
 
-export function useResumeImport({ lang, settings, onImportComplete }: UseResumeImportOptions) {
+export function useResumeImport({ lang, settings, onImportComplete, projectId }: UseResumeImportOptions) {
+  const activeProject = useRef(projectId);
+  activeProject.current = projectId;
+  const busy = useRef(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isImporting, setIsImporting] = useState(false);
   const [importStep, setImportStep] = useState<ImportStep>('idle');
@@ -27,11 +31,18 @@ export function useResumeImport({ lang, settings, onImportComplete }: UseResumeI
 
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (!file) {
+    if (!file || busy.current) {
       return;
     }
 
     try {
+      busy.current = true;
+      const targetProject = projectId;
+      const apply = (formatted: string) => {
+        if (!formatted.trim()) throw new Error(lang === 'zh' ? '未提取到有效内容，原简历已保留。' : 'No content was extracted. Your resume was preserved.');
+        if (activeProject.current !== targetProject) throw new Error(lang === 'zh' ? '导入期间切换了简历，请在目标简历中重新导入。' : 'The project changed during import. Import again in the intended project.');
+        startTransition(() => onImportComplete(formatted));
+      };
       setIsImporting(true);
       setImportError('');
       setImportNotice('');
@@ -39,17 +50,17 @@ export function useResumeImport({ lang, settings, onImportComplete }: UseResumeI
       setImportStep('extracting');
 
       const rawText = await extractTextFromFile(file);
-      
+      if (!rawText.trim()) throw new Error(lang === 'zh' ? '未提取到文字，请使用文本 PDF 或先进行 OCR。原简历已保留。' : 'No text found. Use a text PDF or run OCR first. Your resume was preserved.');
+      if (/\.md$/i.test(file.name)) { apply(rawText); setImportStep('done'); return; }
+
       const provider = settings.providers[settings.activeProvider];
-      
+
       if (!provider.apiKey) {
         setImportStep('parsing');
         const formatted = autoFormatResume(rawText, lang);
         setImportStep('done');
         setImportNotice('missing-api-key');
-        startTransition(() => {
-          onImportComplete(formatted);
-        });
+        apply(formatted);
         return;
       }
 
@@ -58,9 +69,7 @@ export function useResumeImport({ lang, settings, onImportComplete }: UseResumeI
         const formatted = await aiFormatResume(rawText, lang, settings);
         setImportStep('done');
         setImportNotice('');
-        startTransition(() => {
-          onImportComplete(formatted);
-        });
+        apply(formatted);
       } catch (aiError) {
         console.warn('[AI Format Failed, falling back to auto-parse]', aiError);
         setImportStep('parsing');
@@ -79,15 +88,14 @@ export function useResumeImport({ lang, settings, onImportComplete }: UseResumeI
           setImportNoticeDetail(errorMessage.trim());
         }
 
-        startTransition(() => {
-          onImportComplete(formatted);
-        });
+        apply(formatted);
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
       setImportError(errorMessage);
       setImportStep('idle');
     } finally {
+      busy.current = false;
       setIsImporting(false);
       if (fileInputRef.current) {
         fileInputRef.current.value = '';

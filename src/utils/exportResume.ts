@@ -5,31 +5,54 @@ export type ExportFormat = 'pdf' | 'word' | 'html';
 
 const API_BASE = '/api';
 
-function collectExportStyles() {
+function coversGlyphs(range: string, codePoints: number[]) {
+  if (!range) return true;
+  return range.split(',').some(part => {
+    const [start, end] = part.trim().replace(/^U\+/i, '').split('-');
+    const lower = parseInt(start.replace(/\?/g, '0'), 16);
+    const upper = parseInt((end ?? start).replace(/\?/g, 'F'), 16);
+    return codePoints.some(point => point >= lower && point <= upper);
+  });
+}
+async function collectExportStyles(fontFamily?: string, text = '', includeCjk = false) {
+  const codePoints = Array.from(new Set(Array.from(text, character => character.codePointAt(0)!)));
   const styleElements: string[] = [];
 
   for (const sheet of Array.from(document.styleSheets)) {
     try {
-      const cssText = Array.from(sheet.cssRules)
-        .map((rule) => rule.cssText)
-        .join('\n');
+      const rules = await Promise.all(Array.from(sheet.cssRules).map(async rule => {
+        if (rule.type === 5) {
+          const face = (rule as CSSFontFaceRule).style;
+          const selected = (fontFamily && face.fontFamily.includes(fontFamily)) || (includeCjk && face.fontFamily.includes('Noto Sans SC'));
+          if (!selected || !coversGlyphs(face.getPropertyValue('unicode-range'), codePoints)) return '';
+          let css = rule.cssText;
+          const sources = Array.from(css.matchAll(/url\(["']?([^"')]+)["']?\)/g));
+          const match = sources.find(source => /\.woff2(?:\?|$)/i.test(source[1])) ?? sources[0];
+          if (match) {
+            const url = new URL(match[1], window.location.origin);
+            if (url.origin !== window.location.origin) return css;
+            const response = await fetch(url.href, { signal: AbortSignal.timeout(15000) });
+            if (!response.ok) throw new Error('Font could not be embedded');
+            const data = await blobDataUrl(await response.blob());
+            css = css.replace(/\bsrc\s*:[^;]+;/, `src: url("${data}") format("${/\.woff2/i.test(url.pathname) ? 'woff2' : 'woff'}");`);
+          }
+          return css;
+        }
+        return rule.cssText.startsWith('@import') ? '' : rule.cssText;
+      }));
+      const cssText = rules.filter(Boolean).join('\n');
 
       if (cssText) {
         styleElements.push(`<style>${cssText}</style>`);
       }
-    } catch {
+    } catch (error) {
+      if (!(error instanceof DOMException && error.name === 'SecurityError')) throw error;
       const ownerNode = sheet.ownerNode as HTMLElement | null;
       if (ownerNode?.tagName === 'LINK' || ownerNode?.tagName === 'STYLE') {
         styleElements.push(ownerNode.outerHTML);
       }
     }
   }
-
-  document.querySelectorAll('style').forEach((style) => {
-    if (!styleElements.includes(style.outerHTML)) {
-      styleElements.push(style.outerHTML);
-    }
-  });
 
   return styleElements.join('\n');
 }
@@ -65,6 +88,8 @@ function cloneCanvasForExport(canvasElement: HTMLDivElement) {
 
 function cloneSinglePageForHtmlExport(canvasElement: HTMLDivElement) {
   const projectedTemplate =
+    document.querySelector<HTMLElement>(`[data-resume-measure-id="${canvasElement.dataset.measureId}"] .resume-template`) ||
+    canvasElement.parentElement?.querySelector<HTMLElement>('.resume-measure .resume-template') ||
     canvasElement.querySelector<HTMLElement>('.resume-paper-page-card > div:nth-child(2) > div > .resume-template') ||
     canvasElement.querySelector<HTMLElement>('.resume-template');
 
@@ -123,7 +148,8 @@ function syncCardContentOffset(card: HTMLElement) {
   }
 
   contentWrapper.style.position = 'absolute';
-  contentWrapper.style.top = `-${pageMarginPx + (Number.isFinite(contentOffset) ? contentOffset : 0)}px`;
+  const sourceOffset = Number.parseFloat(card.getAttribute('data-source-offset') ?? '');
+  contentWrapper.style.top = `-${Number.isFinite(sourceOffset) ? sourceOffset : pageMarginPx + (Number.isFinite(contentOffset) ? contentOffset : 0)}px`;
   contentWrapper.style.left = '0';
 }
 
@@ -177,15 +203,36 @@ async function buildExportHtml(
   centered: boolean = false,
   exportMode: 'pdf' | 'html' = 'pdf'
 ): Promise<string> {
+  const measure = document.querySelector<HTMLElement>(`[data-resume-measure-id="${canvasElement.dataset.measureId}"]`);
+  const text = measure?.innerText ?? canvasElement.textContent ?? '';
+  const includeCjk = /[\u2e80-\u9fff]/.test(text);
+  if (includeCjk) {
+    await import('@fontsource/noto-sans-sc/400.css');
+    await document.fonts.load('14px "Noto Sans SC"', text);
+    await document.fonts.ready;
+    await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+  }
+  const deadline = Date.now() + 5000;
+  while (canvasElement.dataset.paginationReady === 'false') {
+    if (Date.now() > deadline) throw new Error('Preview is still updating. Try exporting again.');
+    await new Promise(resolve => setTimeout(resolve, 16));
+  }
   const origin = window.location.origin;
-  const styleNodes = collectExportStyles();
+  const styleNodes = await collectExportStyles(theme?.fontFamily, text, includeCjk);
   const exportCanvas = exportMode === 'pdf'
     ? buildPdfDocumentForExport(canvasElement)
     : cloneSinglePageForHtmlExport(canvasElement);
+  for (const img of Array.from(exportCanvas.querySelectorAll<HTMLImageElement>('img'))) {
+    if (img.src && !img.src.startsWith('data:')) {
+      const response = await fetch(img.src, { signal: AbortSignal.timeout(15000) });
+      if (!response.ok) throw new Error('Image could not be embedded');
+      img.src = await blobDataUrl(await response.blob());
+    }
+  }
 
   const pageMargin = theme?.pageMargin ? `${theme.pageMargin}mm` : '15mm';
 
-  const bodyStyle = centered 
+  const bodyStyle = centered
     ? `background: #eef3e7; display: flex; justify-content: center; align-items: flex-start; padding: 24px; margin: 0;`
     : `background: var(--resume-paper, #faf9f3) !important; display: block; padding: 0; margin: 0;`;
 
@@ -194,9 +241,10 @@ async function buildExportHtml(
     : `width: 210mm; height: auto; min-height: 0; background: transparent; transform: none !important; box-shadow: none !important;`;
 
   return `<!DOCTYPE html>
-<html lang="zh-CN" class="light" data-export-mode="${exportMode}">
+<html lang="${document.documentElement.lang === 'en' ? 'en' : 'zh-CN'}" class="light" data-export-mode="${exportMode}">
 <head>
   <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; img-src data:; font-src data:">
   <base href="${origin}">
   ${styleNodes}
   <style>
@@ -206,9 +254,9 @@ async function buildExportHtml(
       html, body {
         background-color: var(--resume-paper, #faf9f3) !important;
       }
-      .resume-paper { 
-        box-shadow: none !important; 
-        margin: 0 !important; 
+      .resume-paper {
+        box-shadow: none !important;
+        margin: 0 !important;
         padding: 0 !important;
         position: static !important;
         transform: none !important;
@@ -351,6 +399,7 @@ async function fetchExport(apiPath: string, html: string, filename: string, mime
   const response = await fetch(`${API_BASE}${apiPath}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
+    signal: AbortSignal.timeout(65000),
     body: JSON.stringify({
       html,
       filename,
@@ -362,6 +411,16 @@ async function fetchExport(apiPath: string, html: string, filename: string, mime
   }
 
   const blob = await response.blob();
+  downloadBlob(blob, filename, extension);
+}
+
+function blobDataUrl(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader(); reader.onload = () => resolve(String(reader.result));
+    reader.onerror = () => reject(new Error('Could not embed resource')); reader.readAsDataURL(blob);
+  });
+}
+function downloadBlob(blob: Blob, filename: string, extension: string) {
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
@@ -369,12 +428,12 @@ async function fetchExport(apiPath: string, html: string, filename: string, mime
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
-  URL.revokeObjectURL(url);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
 export async function exportToPdf(
-  canvasElement: HTMLDivElement, 
-  draft: ResumeDraft, 
+  canvasElement: HTMLDivElement,
+  draft: ResumeDraft,
   theme?: ResumeThemeConfig,
   template?: string
 ): Promise<void> {
@@ -383,28 +442,28 @@ export async function exportToPdf(
     await fetchExport('/export/pdf', html, draft.frontmatter.name || 'resume', 'application/pdf', 'pdf');
   } catch (error) {
     console.error('PDF export failed:', error);
-    throw new Error('PDF export failed. Please make sure the export server is running (npm run server).');
+    throw new Error('PDF export failed. Please try again or use HTML export.');
   }
 }
 
 export async function exportToHtml(
-  canvasElement: HTMLDivElement, 
-  draft: ResumeDraft, 
+  canvasElement: HTMLDivElement,
+  draft: ResumeDraft,
   theme?: ResumeThemeConfig,
   template?: string
 ): Promise<void> {
   try {
     const html = await buildExportHtml(canvasElement, draft, theme, template, true, 'html');
-    await fetchExport('/export/html', html, draft.frontmatter.name || 'resume', 'text/html', 'html');
+    downloadBlob(new Blob([html], { type: 'text/html;charset=utf-8' }), draft.frontmatter.name || 'resume', 'html');
   } catch (error) {
     console.error('HTML export failed:', error);
-    throw new Error('HTML export failed. Please make sure the export server is running (npm run server).');
+    throw new Error('HTML export failed. Please try again.');
   }
 }
 
 export async function exportToWord(
-  canvasElement: HTMLDivElement, 
-  draft: ResumeDraft, 
+  canvasElement: HTMLDivElement,
+  draft: ResumeDraft,
   theme?: ResumeThemeConfig,
   template?: string
 ): Promise<void> {
@@ -412,9 +471,11 @@ export async function exportToWord(
     const response = await fetch(`${API_BASE}/export/docx`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      signal: AbortSignal.timeout(65000),
       body: JSON.stringify({
         draft,
         template,
+        theme,
         filename: draft.frontmatter.name || 'resume',
       }),
     });

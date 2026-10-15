@@ -100,7 +100,7 @@ export const AvatarUpload = memo(function AvatarUpload({ value, onChange, lang }
 
   return (
     <div className="block">
-      <span className="block text-xs font-semibold uppercase tracking-[0.2em] text-gray-400 dark:text-gray-500 mb-2">
+      <span className="block text-xs font-medium text-[var(--ui-text-secondary)] mb-2">
         {lang === 'zh' ? '头像' : 'Avatar'}
       </span>
 
@@ -113,13 +113,17 @@ export const AvatarUpload = memo(function AvatarUpload({ value, onChange, lang }
       />
 
       <div
+        role="button"
+        tabIndex={0}
+        aria-label={lang === 'zh' ? '上传头像' : 'Upload avatar'}
+        onKeyDown={event => { if (event.target === event.currentTarget && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); handleClick(); } }}
         onClick={handleClick}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
         className={`
           relative w-24 h-24 rounded-full cursor-pointer
-          border-2 border-dashed transition-all
+          border-2 border-dashed transition-colors
           ${isDragging
             ? 'border-[var(--app-accent)] bg-[var(--app-accent-soft)]'
             : 'border-[var(--app-border)] hover:border-[var(--app-accent)]'
@@ -146,14 +150,14 @@ export const AvatarUpload = memo(function AvatarUpload({ value, onChange, lang }
         ) : (
           <div className="w-full h-full rounded-full bg-[var(--app-surface-muted)] flex flex-col items-center justify-center gap-1">
             <Upload size={20} className="text-[var(--muted-foreground)]" />
-            <span className="text-[10px] text-[var(--muted-foreground)]">
+            <span className="text-xs text-[var(--muted-foreground)]">
               {lang === 'zh' ? '点击上传' : 'Upload'}
             </span>
           </div>
         )}
       </div>
 
-      <p className="mt-2 text-[10px] text-gray-400 dark:text-gray-500">
+      <p className="mt-2 text-xs text-[var(--ui-text-secondary)]">
         {lang === 'zh' ? '支持 JPG、PNG，最大 5MB' : 'JPG, PNG, max 5MB'}
       </p>
     </div>

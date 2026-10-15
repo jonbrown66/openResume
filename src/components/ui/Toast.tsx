@@ -1,7 +1,8 @@
 import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { CheckCircle, AlertCircle, Info, XCircle } from 'lucide-react';
-import { dynamicIslandSpring } from '@/lib/motion';
+import { CheckCircle, AlertCircle, Info, XCircle, X } from 'lucide-react';
+import { uiTransition } from '@/lib/motion';
 
 type ToastType = 'success' | 'error' | 'info' | 'warning';
 
@@ -29,13 +30,13 @@ export function useToast() {
   return context;
 }
 
-export function ToastProvider({ children }: { children: ReactNode }) {
+export function ToastProvider({ children, language = 'en' }: { children: ReactNode; language?: 'zh' | 'en' }) {
   const [toasts, setToasts] = useState<Toast[]>([]);
 
   const addToast = useCallback((message: string, type: ToastType = 'info') => {
     const id = `toast-${Date.now()}-${Math.random().toString(36).slice(2)}`;
     setToasts(prev => [...prev, { id, message, type, createdAt: Date.now() }]);
-    
+
     setTimeout(() => {
       setToasts(prev => prev.filter(t => t.id !== id));
     }, TOAST_DURATION);
@@ -48,7 +49,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   return (
     <ToastContext.Provider value={{ toasts, addToast, removeToast }}>
       {children}
-      <ToastContainer toasts={toasts} onRemove={removeToast} />
+      <ToastContainer toasts={toasts} onRemove={removeToast} closeLabel={language === 'zh' ? '关闭通知' : 'Dismiss notification'} />
     </ToastContext.Provider>
   );
 }
@@ -68,10 +69,10 @@ const TOAST_ACCENT = {
 };
 
 const TOAST_ICON_COLORS = {
-  success: 'text-emerald-400',
-  error: 'text-red-400',
-  info: 'text-blue-400',
-  warning: 'text-amber-400',
+  success: 'text-emerald-600 dark:text-emerald-400',
+  error: 'text-red-600 dark:text-red-400',
+  info: 'text-blue-600 dark:text-blue-400',
+  warning: 'text-amber-600 dark:text-amber-400',
 };
 
 /* ── 倒计时进度条 ────────────────────── */
@@ -83,15 +84,18 @@ function ToastProgress({ duration }: { duration: number }) {
       animate={{ scaleX: 0 }}
       transition={{ duration: duration / 1000, ease: 'linear' }}
     >
-      <div className="h-full w-full bg-white/20 rounded-full" />
+      <div className="h-full w-full bg-[var(--ui-text-secondary)]/20 rounded-full" />
     </motion.div>
   );
 }
 
 /* ── Dynamic Island 风格 Toast 容器 ────── */
-function ToastContainer({ toasts, onRemove }: { toasts: Toast[]; onRemove: (id: string) => void }) {
-  return (
-    <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[100] flex flex-col items-center gap-2 pointer-events-none">
+function ToastContainer({ toasts, onRemove, closeLabel }: { toasts: Toast[]; onRemove: (id: string) => void; closeLabel: string }) {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  if (!mounted) return null;
+  return createPortal(
+    <div data-overlay-branch role="status" aria-live="polite" aria-atomic="true" className="app-ui fixed top-4 left-1/2 -translate-x-1/2 z-[300] flex flex-col items-center gap-2 pointer-events-none">
       <AnimatePresence mode="popLayout">
         {toasts.map((toast) => {
           const Icon = TOAST_ICONS[toast.type];
@@ -102,27 +106,26 @@ function ToastContainer({ toasts, onRemove }: { toasts: Toast[]; onRemove: (id: 
               key={toast.id}
               layout
               // Dynamic Island 弹簧弹入 + 模糊退出
-              initial={{ opacity: 0, y: -40, scale: 0.85, filter: 'blur(8px)' }}
-              animate={{ opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }}
-              exit={{ opacity: 0, y: -20, scale: 0.9, filter: 'blur(10px)' }}
-              transition={dynamicIslandSpring}
-              className="pointer-events-auto relative flex items-center gap-3 pl-4 pr-3 py-2.5 rounded-full bg-zinc-900 dark:bg-zinc-800 text-white shadow-2xl shadow-black/20 dark:shadow-black/40 ring-1 ring-white/10 min-w-[200px] max-w-sm overflow-hidden cursor-pointer select-none"
+              initial={{ opacity: 0, y: -6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -4 }}
+              transition={uiTransition}
+              className="ui-toast pointer-events-auto relative flex items-center gap-3 px-4 py-3 min-w-[200px] max-w-[calc(100vw-2rem)] sm:max-w-sm overflow-hidden cursor-pointer select-none"
               onClick={() => onRemove(toast.id)}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
             >
               {/* 左侧彩色点 */}
               <span className={`w-2 h-2 rounded-full shrink-0 ${TOAST_ACCENT[toast.type]}`} />
               {/* 图标 */}
               <Icon size={16} className={`shrink-0 ${TOAST_ICON_COLORS[toast.type]}`} />
               {/* 文字 */}
-              <span className="text-sm font-medium flex-1 truncate">{toast.message}</span>
+              <span className="text-sm font-medium flex-1 break-words">{toast.message}</span>
+              <button type="button" className="app-control ui-icon-button" aria-label={closeLabel} onClick={() => onRemove(toast.id)}><X size={16} /></button>
               {/* 进度条 */}
               <ToastProgress duration={remaining} />
             </motion.div>
           );
         })}
       </AnimatePresence>
-    </div>
+    </div>, document.body
   );
 }

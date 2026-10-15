@@ -3,6 +3,11 @@ import { describe, expect, it } from 'vitest';
 import { convertDocxHtmlToText, reconstructPdfPageText, type PdfTextItemLike } from '@/utils/fileExtractor';
 
 describe('fileExtractor helpers', () => {
+  it('preserves every fragment in the gutter between detected columns', () => {
+    const item = (str: string, x: number, y: number, width = 50) => ({ str, transform: [1, 0, 0, 1, x, y], width, height: 12 });
+    const text = reconstructPdfPageText([item('LEFT1', 40, 760), item('LEFT2', 40, 730), item('MIDDLE', 200, 700), item('RIGHT1', 500, 760, 100), item('RIGHT2', 500, 730, 100)]);
+    for (const marker of ['LEFT1', 'LEFT2', 'MIDDLE', 'RIGHT1', 'RIGHT2']) expect(text).toContain(marker);
+  });
   it('reconstructs pdf items into readable lines and paragraphs', () => {
     const items: PdfTextItemLike[] = [
       { str: '张三', transform: [1, 0, 0, 1, 80, 760], width: 40, height: 16 },

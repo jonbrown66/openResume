@@ -2,7 +2,7 @@ import { memo, useState, useCallback, useEffect, useRef } from 'react';
 import { Minus, Plus } from 'lucide-react';
 
 import type { AppLanguage, TranslationSet } from '@/config/ui';
-import type { ResumeDraft, ResumeSection } from '@/types/resume';
+import type { ResumeDraft } from '@/types/resume';
 import { AvatarUpload } from './AvatarUpload';
 
 interface BlockEditorProps {
@@ -30,9 +30,9 @@ function getSectionFieldConfig(type: SectionType, lang: AppLanguage, t: Translat
     case 'education':
       return { showHeading: true, showMeta: true, showOrg: true, headingLabel: lang === 'zh' ? '学校/专业' : 'School/Major', orgLabel: lang === 'zh' ? '学历' : 'Degree' };
     case 'project':
-      return { showHeading: true, showMeta: true, showOrg: false, headingLabel: lang === 'zh' ? '项目名称' : 'Project Name', orgLabel: t.entryOrganization };
+      return { showHeading: true, showMeta: true, showOrg: true, headingLabel: lang === 'zh' ? '项目名称' : 'Project Name', orgLabel: t.entryOrganization };
     case 'skill':
-      return { showHeading: false, showMeta: false, showOrg: false, headingLabel: t.entryHeading, orgLabel: t.entryOrganization };
+      return { showHeading: true, showMeta: true, showOrg: true, headingLabel: t.entryHeading, orgLabel: t.entryOrganization };
     default:
       return { showHeading: true, showMeta: true, showOrg: true, headingLabel: t.entryHeading, orgLabel: t.entryOrganization };
   }
@@ -48,22 +48,17 @@ export const BlockEditor = memo(function BlockEditor({ draft, lang, translations
   }, [draft]);
 
   const update = useCallback((updater: (prev: ResumeDraft) => ResumeDraft) => {
-    let next: ResumeDraft | undefined;
-    setState(prev => {
-      next = updater(prev);
-      stateRef.current = next;
-      return next;
-    });
-    if (next) {
-      onChange(next);
-    }
+    const next = updater(stateRef.current);
+    stateRef.current = next;
+    setState(next);
+    onChange(next);
   }, [onChange]);
 
   return (
     <div className="space-y-5 px-4 py-5 text-sm text-[var(--secondary-foreground)] sm:space-y-6 sm:px-8 sm:py-6">
       <section className="grid gap-3 sm:gap-4 sm:grid-cols-2">
         <label className="block">
-          <span className="block text-xs font-semibold uppercase tracking-[0.2em] text-gray-400 dark:text-gray-500 mb-2">{t.fieldName}</span>
+          <span className="block text-xs font-medium text-[var(--ui-text-secondary)] mb-2">{t.fieldName}</span>
           <input
             className="w-full rounded-lg border border-[var(--app-border)] bg-[var(--app-surface)] px-3 py-2.5 outline-none transition-colors focus:border-[var(--app-accent)] sm:px-4 sm:py-3"
             value={state.frontmatter.name}
@@ -71,7 +66,7 @@ export const BlockEditor = memo(function BlockEditor({ draft, lang, translations
           />
         </label>
         <label className="block">
-          <span className="block text-xs font-semibold uppercase tracking-[0.2em] text-gray-400 dark:text-gray-500 mb-2">{t.fieldTitle}</span>
+          <span className="block text-xs font-medium text-[var(--ui-text-secondary)] mb-2">{t.fieldTitle}</span>
           <input
             className="w-full rounded-lg border border-[var(--app-border)] bg-[var(--app-surface)] px-3 py-2.5 outline-none transition-colors focus:border-[var(--app-accent)] sm:px-4 sm:py-3"
             value={state.frontmatter.title}
@@ -79,7 +74,7 @@ export const BlockEditor = memo(function BlockEditor({ draft, lang, translations
           />
         </label>
         <label className="block sm:col-span-2">
-          <span className="block text-xs font-semibold uppercase tracking-[0.2em] text-gray-400 dark:text-gray-500 mb-2">{t.fieldContact}</span>
+          <span className="block text-xs font-medium text-[var(--ui-text-secondary)] mb-2">{t.fieldContact}</span>
           <input
             className="w-full rounded-lg border border-[var(--app-border)] bg-[var(--app-surface)] px-3 py-2.5 outline-none transition-colors focus:border-[var(--app-accent)] sm:px-4 sm:py-3"
             value={state.frontmatter.contact}
@@ -97,7 +92,7 @@ export const BlockEditor = memo(function BlockEditor({ draft, lang, translations
 
       <section>
         <label className="block">
-          <span className="block text-xs font-semibold uppercase tracking-[0.2em] text-gray-400 dark:text-gray-500 mb-2">{t.fieldSummary}</span>
+          <span className="block text-xs font-medium text-[var(--ui-text-secondary)] mb-2">{t.fieldSummary}</span>
           <textarea
             className="w-full min-h-24 rounded-lg border border-[var(--app-border)] bg-[var(--app-surface)] px-3 py-3 outline-none transition-colors focus:border-[var(--app-accent)] resize-none sm:px-4 sm:py-4"
             value={state.summary}
@@ -111,10 +106,10 @@ export const BlockEditor = memo(function BlockEditor({ draft, lang, translations
         const config = getSectionFieldConfig(sectionType, lang, t);
 
         return (
-          <section key={`${section.title}-${sectionIndex}`} className="app-surface rounded-xl border p-4 sm:p-5 space-y-4 transition-colors">
+          <section key={section.id ?? sectionIndex} className="app-surface rounded-xl border p-4 sm:p-5 space-y-4 transition-colors">
             <div className="flex items-center justify-between gap-3">
               <label className="block flex-1">
-                <span className="block text-xs font-semibold uppercase tracking-[0.2em] text-gray-400 dark:text-gray-500 mb-2">{t.sectionTitle}</span>
+                <span className="block text-xs font-medium text-[var(--ui-text-secondary)] mb-2">{t.sectionTitle}</span>
                 <input
                   className="w-full rounded-lg border border-[var(--app-border)] bg-[var(--app-surface)] px-3 py-2 outline-none transition-colors focus:border-[var(--app-accent)] sm:rounded-xl sm:px-4 sm:py-3"
                   value={section.title}
@@ -134,13 +129,20 @@ export const BlockEditor = memo(function BlockEditor({ draft, lang, translations
               </button>
             </div>
 
+            <label className="block text-xs">
+              <span className="block mb-2">{lang === 'zh' ? '区块说明' : 'Section content'}</span>
+              <textarea className="w-full min-h-20 rounded-lg border border-[var(--app-border)] p-3 bg-[var(--app-surface)]"
+                value={section.content} onChange={e => update(prev => ({ ...prev,
+                  sections: prev.sections.map((s, i) => i === sectionIndex ? { ...s, content: e.target.value } : s),
+                }))} />
+            </label>
             {section.entries.map((entry, entryIndex) => (
-              <div key={`${entry.heading}-${entryIndex}`} className="rounded-lg sm:rounded-xl border border-[var(--app-border)] bg-[var(--app-surface-muted)] p-3 sm:p-4 space-y-3 transition-colors">
+              <div key={entry.id ?? entryIndex} className="ui-entry-card rounded-lg sm:rounded-xl border border-[var(--app-border)] bg-[var(--app-surface-muted)] p-3 sm:p-4 space-y-3 transition-colors">
                 {(config.showHeading || config.showMeta) && (
                   <div className={`grid gap-2 sm:gap-3 ${config.showHeading && config.showMeta ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1'}`}>
                     {config.showHeading && (
                       <label className="block text-xs">
-                        <span className="block text-[10px] font-semibold uppercase tracking-[0.15em] text-gray-400 dark:text-gray-500 mb-1.5">{config.headingLabel}</span>
+                        <span className="block text-xs font-semibold uppercase tracking-[0.15em] text-[var(--ui-text-secondary)] mb-1.5">{config.headingLabel}</span>
                         <input
                           className="w-full rounded-lg border border-[var(--app-border)] bg-[var(--app-surface)] px-3 py-2 outline-none transition-colors focus:border-[var(--app-accent)] sm:px-4 sm:py-3"
                           value={entry.heading}
@@ -155,7 +157,7 @@ export const BlockEditor = memo(function BlockEditor({ draft, lang, translations
                     )}
                     {config.showMeta && (
                       <label className="block text-xs">
-                        <span className="block text-[10px] font-semibold uppercase tracking-[0.15em] text-gray-400 dark:text-gray-500 mb-1.5">{t.entryMeta}</span>
+                        <span className="block text-xs font-semibold uppercase tracking-[0.15em] text-[var(--ui-text-secondary)] mb-1.5">{t.entryMeta}</span>
                         <input
                           className="w-full rounded-lg border border-[var(--app-border)] bg-[var(--app-surface)] px-3 py-2 outline-none transition-colors focus:border-[var(--app-accent)] sm:px-4 sm:py-3"
                           value={entry.meta}
@@ -173,7 +175,7 @@ export const BlockEditor = memo(function BlockEditor({ draft, lang, translations
 
                 {config.showOrg && (
                   <label className="block text-xs">
-                    <span className="block text-[10px] font-semibold uppercase tracking-[0.15em] text-gray-400 dark:text-gray-500 mb-1.5">{config.orgLabel}</span>
+                    <span className="block text-xs font-semibold uppercase tracking-[0.15em] text-[var(--ui-text-secondary)] mb-1.5">{config.orgLabel}</span>
                     <input
                       className="w-full rounded-lg border border-[var(--app-border)] bg-[var(--app-surface)] px-3 py-2 outline-none transition-colors focus:border-[var(--app-accent)] sm:px-4 sm:py-3"
                       value={entry.organization}
@@ -188,7 +190,7 @@ export const BlockEditor = memo(function BlockEditor({ draft, lang, translations
                 )}
 
                 <label className="block text-xs">
-                  <span className="block text-[10px] font-semibold uppercase tracking-[0.15em] text-gray-400 dark:text-gray-500 mb-1.5">{t.entryContent}</span>
+                  <span className="block text-xs font-semibold uppercase tracking-[0.15em] text-[var(--ui-text-secondary)] mb-1.5">{t.entryContent}</span>
                   <textarea
                     className={`${config.showHeading ? 'min-h-20 sm:min-h-24' : 'min-h-[120px] sm:min-h-[160px]'} w-full rounded-lg border border-[var(--app-border)] bg-[var(--app-surface)] px-3 py-2 outline-none transition-colors focus:border-[var(--app-accent)] resize-none sm:px-4 sm:py-3`}
                     value={entry.content}
@@ -224,7 +226,7 @@ export const BlockEditor = memo(function BlockEditor({ draft, lang, translations
               onClick={() => update(prev => ({
                 ...prev,
                 sections: prev.sections.map((s, i) => i === sectionIndex ? {
-                  ...s, entries: [...s.entries, { heading: '', meta: '', organization: '', content: t.newEntryContent }]
+                  ...s, entries: [...s.entries, { id: crypto.randomUUID(), heading: '', meta: '', organization: '', content: t.newEntryContent }]
                 } : s)
               }))}
             >
@@ -236,11 +238,11 @@ export const BlockEditor = memo(function BlockEditor({ draft, lang, translations
 
       <button
         type="button"
-        className="flex w-full items-center justify-center rounded-xl border border-dashed border-[var(--app-border)] py-3 text-[var(--muted-foreground)] transition-all hover:border-[var(--app-accent)] hover:bg-[var(--app-accent-soft)] hover:text-[var(--secondary-foreground)] sm:py-4"
+        className="flex w-full items-center justify-center rounded-xl border border-dashed border-[var(--app-border)] py-3 text-[var(--muted-foreground)] transition-colors hover:border-[var(--app-accent)] hover:bg-[var(--app-accent-soft)] hover:text-[var(--secondary-foreground)] sm:py-4"
         title={t.addSection}
         onClick={() => update(prev => ({
           ...prev,
-          sections: [...prev.sections, { title: t.newSection, content: '', entries: [] }]
+          sections: [...prev.sections, { id: crypto.randomUUID(), title: t.newSection, content: '', entries: [] }]
         }))}
       >
         <Plus size={24} />

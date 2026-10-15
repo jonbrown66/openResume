@@ -6,6 +6,7 @@ export interface ResumeProject {
   id: string;
   name: string;
   data: ResumeDraft;
+  markdown?: string;
   theme: ResumeThemeConfig;
   layout: LayoutConfig;
   templateId: ResumeTemplate;
@@ -13,8 +14,7 @@ export interface ResumeProject {
   updatedAt: number;
 }
 
-export interface LayoutConfig {
-}
+export type LayoutConfig = Record<string, never>;
 
 export interface StorageSchema {
   projects: ResumeProject[];

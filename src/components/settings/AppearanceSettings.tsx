@@ -1,13 +1,13 @@
 import { motion } from 'framer-motion';
-import { Sun, Moon, Monitor, PenLine } from 'lucide-react';
+import { Sun, Moon, Monitor } from 'lucide-react';
 import type { AppSettings } from '@/config/settings';
 import { translations } from '@/config/ui';
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
 } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
@@ -41,7 +41,7 @@ export function AppearanceSettings({ settings, onUpdateSettings }: AppearanceSet
               key={mode.id}
               onClick={() => onUpdateSettings({ theme: mode.id as 'light' | 'dark' | 'system' })}
               className={cn(
-                "flex flex-col items-center justify-center gap-2 p-4 rounded-lg border-2 transition-all duration-200",
+                "flex flex-col items-center justify-center gap-2 p-4 rounded-lg border-2 transition-colors duration-200",
                 settings.theme === mode.id
                   ? "bg-[var(--app-accent-soft)] border-[var(--app-accent)] shadow-[0_2px_10px_-4px_rgba(84,112,45,0.28)]"
                   : "bg-[var(--app-surface-muted)] border-transparent hover:border-[var(--app-border)]"
@@ -68,11 +68,12 @@ export function AppearanceSettings({ settings, onUpdateSettings }: AppearanceSet
         <Label className="text-[15px] font-medium text-zinc-900 dark:text-zinc-100">
           {t.appearanceLanguage}
         </Label>
-        <Select 
-          value={settings.language} 
+        <Select
+          items={[{ value: 'zh', label: t.languageZh }, { value: 'en', label: t.languageEn }]}
+          value={settings.language}
           onValueChange={(val) => onUpdateSettings({ language: val as 'zh' | 'en' })}
         >
-          <SelectTrigger className="w-full h-12 rounded-lg border-[var(--app-border)] bg-[var(--app-surface)]/70 px-4 focus:ring-1 focus:ring-[var(--app-accent)]/35">
+          <SelectTrigger aria-label={t.appearanceLanguage} className="w-full h-12 rounded-lg border-[var(--app-border)] bg-[var(--app-surface)]/70 px-4 focus:ring-1 focus:ring-[var(--app-accent)]/35">
             <SelectValue />
           </SelectTrigger>
           <SelectContent className="rounded-lg border-[var(--app-border)] bg-[var(--app-surface)]">

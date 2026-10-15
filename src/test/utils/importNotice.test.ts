@@ -4,6 +4,9 @@ import { resolveImportNoticeMessage } from '@/utils/importNotice';
 import { translations } from '@/config/ui';
 
 describe('resolveImportNoticeMessage', () => {
+  it('shows the extraction failure reason so the user can recover', () => {
+    expect(resolveImportNoticeMessage({ importError: 'No text found', importNotice: '', importNoticeDetail: '', translations: translations.en })).toContain('No text found');
+  });
   it('returns the translated fallback detail when AI formatting fails without extra detail', () => {
     expect(
       resolveImportNoticeMessage({

@@ -1,65 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getBrowser, createPage, closePage, A4_WIDTH_PX, A4_HEIGHT_PX, BROWSER_CONFIG } from '@/lib/puppeteer';
-
+import { BrowserBusyError, withExportPage } from '@/lib/puppeteer';
+import { ExportRequestError, readExportRequest, safeFilename, sanitizeExportHtml } from '@/lib/exportRequest';
 export const maxDuration = 60;
-
 export async function POST(request: NextRequest) {
-  let page = null;
-
   try {
-    const { html, filename = 'resume' } = await request.json();
-
-    if (!html) {
-      return NextResponse.json({ error: 'HTML is required' }, { status: 400 });
-    }
-
-    const browser = await getBrowser();
-    
-    const browserPageCount = (await browser.pages()).length;
-    if (browserPageCount >= BROWSER_CONFIG.maxInstances) {
-      return NextResponse.json({ error: 'Server busy, try again later' }, { status: 503 });
-    }
-
-    page = await createPage();
-    
-    const pageClosePromise = new Promise<never>((_, reject) => {
-      setTimeout(() => reject(new Error('Page timeout')), BROWSER_CONFIG.pageTimeout);
+    const body = await readExportRequest(request);
+    const html = sanitizeExportHtml(body.html);
+    const pdf = await withExportPage(async page => {
+      await page.setContent(html, { waitUntil: 'load', timeout: 20000 });
+      await page.emulateMedia({ media: 'screen' });
+      await page.evaluate(() => document.fonts.ready);
+      return page.pdf({ format: 'A4', printBackground: true, preferCSSPageSize: true,
+        margin: { top: '0', right: '0', bottom: '0', left: '0' } });
     });
-
-    try {
-      await page.setViewport({ width: A4_WIDTH_PX, height: A4_HEIGHT_PX });
-      
-      await page.setContent(html, { waitUntil: 'load', timeout: 30000 });
-      await page.emulateMediaType('screen');
-      
-      await page.evaluate(() => {
-        return document.fonts.ready;
-      });
-
-      await page.evaluate(() => new Promise<void>((resolve) => {
-        requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
-      }));
-
-      const pdf = await page.pdf({
-        format: 'A4',
-        scale: 1,
-        printBackground: true,
-        preferCSSPageSize: true,
-        margin: { top: '0', right: '0', bottom: '0', left: '0' },
-      });
-
-      const encodedFilename = encodeURIComponent(`${filename}.pdf`);
-      return new NextResponse(Buffer.from(pdf), {
-        headers: {
-          'Content-Type': 'application/pdf',
-          'Content-Disposition': `attachment; filename="${encodedFilename}"; filename*=UTF-8''${encodedFilename}`,
-        },
-      });
-    } finally {
-      await closePage(page);
-    }
+    return new NextResponse(Buffer.from(pdf), { headers: { 'Content-Type': 'application/pdf',
+      'Content-Disposition': safeFilename(body.filename, 'pdf'), 'Cache-Control': 'no-store' } });
   } catch (error) {
-    console.error('PDF generation error:', error);
-    return NextResponse.json({ error: 'Failed to generate PDF' }, { status: 500 });
+    const status = error instanceof ExportRequestError ? error.status : error instanceof BrowserBusyError ? 503 : 500;
+    return NextResponse.json({ error: status === 500 ? 'Failed to generate PDF' : (error as Error).message }, { status });
   }
 }

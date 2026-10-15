@@ -28,9 +28,9 @@ export function AssistantConversationList({
           className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
         >
           <div
-            className={`max-w-[88%] px-4 py-3 text-sm leading-6 ${
+            className={`ui-chat-bubble max-w-[88%] px-4 py-3 text-sm leading-6 ${
               message.role === 'user'
-                ? 'app-primary rounded-[18px] rounded-br-md shadow-sm'
+                ? 'bg-[var(--ui-selected-bg)] text-[var(--secondary-foreground)]'
                 : 'rounded-[18px] rounded-bl-md bg-[var(--app-surface-muted)]/85 text-[var(--secondary-foreground)] shadow-[0_8px_24px_-20px_rgba(40,52,25,0.5)]'
             }`}
           >

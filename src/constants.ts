@@ -124,7 +124,7 @@ export const FONT_OPTIONS = [
 ];
 
 export const FONT_STYLES: Record<string, { family: string; category: 'sans' | 'serif' | 'mono' | 'chinese' }> = {
-  'Geist': { family: "'Geist', 'Noto Sans SC', 'PingFang SC', sans-serif", category: 'sans' },
+  'Geist': { family: "'Geist Variable', 'Geist', 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif", category: 'sans' },
   'Source Han Sans SC': { family: "'Source Han Sans SC', 'Source Han Sans CN', 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif", category: 'chinese' },
   '思源黑体 (细圆)': { family: "'Gen Jyuu Gothic', '思源柔黑体', 'Resource Han Rounded CN', '源柔黑体', 'GenSenRounded', 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif", category: 'chinese' },
   '思源柔黑体': { family: "'Gen Jyuu Gothic', '思源柔黑体', 'Resource Han Rounded CN', '源柔黑体', 'GenSenRounded', 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif", category: 'chinese' },

@@ -1,3 +1,4 @@
+import { fetchJsonWithTimeout } from '@/utils/fetchWithTimeout';
 import type { AppSettings, ApiProvider } from '@/config/settings';
 import type { AppLanguage } from '@/config/ui';
 import { sanitizeMarkdownImagesForAi } from '@/utils/aiMarkdownSanitizer';
@@ -32,28 +33,9 @@ class ApiError extends Error {
   }
 }
 
-async function fetchWithTimeout(
-  url: string,
-  options: RequestInit & { timeout?: number },
-): Promise<Response> {
-  const { timeout = REQUEST_TIMEOUT, signal: existingSignal, ...fetchOptions } = options;
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), timeout);
-
-  try {
-    const response = await fetch(url, {
-      ...fetchOptions,
-      signal: existingSignal || controller.signal,
-    });
-    clearTimeout(timeoutId);
-    return response;
-  } catch (error) {
-    clearTimeout(timeoutId);
-    if (error instanceof Error && error.name === 'AbortError') {
-      throw new ApiError(`Request timed out after ${timeout}ms`);
-    }
-    throw error;
-  }
+async function fetchWithTimeout(url: string, options: RequestInit & { timeout?: number }): Promise<Response> {
+  const { timeout = REQUEST_TIMEOUT, ...fetchOptions } = options;
+  return fetchJsonWithTimeout(url, fetchOptions, timeout);
 }
 
 function stripCodeFence(text: string): string {
@@ -379,7 +361,7 @@ function restoreAvatarInMarkdown(proposedMarkdown: string, originalMarkdown: str
   if (!avatarMatch) {
     return proposedMarkdown;
   }
-  
+
   const originalAvatar = avatarMatch[1];
   return proposedMarkdown.replace(/image:\s*['"]?\[avatar\]['"]?/g, `image: ${originalAvatar}`);
 }

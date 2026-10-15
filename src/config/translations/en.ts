@@ -52,7 +52,7 @@ export const enTranslations = {
   newSection: 'New Section',
   style: 'Style',
   styleEditor: 'Style Editor',
-  primaryColor: 'Primary Color',
+  primaryColor: 'Accent Color',
   secondaryColor: 'Secondary Color',
   colors: 'Colors',
   typography: 'Typography',

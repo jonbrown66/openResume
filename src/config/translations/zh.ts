@@ -53,7 +53,7 @@ export const zhTranslations: TranslationDefinition = {
   newSection: '新区块',
   style: '样式',
   styleEditor: '样式编辑器',
-  primaryColor: '主色',
+  primaryColor: '强调色',
   secondaryColor: '辅色',
   colors: '颜色',
   typography: '字体',
