@@ -56,8 +56,8 @@ export const EditorPane = memo(function EditorPane({
       const key = event.key.toLowerCase();
       if (key === 'z') { event.preventDefault(); if (event.shiftKey) onRedo(); else onUndo(); }
       if (key === 'y') { event.preventDefault(); onRedo(); }
-    }} className="group/editor relative z-10 grid h-full flex-1 grid-rows-[auto_1fr] border-r-0 border-[var(--app-border)] bg-[var(--app-surface)] transition-colors duration-200 print:hidden lg:border-r">
-      <div className="relative">
+    }} className="group/editor relative z-10 grid h-full min-h-0 flex-1 grid-rows-[auto_minmax(0,1fr)] border-r-0 border-[var(--app-border)] bg-[var(--app-surface)] transition-colors duration-200 print:hidden lg:border-r">
+      <div className="relative min-h-16">
         {isImporting ? (
           <motion.div
             className="absolute inset-0 z-30 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-sm overflow-y-auto custom-scrollbar"
@@ -157,13 +157,13 @@ export const EditorPane = memo(function EditorPane({
 
       <div
         ref={containerRef}
-        className="row-start-2 overflow-y-auto overflow-x-hidden pt-16 sm:pt-20 lg:pt-24 pb-8 custom-scrollbar"
+        className={`row-start-2 min-h-0 ${editorMode === 'markdown' ? 'overflow-hidden' : 'overflow-y-auto overflow-x-hidden pbe-4 custom-scrollbar'}`}
       >
         {editorMode === 'markdown' ? (
           <textarea
             data-code-editor
             aria-label={lang === 'zh' ? '简历 Markdown' : 'Resume Markdown'}
-            className="w-full min-h-[calc(100dvh-9rem)] bg-transparent px-4 font-mono text-[13px] leading-[1.75] text-zinc-800 selection:bg-zinc-200 resize-none focus:outline-none dark:text-zinc-200 dark:selection:bg-zinc-700 sm:min-h-[600px] sm:px-8 lg:px-10"
+            className="block h-full min-h-0 w-full resize-none overflow-y-auto bg-transparent px-4 pbs-3 pbe-4 font-mono text-[13px] leading-[1.75] text-zinc-800 selection:bg-zinc-200 dark:text-zinc-200 dark:selection:bg-zinc-700 sm:px-6 custom-scrollbar"
             value={displayMarkdown}
             onChange={(e) => handleMarkdownChange(e.target.value)}
             spellCheck={false}

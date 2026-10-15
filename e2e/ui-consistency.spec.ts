@@ -16,6 +16,36 @@ async function settings(page: Page) {
   return page.getByRole('dialog', { name: 'Settings', exact: true });
 }
 
+test('markdown editor fills the pane without rounded focus borders or nested scrolling', async ({ page }) => {
+  const editor = page.getByRole('textbox', { name: 'Resume Markdown', exact: true });
+  await editor.click();
+  const layout = await editor.evaluate(element => {
+    const input = element as HTMLTextAreaElement;
+    const container = input.parentElement!;
+    const style = getComputedStyle(input);
+    return { radius: style.borderRadius, outline: style.outlineColor, border: style.borderWidth,
+      paddingTop: parseFloat(getComputedStyle(container).paddingTop),
+      outerOverflow: container.scrollHeight - container.clientHeight,
+      heightGap: Math.abs(input.getBoundingClientRect().height - container.clientHeight),
+      scrollable: input.scrollHeight > input.clientHeight };
+  });
+  expect(layout.radius).toBe('0px');
+  expect(layout.border).toBe('0px');
+  expect(layout.outline).toBe('rgba(0, 0, 0, 0)');
+  expect(layout.paddingTop).toBe(0);
+  expect(layout.outerOverflow).toBeLessThanOrEqual(1);
+  expect(layout.heightGap).toBeLessThanOrEqual(1);
+  expect(layout.scrollable).toBe(true);
+  await editor.press('Control+End');
+  await expect.poll(() => editor.evaluate(element => {
+    const input = element as HTMLTextAreaElement;
+    const style = getComputedStyle(input);
+    // Caret navigation reveals the final line, without necessarily consuming bottom padding.
+    return input.selectionEnd === input.value.length && input.scrollTop > 0
+      && input.scrollHeight - input.clientHeight - input.scrollTop <= parseFloat(style.paddingBottom) + parseFloat(style.lineHeight);
+  })).toBe(true);
+});
+
 test('short-screen settings scroll, stay above tools and restore keyboard focus', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 568 });
   const dialog = await settings(page);

@@ -1253,7 +1253,11 @@ html, body {
 .ui-style-form { display: grid; gap: 24px; }
 .ui-style-sliders { display: grid; gap: 16px; }
 .ui-select-overlay { z-index: 240 !important; }
-.app-ui [data-code-editor] { border-radius: var(--ui-radius-control); }
+.app-ui [data-code-editor] { border: 0; border-radius: 0; box-shadow: none; }
+.app-ui [data-code-editor]:focus-visible { outline: 2px solid transparent; outline-offset: -2px; box-shadow: none; }
+@media (forced-colors: active) {
+  .app-ui [data-code-editor]:focus-visible { outline-color: Highlight; }
+}
 .app-ui .ui-swatch { inline-size: var(--ui-control-size); block-size: var(--ui-control-size); border-radius: var(--ui-radius-control); display: grid; place-items: center; flex-shrink: 0; border: 1px solid transparent; }
 .ui-swatch > span { inline-size: 18px; block-size: 18px; border-radius: 50%; border: 1px solid var(--app-border); }
 .ui-swatch[aria-pressed=true] { background: var(--ui-selected-bg); border-color: var(--ui-focus); }
