@@ -1,9 +1,11 @@
 import type { ResumeDraft } from '../types/resume';
 import type { ResumeThemeConfig } from '../types/theme';
+import { ensureResumeFonts, exportFontFamilies, isBuiltinFont } from '@/lib/resumeFonts';
 
 export type ExportFormat = 'pdf' | 'word' | 'html';
 
 const API_BASE = '/api';
+class FontExportError extends Error {}
 
 function coversGlyphs(range: string, codePoints: number[]) {
   if (!range) return true;
@@ -14,7 +16,8 @@ function coversGlyphs(range: string, codePoints: number[]) {
     return codePoints.some(point => point >= lower && point <= upper);
   });
 }
-async function collectExportStyles(fontFamily?: string, text = '', includeCjk = false) {
+async function collectExportStyles(fontFamily = 'Geist', text = '') {
+  const families = exportFontFamilies(fontFamily, text);
   const codePoints = Array.from(new Set(Array.from(text, character => character.codePointAt(0)!)));
   const styleElements: string[] = [];
 
@@ -23,7 +26,7 @@ async function collectExportStyles(fontFamily?: string, text = '', includeCjk = 
       const rules = await Promise.all(Array.from(sheet.cssRules).map(async rule => {
         if (rule.type === 5) {
           const face = (rule as CSSFontFaceRule).style;
-          const selected = (fontFamily && face.fontFamily.includes(fontFamily)) || (includeCjk && face.fontFamily.includes('Noto Sans SC'));
+          const selected = families.includes(face.fontFamily.replace(/['"]/g, ''));
           if (!selected || !coversGlyphs(face.getPropertyValue('unicode-range'), codePoints)) return '';
           let css = rule.cssText;
           const sources = Array.from(css.matchAll(/url\(["']?([^"')]+)["']?\)/g));
@@ -205,20 +208,17 @@ async function buildExportHtml(
 ): Promise<string> {
   const measure = document.querySelector<HTMLElement>(`[data-resume-measure-id="${canvasElement.dataset.measureId}"]`);
   const text = measure?.innerText ?? canvasElement.textContent ?? '';
-  const includeCjk = /[\u2e80-\u9fff]/.test(text);
-  if (includeCjk) {
-    await import('@fontsource/noto-sans-sc/400.css');
-    await document.fonts.load('14px "Noto Sans SC"', text);
-    await document.fonts.ready;
-    await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
-  }
+  if (!isBuiltinFont(theme?.fontFamily ?? 'Geist')) throw new FontExportError('本地字体无法嵌入 PDF/HTML，请先选择内置字体。Local fonts cannot be embedded; choose a built-in font.');
+  try { await ensureResumeFonts(theme?.fontFamily ?? 'Geist', text); }
+  catch { throw new FontExportError('字体尚未加载成功，请重试或选择其他内置字体。Font loading failed; retry or choose another built-in font.'); }
   const deadline = Date.now() + 5000;
   while (canvasElement.dataset.paginationReady === 'false') {
+    if (canvasElement.dataset.fontError) throw new FontExportError(canvasElement.dataset.fontError);
     if (Date.now() > deadline) throw new Error('Preview is still updating. Try exporting again.');
     await new Promise(resolve => setTimeout(resolve, 16));
   }
   const origin = window.location.origin;
-  const styleNodes = await collectExportStyles(theme?.fontFamily, text, includeCjk);
+  const styleNodes = await collectExportStyles(theme?.fontFamily, text);
   const exportCanvas = exportMode === 'pdf'
     ? buildPdfDocumentForExport(canvasElement)
     : cloneSinglePageForHtmlExport(canvasElement);
@@ -442,6 +442,7 @@ export async function exportToPdf(
     await fetchExport('/export/pdf', html, draft.frontmatter.name || 'resume', 'application/pdf', 'pdf');
   } catch (error) {
     console.error('PDF export failed:', error);
+    if (error instanceof FontExportError) throw error;
     throw new Error('PDF export failed. Please try again or use HTML export.');
   }
 }
@@ -457,6 +458,7 @@ export async function exportToHtml(
     downloadBlob(new Blob([html], { type: 'text/html;charset=utf-8' }), draft.frontmatter.name || 'resume', 'html');
   } catch (error) {
     console.error('HTML export failed:', error);
+    if (error instanceof FontExportError) throw error;
     throw new Error('HTML export failed. Please try again.');
   }
 }

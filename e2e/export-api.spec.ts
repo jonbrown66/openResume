@@ -21,3 +21,18 @@ test('DOCX uses A4 and preserves rich text and selected theme', async ({ request
   expect(xml).not.toContain('**'); expect(xml).not.toContain('• *Bold');
   expect(readZipText(await response.body(), 'word/styles.xml')).toContain('w:val="28"');
 });
+
+test('DOCX writes native font names and matching East Asian fonts', async ({ request }) => {
+  for (const [fontFamily, latin, eastAsia] of [
+    ['Source Han Serif SC', 'Noto Serif SC', 'Noto Serif SC'],
+    ['Noto Mono', 'Noto Sans Mono', 'Noto Sans SC'],
+    ['Noto Serif', 'Noto Serif', 'Noto Serif SC'],
+  ]) {
+    const response = await request.post('/api/export/docx', { data: { theme: { fontFamily },
+      draft: { frontmatter: { name: '字体 Font', title: '工程师', contact: '' }, summary: '正文 Resume', sections: [] } } });
+    expect(response.status()).toBe(200);
+    const styles = readZipText(await response.body(), 'word/styles.xml');
+    expect(styles).toContain(`w:ascii="${latin}"`);
+    expect(styles).toContain(`w:eastAsia="${eastAsia}"`);
+  }
+});

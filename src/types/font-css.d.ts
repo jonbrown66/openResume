@@ -1,4 +1,4 @@
-declare module '@fontsource/noto-sans-sc/400.css' {
+declare module '@fontsource/*' {
   const stylesheet: unknown;
   export default stylesheet;
 }

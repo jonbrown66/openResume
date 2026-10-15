@@ -688,9 +688,10 @@ html, body {
 .template-minimal .resume-content h2 {
   display: block;
   color: var(--primary-color, #64748b);
-  font-size: 0.72rem;
-  font-weight: 750;
-  letter-spacing: 0.22em;
+  font-size: calc(var(--font-size, 11pt) * 1.16);
+  line-height: 1.35;
+  font-weight: 700;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
   border: none;
   margin-top: 1.45rem;
@@ -708,7 +709,7 @@ html, body {
 }
 
 .template-minimal .resume-h3-split h3 {
-  font-size: 0.92rem;
+  font-size: var(--font-size, 11pt);
   font-weight: 600;
   letter-spacing: -0.01em;
   color: var(--resume-ink);
@@ -1099,68 +1100,6 @@ html, body {
 }
 .template-sidebar .resume-content tr:last-child td {
   border-bottom: none;
-}
-
-/* -----------------------------------------
-   思源黑体 (细圆) / 柔黑变体微调 (偏细偏大、亲和圆润)
------------------------------------------ */
-[data-font-family*="细圆"],
-[data-font-family*="柔黑"],
-[data-font-family*="Rounded"] {
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-[data-font-family*="细圆"] .resume-content,
-[data-font-family*="柔黑"] .resume-content,
-[data-font-family*="Rounded"] .resume-content {
-  /* 偏细偏大：字重 300 纤细呼吸感，字号轻微微调放大 4%，字间距更舒展 */
-  font-size: calc(var(--font-size, 10pt) * 1.04);
-  font-weight: 300;
-  letter-spacing: 0.02em;
-}
-
-[data-font-family*="细圆"] .resume-content p,
-[data-font-family*="柔黑"] .resume-content p,
-[data-font-family*="Rounded"] .resume-content p,
-[data-font-family*="细圆"] .resume-content li,
-[data-font-family*="柔黑"] .resume-content li,
-[data-font-family*="Rounded"] .resume-content li {
-  font-weight: 300;
-}
-
-[data-font-family*="细圆"] .resume-header h1,
-[data-font-family*="柔黑"] .resume-header h1,
-[data-font-family*="Rounded"] .resume-header h1,
-[data-font-family*="细圆"] .sidebar-main-header h1,
-[data-font-family*="柔黑"] .sidebar-main-header h1,
-[data-font-family*="Rounded"] .sidebar-main-header h1 {
-  font-weight: 600;
-  letter-spacing: 0.025em;
-}
-
-[data-font-family*="细圆"] .resume-content h2,
-[data-font-family*="柔黑"] .resume-content h2,
-[data-font-family*="Rounded"] .resume-content h2,
-[data-font-family*="细圆"] .sidebar-heading,
-[data-font-family*="柔黑"] .sidebar-heading,
-[data-font-family*="Rounded"] .sidebar-heading {
-  font-weight: 600;
-}
-
-[data-font-family*="细圆"] .resume-content h3,
-[data-font-family*="柔黑"] .resume-content h3,
-[data-font-family*="Rounded"] .resume-content h3,
-[data-font-family*="细圆"] .sidebar-entry-heading,
-[data-font-family*="柔黑"] .sidebar-entry-heading,
-[data-font-family*="Rounded"] .sidebar-entry-heading {
-  font-weight: 550;
-}
-
-[data-font-family*="细圆"] strong,
-[data-font-family*="柔黑"] strong,
-[data-font-family*="Rounded"] strong {
-  font-weight: 600;
 }
 
 @theme inline {

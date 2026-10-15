@@ -1,10 +1,10 @@
-import { memo, useEffect } from 'react';
+import { memo, useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { RotateCcw, Type, Ruler, AlignVerticalSpaceAround } from 'lucide-react';
 import type { ResumeThemeConfig } from '@/types/theme';
 import { translations } from '@/config/ui';
 import { AnchoredPanel } from './ui/AnchoredPanel';
-import { FONT_OPTIONS } from '@/constants';
+import { BUILTIN_FONTS, LOCAL_FONTS, checkLocalFont, ensureResumeFonts, fontLabel, resolveFont } from '@/lib/resumeFonts';
 import { ColorPicker } from './ColorPicker';
 import { SliderControl } from './SliderControl';
 import { 
@@ -12,7 +12,9 @@ import {
   SelectContent, 
   SelectItem, 
   SelectTrigger, 
-  SelectValue 
+  SelectValue,
+  SelectGroup,
+  SelectLabel,
 } from '@/components/ui/select';
 
 export interface ThemeEditorPanelProps {
@@ -40,6 +42,29 @@ export const ThemeEditorPanel = memo(function ThemeEditorPanel({
   onClose,
 }: ThemeEditorPanelProps) {
   const t = translations[lang];
+  const [available, setAvailable] = useState<Record<string, boolean>>({});
+  const [loadingFont, setLoadingFont] = useState<string | null>(null);
+  const [fontError, setFontError] = useState(false);
+  const installedFonts = LOCAL_FONTS.filter(font => available[font]);
+  const request = useRef(0);
+  useEffect(() => {
+    let active = true;
+    Promise.all(LOCAL_FONTS.map(async font => [font, await checkLocalFont(font)] as const)).then(entries => {
+      if (active) setAvailable(Object.fromEntries(entries));
+    });
+    return () => { active = false; request.current++; };
+  }, []);
+  async function selectFont(value: string | null) {
+    if (!value) return;
+    const token = ++request.current;
+    setLoadingFont(value); setFontError(false);
+    try {
+      const text = document.querySelector('.resume-measure')?.textContent ?? '简历 Resume';
+      await ensureResumeFonts(value, text);
+      if (token === request.current) onChange({ fontFamily: value });
+    } catch { if (token === request.current) setFontError(true); }
+    finally { if (token === request.current) setLoadingFont(null); }
+  }
 
   useEffect(() => {
     
@@ -68,7 +93,7 @@ export const ThemeEditorPanel = memo(function ThemeEditorPanel({
 
   return (
     <AnchoredPanel title={t.styleEditor} closeLabel={t.close} triggerRef={triggerRef} anchorRect={anchorRect} onClose={onClose}
-      footer={<button type="button" onClick={onReset} className="app-secondary flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border text-sm font-medium transition-colors">
+      footer={<button type="button" onClick={() => { request.current++; setLoadingFont(null); setFontError(false); onReset(); }} className="app-secondary flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border text-sm font-medium transition-colors">
         <RotateCcw size={16} />{t.resetToDefault}
       </button>}>
       <motion.div 
@@ -93,20 +118,29 @@ export const ThemeEditorPanel = memo(function ThemeEditorPanel({
             </span>
           </div>
           <Select
-            value={theme.fontFamily}
-            onValueChange={(val) => onChange({ fontFamily: val || undefined })}
+            value={resolveFont(theme.fontFamily)}
+            onValueChange={selectFont}
           >
             <SelectTrigger aria-label={t.typography} className="w-full h-10 rounded-xl border-[var(--app-border)] bg-[var(--app-surface)]/70 px-4 focus:ring-1 focus:ring-[var(--app-accent)]/35">
-              <SelectValue />
+              <SelectValue>{fontLabel(theme.fontFamily, lang)}</SelectValue>
             </SelectTrigger>
             <SelectContent className="rounded-lg border-[var(--app-border)] bg-[var(--app-surface)]">
-              {FONT_OPTIONS.map((font) => (
-                <SelectItem key={font} value={font} title={font}>
+              <SelectGroup>
+                <SelectLabel>{lang === 'zh' ? '内置字体 · 可嵌入导出' : 'Built-in · export ready'}</SelectLabel>
+                {BUILTIN_FONTS.map(font => <SelectItem key={font} value={font} title={fontLabel(font, lang)}>{fontLabel(font, lang)}</SelectItem>)}
+              </SelectGroup>
+              {installedFonts.length > 0 && <SelectGroup>
+                <SelectLabel>{lang === 'zh' ? '已安装的本地字体' : 'Installed local fonts'}</SelectLabel>
+                {installedFonts.map(font => <SelectItem key={font} value={font} title={font}>
                   {font}
-                </SelectItem>
-              ))}
+                </SelectItem>)}
+              </SelectGroup>}
             </SelectContent>
           </Select>
+          {(loadingFont || fontError) && <p role="status" className="mbs-2 text-xs leading-relaxed text-muted-foreground">
+            {loadingFont ? (lang === 'zh' ? `正在加载 ${fontLabel(loadingFont, lang)}，完成后应用…` : `Loading ${fontLabel(loadingFont, lang)}…`)
+              : (lang === 'zh' ? '字体加载失败，已保留当前字体。请重新选择以重试。' : 'Font loading failed. Current font kept; select again to retry.')}
+          </p>}
         </motion.div>
 
         <motion.div className="ui-style-sliders">

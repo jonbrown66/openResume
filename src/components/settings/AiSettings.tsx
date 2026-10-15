@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Cpu, Eye, EyeOff, Sparkles, Wand2, Globe } from 'lucide-react';
+import { Cpu, Eye, EyeOff, Sparkles, Wand2, Globe, RefreshCw } from 'lucide-react';
 import type { AppSettings, ApiProviderId } from '@/config/settings';
 import { translations } from '@/config/ui';
 import {
@@ -16,6 +16,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/Toast';
 
 import { testAiProviderConnection } from '@/utils/aiConnection';
+import { useModelCatalog } from '@/hooks/useModelCatalog';
 
 export interface AiSettingsProps {
   settings: AppSettings;
@@ -61,14 +62,23 @@ export function AiSettings({ settings, onUpdateProvider, onSetActiveProvider }: 
   const [showKey, setShowKey] = useState(false);
   const [testingProviderId, setTestingProviderId] = useState<ApiProviderId | null>(null);
   const [customModelModes, setCustomModelModes] = useState<Partial<Record<ApiProviderId, boolean>>>({});
+  const [modelMenu, setModelMenu] = useState<string[] | null>(null);
   const currentProviderId = settings.activeProvider;
   const currentProvider = settings.providers[currentProviderId];
   const t = translations[settings.language];
   const { addToast } = useToast();
+  const catalog = useModelCatalog(currentProvider);
+  const zh = settings.language === 'zh';
+  const catalogStatus = catalog.loading ? (zh ? '正在检查模型…' : 'Checking models…')
+    : catalog.error ? (catalog.error === 'auth' ? (zh ? '获取失败，请检查 API Key 和权限。' : 'Check your API key and permissions.')
+      : catalog.error === 'unsupported' ? (zh ? '此接口不支持获取模型，可手动填写。' : 'This endpoint cannot list models. Enter a model manually.')
+        : (zh ? '暂时无法更新，已保留已有列表，可重试或手动填写。' : 'Could not update. Previous list kept; retry or enter a model manually.'))
+      : '';
 
   const availableModels = useMemo(() => {
-    return Array.from(new Set(DEFAULT_MODELS[currentProviderId] || []));
-  }, [currentProviderId]);
+    return Array.from(new Set(catalog.models ? [...catalog.models, currentProvider.model].filter(Boolean) : DEFAULT_MODELS[currentProviderId] || []));
+  }, [currentProviderId, catalog.models, currentProvider.model]);
+  const modelOptions = modelMenu ?? availableModels;
 
   const isStoredCustomModel = Boolean(
     currentProvider.model && !availableModels.includes(currentProvider.model),
@@ -79,8 +89,7 @@ export function AiSettings({ settings, onUpdateProvider, onSetActiveProvider }: 
 
   const handleModelChange = (value: string | null) => {
     if (!value) {
-      setCustomModelModes((prev) => ({ ...prev, [currentProviderId]: false }));
-      onUpdateProvider(currentProviderId, { model: undefined });
+      // Catalog changes must never clear the user's stored selection.
       return;
     }
 
@@ -194,19 +203,25 @@ export function AiSettings({ settings, onUpdateProvider, onSetActiveProvider }: 
       </div>
 
       <div className="space-y-2.5">
-        <Label className="text-[15px] font-medium text-zinc-900 dark:text-zinc-100">
-          {t.aiModel}
-        </Label>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <Label className="text-[15px] font-medium text-zinc-900 dark:text-zinc-100">{t.aiModel}</Label>
+          <Button type="button" variant="outline" size="sm" className="min-h-11 shrink-0 gap-2 rounded-lg"
+            disabled={catalog.loading} onClick={() => { void catalog.refresh(); }}>
+            <RefreshCw size={14} aria-hidden="true" />{zh ? '刷新模型' : 'Refresh models'}
+          </Button>
+        </div>
         <Select
-          items={[...availableModels.map(model => ({ value: model, label: model })), { value: CUSTOM_MODEL_VALUE, label: t.aiModelCustomOption }]}
+          items={[...modelOptions.map(model => ({ value: model, label: model })), { value: CUSTOM_MODEL_VALUE, label: t.aiModelCustomOption }]}
           value={selectedModelValue}
           onValueChange={handleModelChange}
+          onOpenChange={open => { if (open) setModelMenu(availableModels); }}
+          onOpenChangeComplete={open => { if (!open) setModelMenu(null); }}
         >
           <SelectTrigger aria-label={t.aiModel} className="w-full h-12 rounded-lg border-[var(--app-border)] bg-[var(--app-surface)]/70 px-4 focus:ring-1 focus:ring-[var(--app-accent)]/35">
             <SelectValue />
           </SelectTrigger>
           <SelectContent className="rounded-lg border-[var(--app-border)] bg-[var(--app-surface)]">
-            {availableModels.map(m => (
+            {modelOptions.map(m => (
               <SelectItem key={m} value={m} title={m}>{m}</SelectItem>
             ))}
             <SelectItem value={CUSTOM_MODEL_VALUE} className="rounded-lg">
@@ -214,6 +229,10 @@ export function AiSettings({ settings, onUpdateProvider, onSetActiveProvider }: 
             </SelectItem>
           </SelectContent>
         </Select>
+        {catalogStatus && <p role="status" className="text-xs leading-relaxed text-muted-foreground">{catalogStatus}</p>}
+        {catalog.models && currentProvider.model && !catalog.models.includes(currentProvider.model) && <p className="text-xs leading-relaxed text-muted-foreground">
+          {zh ? '当前模型未出现在最新列表中，已保留。可选择新模型或测试连接。' : 'Current model is not in the latest list and has been kept. Choose another model or test the connection.'}
+        </p>}
         {isCustomModel ? (
           <Input
             aria-label={t.aiModelCustomPlaceholder}

@@ -4,6 +4,7 @@ import remarkParse from 'remark-parse';
 import remarkGfm from 'remark-gfm';
 import type { ResumeDraft } from '@/types/resume';
 import type { ResumeThemeConfig } from '@/types/theme';
+import { fontNativeName, isBuiltinFont, resolveFont } from '@/lib/resumeFonts';
 
 interface Node { type: string; value?: string; url?: string; depth?: number; ordered?: boolean; children?: Node[] }
 type Block = Paragraph | Table;
@@ -73,7 +74,9 @@ export function buildDocx(draft: ResumeDraft, theme: ResumeThemeConfig, template
     ] })] })];
   } else content = [...header, new Paragraph({ alignment: centered ? AlignmentType.CENTER : AlignmentType.LEFT, children: [new TextRun(draft.frontmatter.contact)] }), ...sectionBlocks(draft, theme)];
   const margin = Math.round(theme.pageMargin * 56.6929);
-  return new Document({ styles: { default: { document: { run: { font: theme.fontFamily, size: theme.fontSize * 2 },
+  const nativeFont = fontNativeName(theme.fontFamily);
+  const eastAsiaFont = isBuiltinFont(theme.fontFamily) && !['Noto Serif SC', 'Noto Sans SC'].includes(resolveFont(theme.fontFamily)) ? (resolveFont(theme.fontFamily) === 'Noto Serif' ? 'Noto Serif SC' : 'Noto Sans SC') : nativeFont;
+  return new Document({ styles: { default: { document: { run: { font: { ascii: nativeFont, hAnsi: nativeFont, eastAsia: eastAsiaFont, cs: nativeFont }, size: theme.fontSize * 2 },
     paragraph: { spacing: { line: Math.round(theme.lineHeight * 240) } } } } },
     numbering: { config: [{ reference: 'resume-numbered', levels: Array.from({ length: 9 }, (_, level) => ({ level, format: LevelFormat.DECIMAL,
       text: `%${level + 1}.`, alignment: AlignmentType.LEFT, style: { paragraph: { indent: { left: 360 * (level + 1), hanging: 180 } } } })) }] },

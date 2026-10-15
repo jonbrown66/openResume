@@ -71,7 +71,8 @@ export const PreviewPane = memo(function PreviewPane({
     theme,
     template,
     pending: previewPending,
-  }), [resumeRef, scale, theme, template, previewPending]);
+    lang,
+  }), [resumeRef, scale, theme, template, previewPending, lang]);
 
   const rendererProps = useMemo(() => ({
     draft: deferredDraft,

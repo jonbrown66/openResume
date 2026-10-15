@@ -73,7 +73,7 @@ test('settings and font Select options are above their panels and clickable', as
     const rect = element.getBoundingClientRect();
     return element.contains(document.elementFromPoint(rect.x + rect.width / 2, rect.y + rect.height / 2));
   }), { message: 'Font option is covered by its panel' }).toBe(true);
-  const lastFont = page.getByRole('option').last();
+  const lastFont = page.locator('[role="option"]:not([aria-disabled="true"])').last();
   await lastFont.scrollIntoViewIfNeeded();
   await expect.poll(() => lastFont.evaluate(element => {
     const rect = element.getBoundingClientRect();
@@ -107,8 +107,9 @@ test('style controls have names and touch-sized targets', async ({ page }) => {
   await expect(dialog).toBeVisible();
   const swatch = dialog.locator('[data-color-swatch]').first();
   await expect(swatch).toHaveAttribute('aria-label', /#[0-9a-f]{6}/);
-  const bounds = await swatch.boundingBox();
-  expect(bounds!.width).toBeGreaterThanOrEqual(44); expect(bounds!.height).toBeGreaterThanOrEqual(44);
+  // Layout dimensions avoid subpixel noise from the panel's transform animation.
+  const bounds = await swatch.evaluate(element => ({ width: (element as HTMLElement).offsetWidth, height: (element as HTMLElement).offsetHeight }));
+  expect(bounds.width).toBeGreaterThanOrEqual(44); expect(bounds.height).toBeGreaterThanOrEqual(44);
   await expect(dialog.getByRole('slider', { name: 'Font Size', exact: true })).toBeVisible();
   await page.keyboard.press('Escape');
   await expect(dialog).toBeHidden();

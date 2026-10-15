@@ -1,5 +1,5 @@
 import { createRef } from 'react';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
 import { ThemeEditorPanel } from '@/components/ThemeEditorPanel';
@@ -7,7 +7,7 @@ import { translations } from '@/config/ui';
 import { DEFAULT_THEME_CONFIG } from '@/types/theme';
 
 describe('ThemeEditorPanel', () => {
-  it('keeps the panel open when interacting with a portaled select', () => {
+  it('keeps the panel open when interacting with a portaled select', async () => {
     const onClose = vi.fn();
     const triggerRef = createRef<HTMLButtonElement>();
 
@@ -24,6 +24,7 @@ describe('ThemeEditorPanel', () => {
     );
 
     expect(screen.getByRole('dialog', { name: translations.en.styleEditor })).toBeInTheDocument();
+    await act(async () => {}); // Finish local-font availability detection.
 
     const selectContent = document.createElement('div');
     selectContent.setAttribute('data-slot', 'select-content');

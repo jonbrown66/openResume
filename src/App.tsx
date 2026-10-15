@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 import { MotionConfig } from 'framer-motion';
 
 import { ToastProvider } from '@/components/ui/Toast';
@@ -13,9 +13,13 @@ import { useResumeProjects } from '@/hooks/useResumeProjects';
 import { useResumeWorkspaceState } from '@/hooks/useResumeWorkspaceState';
 import { useSettings } from '@/hooks/useSettings';
 import { resolveImportNoticeMessage } from '@/utils/importNotice';
+import { startInitialModelRefresh } from '@/hooks/useModelCatalog';
 
 export default function App() {
   const { settings, updateSettings, updateProvider, setActiveProvider, storageError: settingsStorageError } = useSettings();
+  useEffect(() => {
+    startInitialModelRefresh();
+  }, []);
   const { resolvedTheme } = useAppTheme(settings.theme);
   const {
     projects,

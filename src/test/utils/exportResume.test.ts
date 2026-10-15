@@ -1,10 +1,13 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { exportToHtml, exportToPdf } from '@/utils/exportResume';
 import { defaultMarkdownEn } from '@/constants';
 import { parseMarkdownToResumeDraft } from '@/utils/resumeDocument';
 
 describe('exportResume', () => {
+  beforeEach(() => {
+    Object.defineProperty(document, 'fonts', { configurable: true, value: Object.assign([{ family: 'Geist Variable', weight: '100 900' }], { load: vi.fn().mockResolvedValue([{}]) }) });
+  });
   afterEach(() => {
     vi.restoreAllMocks();
     document.body.innerHTML = '';

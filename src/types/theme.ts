@@ -13,9 +13,9 @@ export const DEFAULT_THEME_CONFIG: ResumeThemeConfig = {
   primaryColor: '#d48516',
   secondaryColor: '#404040',
   fontFamily: 'Geist',
-  fontSize: 10,
-  lineHeight: 1.5,
-  sectionSpacing: 16,
-  pageMargin: 20,
+  fontSize: 11,
+  lineHeight: 1.4,
+  sectionSpacing: 20,
+  pageMargin: 12,
   customCss: '',
 };

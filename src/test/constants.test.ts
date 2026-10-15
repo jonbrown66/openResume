@@ -6,18 +6,16 @@ describe('font constants', () => {
   it('keeps resume font options focused on common readable Chinese fonts', () => {
     expect(FONT_OPTIONS).toEqual([
       'Geist',
-      'Source Han Sans SC',
-      '思源黑体 (细圆)',
-      'Source Han Serif SC',
       'Noto Sans SC',
       'Noto Serif SC',
       'Noto Sans',
       'Noto Serif',
       'Noto Mono',
-      'Fira Mono',
+      '思源黑体 (细圆)',
       '源泉圓體',
       '全字庫正宋體',
       '全字庫正楷體',
+      'Fira Mono',
     ]);
 
     expect(FONT_OPTIONS).not.toContain('ZCOOL QingKe HuangYou');
@@ -27,11 +25,11 @@ describe('font constants', () => {
   });
 
   it('maps Source Han font labels to practical local and web fallbacks', () => {
-    expect(FONT_STYLES['Source Han Sans SC'].family).toContain('Source Han Sans SC');
+    expect(FONT_STYLES['Source Han Sans SC'].family).toBe(FONT_STYLES['Noto Sans SC'].family);
     expect(FONT_STYLES['Source Han Sans SC'].family).toContain('Noto Sans SC');
     expect(FONT_STYLES['思源黑体 (细圆)'].family).toContain('思源柔黑体');
     expect(FONT_STYLES['思源黑体 (细圆)'].family).toContain('Noto Sans SC');
-    expect(FONT_STYLES['Source Han Serif SC'].family).toContain('Source Han Serif SC');
+    expect(FONT_STYLES['Source Han Serif SC'].family).toBe(FONT_STYLES['Noto Serif SC'].family);
     expect(FONT_STYLES['Source Han Serif SC'].family).toContain('Noto Serif SC');
   });
 });

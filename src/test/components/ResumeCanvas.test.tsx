@@ -5,6 +5,7 @@ import { ResumeCanvas } from '@/components/ResumeCanvas';
 
 describe('ResumeCanvas', () => {
   beforeAll(() => {
+    Object.defineProperty(document, 'fonts', { configurable: true, value: Object.assign([{ family: 'Geist Variable', weight: '100 900' }], { load: async () => [{}] }) });
     // jsdom has no layout engine; line boundaries are checked by the browser E2E test.
     Object.defineProperty(Range.prototype, 'getClientRects', { configurable: true, value: () => [] });
   });

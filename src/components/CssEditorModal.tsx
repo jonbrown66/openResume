@@ -6,7 +6,7 @@ import { overlayTransition } from '@/lib/motion';
 import { Code2, Copy, Check, Save, RotateCcw, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { translations } from '@/config/ui';
-import { FONT_STYLES } from '@/constants';
+import { fontFamily as resolveFontFamily } from '@/lib/resumeFonts';
 import type { ResumeTemplate } from '@/config/ui';
 
 interface CssEditorModalProps {
@@ -21,7 +21,7 @@ interface CssEditorModalProps {
 }
 
 function getBaseCss(fontFamily: string): string {
-  const familyString = FONT_STYLES[fontFamily]?.family || `'${fontFamily}', sans-serif`;
+  const familyString = resolveFontFamily(fontFamily);
   return `/* 基础样式 */
 .resume-content {
   font-family: ${familyString};

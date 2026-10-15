@@ -107,36 +107,31 @@ contact: 138-0000-0000 | zhangsan@example.com | 北京市朝阳区
 export const pageWidthPx = 794;
 export const pageHeightPx = 1123;
 
-export const FONT_OPTIONS = [
+export const BUILTIN_FONTS = [
   'Geist',
-  'Source Han Sans SC',
-  '思源黑体 (细圆)',
-  'Source Han Serif SC',
   'Noto Sans SC',
   'Noto Serif SC',
   'Noto Sans',
   'Noto Serif',
   'Noto Mono',
-  'Fira Mono',
-  '源泉圓體',
-  '全字庫正宋體',
-  '全字庫正楷體',
-];
+] as const;
+export const LOCAL_FONTS = ['思源黑体 (细圆)', '源泉圓體', '全字庫正宋體', '全字庫正楷體', 'Fira Mono'] as const;
+export const FONT_OPTIONS = [...BUILTIN_FONTS, ...LOCAL_FONTS];
 
 export const FONT_STYLES: Record<string, { family: string; category: 'sans' | 'serif' | 'mono' | 'chinese' }> = {
   'Geist': { family: "'Geist Variable', 'Geist', 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif", category: 'sans' },
-  'Source Han Sans SC': { family: "'Source Han Sans SC', 'Source Han Sans CN', 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif", category: 'chinese' },
+  'Source Han Sans SC': { family: "'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif", category: 'chinese' },
   '思源黑体 (细圆)': { family: "'Gen Jyuu Gothic', '思源柔黑体', 'Resource Han Rounded CN', '源柔黑体', 'GenSenRounded', 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif", category: 'chinese' },
   '思源柔黑体': { family: "'Gen Jyuu Gothic', '思源柔黑体', 'Resource Han Rounded CN', '源柔黑体', 'GenSenRounded', 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif", category: 'chinese' },
   'Source Han Sans Rounded': { family: "'Gen Jyuu Gothic', '思源柔黑体', 'Resource Han Rounded CN', '源柔黑体', 'GenSenRounded', 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif", category: 'chinese' },
-  'Source Han Serif SC': { family: "'Source Han Serif SC', 'Source Han Serif CN', 'Noto Serif SC', 'Songti SC', 'SimSun', serif", category: 'chinese' },
+  'Source Han Serif SC': { family: "'Noto Serif SC', 'Songti SC', 'STSong', serif", category: 'chinese' },
   'Noto Sans': { family: "'Noto Sans', 'Noto Sans SC', 'PingFang SC', sans-serif", category: 'sans' },
   'Noto Serif': { family: "'Noto Serif', 'Noto Serif SC', 'Songti SC', serif", category: 'serif' },
   'Noto Sans SC': { family: "'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif", category: 'chinese' },
   'Noto Serif SC': { family: "'Noto Serif SC', 'Songti SC', 'STSong', serif", category: 'chinese' },
-  'Noto Mono': { family: "'Noto Sans Mono', 'Source Code Pro', monospace", category: 'mono' },
-  'Fira Mono': { family: "'Fira Mono', 'Noto Mono', monospace", category: 'mono' },
-  '源泉圓體': { family: "'GenSenRounded', '源泉圓體', 'Source Han Sans SC', 'PingFang SC', sans-serif", category: 'chinese' },
+  'Noto Mono': { family: "'Noto Sans Mono', 'Noto Sans SC', monospace", category: 'mono' },
+  'Fira Mono': { family: "'Fira Mono', 'Noto Sans SC', monospace", category: 'mono' },
+  '源泉圓體': { family: "'GenSenRounded', '源泉圓體', 'Noto Sans SC', 'PingFang SC', sans-serif", category: 'chinese' },
   '全字庫正宋體': { family: "'全字庫正宋體', 'TW-Sung', 'Source Han Serif SC', 'Noto Serif SC', 'Songti SC', serif", category: 'chinese' },
-  '全字庫正楷體': { family: "'全字庫正楷體', 'TW-Kai', 'KaiTi', 'BiauKai', 'STKaiti', serif", category: 'chinese' },
+  '全字庫正楷體': { family: "'全字庫正楷體', 'TW-Kai', 'Noto Sans SC', serif", category: 'chinese' },
 };
