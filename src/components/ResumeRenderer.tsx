@@ -79,6 +79,12 @@ function isSkillsSection(title: string): boolean {
   return /skill|技能|能力/i.test(title);
 }
 
+type MarkdownNode = { value?: string; children?: MarkdownNode[] };
+
+function markdownText(node: MarkdownNode): string {
+  return node.value ?? node.children?.map(markdownText).join('') ?? '';
+}
+
 const MarkdownRenderer = memo(({ content, isSkills = false }: { content: string; isSkills?: boolean }) => (
   <ReactMarkdown
     remarkPlugins={[remarkGfm]}
@@ -97,8 +103,13 @@ const MarkdownRenderer = memo(({ content, isSkills = false }: { content: string;
         }
         return <h3 {...props}>{children}</h3>;
       },
-      ul: ({ children, ...props }) => (
-        <ul className={isSkills ? 'skills-list' : 'resume-list'} {...props}>
+      ul: ({ children, node, ...props }) => (
+        <ul className={isSkills
+          ? `skills-list${node?.children.some(item => {
+            const text = markdownText(item).replace(/\s+/g, ' ').trim();
+            return text.length > 48 || /[:：]/.test(text);
+          }) ? ' skills-list-detailed' : ''}`
+          : 'resume-list'} {...props}>
           {children}
         </ul>
       ),
@@ -238,7 +249,7 @@ const SidebarTemplate = memo(({ draft, style, fontFamily }: { draft: ResumeDraft
     : [];
 
   return (
-    <div style={style} data-font-family={fontFamily} className="template-sidebar resume-template h-full box-border">
+    <div style={style} lang={isChineseText(JSON.stringify(draft)) ? 'zh-CN' : 'en'} data-font-family={fontFamily} className="template-sidebar resume-template h-full box-border">
       <div className="sidebar-grid h-full min-h-full">
         {/* 左侧独立侧边栏 */}
         <aside className="sidebar-aside p-[var(--page-margin)]">
@@ -250,7 +261,7 @@ const SidebarTemplate = memo(({ draft, style, fontFamily }: { draft: ResumeDraft
 
           {contactItems.length > 0 && (
             <div className="sidebar-block">
-              <h2 className="sidebar-heading">CONTACT</h2>
+              <h2 className="sidebar-heading">{isChineseText(JSON.stringify(draft)) ? '联系方式' : 'CONTACT'}</h2>
               <div className="sidebar-contact-list">
                 {contactItems.map((item, idx) => (
                   <div key={idx} className="sidebar-contact-item">
@@ -353,7 +364,7 @@ export const ResumeRenderer = memo(({ markdown, draft, template = 'classic', the
   }
 
   return (
-    <div style={style} data-font-family={theme.fontFamily} className={`template-${template} resume-template h-full p-[var(--page-margin)] flex flex-col box-border`}>
+    <div style={style} lang={isChineseText(JSON.stringify(resumeDraft)) ? 'zh-CN' : 'en'} data-font-family={theme.fontFamily} className={`template-${template} resume-template h-full p-[var(--page-margin)] flex flex-col box-border`}>
       <CustomCssInjector css={theme.customCss} id={customCssId} />
       {renderHeader(resumeDraft, template)}
       <div className="resume-content text-[var(--font-size)] leading-[var(--line-height)] flex-1">

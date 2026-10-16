@@ -6,7 +6,6 @@ import { overlayTransition } from '@/lib/motion';
 import { Code2, Copy, Check, Save, RotateCcw, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { translations } from '@/config/ui';
-import { fontFamily as resolveFontFamily } from '@/lib/resumeFonts';
 import type { ResumeTemplate } from '@/config/ui';
 
 interface CssEditorModalProps {
@@ -20,128 +19,22 @@ interface CssEditorModalProps {
   currentFont: string;
 }
 
-function getBaseCss(fontFamily: string): string {
-  const familyString = resolveFontFamily(fontFamily);
-  return `/* 基础样式 */
-.resume-content {
-  font-family: ${familyString};
+function getTemplateCss(template: ResumeTemplate, currentFont: string): string {
+  const heading = template === 'sidebar' ? '.sidebar-heading' : '.resume-content h2';
+  return `/* 继承当前模板，无需复制基础样式。
+   Inherits the current template; uncomment only the rules you want to change.
+   当前字体 / Current font: ${currentFont}
+
+.template-${template} .resume-content {
+  font-family: var(--font-family);
   font-size: var(--font-size);
   line-height: var(--line-height);
 }
-.resume-content h2 {
-  font-size: 1rem;
-  font-weight: 800;
+
+.template-${template} ${heading} {
   color: var(--primary-color);
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  border-bottom: 2px solid var(--primary-color);
-  padding-bottom: 0.5rem;
-  margin: 16px 0 8px;
 }
-.resume-content h3 {
-  font-size: 1rem;
-  font-weight: 700;
-  color: var(--secondary-color);
-  margin-top: 12px;
-}
-.resume-h3-split {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 12px;
-}
-.resume-h3-split h3 {
-  margin-top: 0;
-}
-.resume-h3-split span {
-  font-size: 0.875rem;
-  color: #4B5563;
-}
-.resume-content p {
-  color: #374151;
-  margin-bottom: 4px;
-}
-.resume-content p strong {
-  color: var(--secondary-color);
-}
-.resume-list {
-  list-style: disc;
-  padding-left: 1.25rem;
-  margin-bottom: 8px;
-}
-.resume-list li {
-  color: #374151;
-}
-.skills-list {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  list-style: disc;
-  padding-left: 1.25rem;
-  margin-bottom: 8px;
-}
-.skills-list li {
-  color: #374151;
-}`;
-}
-
-function getTemplateCss(template: ResumeTemplate, fontFamily: string): string {
-  const base = getBaseCss(fontFamily);
-  switch (template) {
-    case 'classic':
-      return `${base}
-
-/* Classic 头部 */
-.bg-\\[\\#EAEAEA\\] {
-  background: #EAEAEA;
-  padding: 24px;
-}`;
-    case 'minimal':
-      return `${base}
-
-/* Minimal 模板 */
-.template-minimal .resume-content h2 {
-  font-family: var(--font-serif);
-  text-align: center;
-  border-bottom: 1px solid;
-  letter-spacing: 0.2em;
-  font-weight: 600;
-}
-.template-minimal .resume-content h3 {
-  font-family: var(--font-serif);
-}`;
-    case 'standard':
-      return `${base}
-
-/* Standard 模板 */
-.template-standard .resume-content h2 {
-  border-bottom: none;
-}
-.template-standard .resume-h3-split span {
-  color: var(--secondary-color);
-}`;
-    case 'sidebar':
-      return `${base}
-
-/* Sidebar 模板 */
-.template-sidebar .sidebar-section {
-  display: flex;
-  margin-bottom: 16px;
-}
-.template-sidebar .sidebar-title {
-  width: 25%;
-  border-right: 1px solid var(--primary-color);
-  padding-right: 12px;
-}
-.template-sidebar .sidebar-title h2 {
-  font-size: 0.875rem;
-  border: none;
-  margin: 0;
-  padding: 0;
-}
-.template-sidebar .sidebar-content {
-  width: 75%;
-  padding-left: 12px;
-}`;
-  }
+*/`;
 }
 
 function escapeHtml(text: string): string {

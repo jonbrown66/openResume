@@ -1,12 +1,35 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
-import { defaultMarkdownEn } from '@/constants';
+import { defaultMarkdownEn, defaultMarkdownZh } from '@/constants';
 import { DEFAULT_THEME_CONFIG } from '@/types/theme';
 import { parseMarkdownToResumeDraft } from '@/utils/resumeDocument';
 import { ResumeRenderer } from '@/components/ResumeRenderer';
 
 describe('ResumeRenderer', () => {
+  it('lays out descriptive skills consistently when Markdown lines are wrapped', () => {
+    const skill = '精通产品需求分析与规格书评审，擅长制定系统级测试计划、设计高覆盖率测试用例，独立主导功能、性能、兼容性测试及核心版本回归。';
+    const { container, rerender } = render(<ResumeRenderer markdown={`---\nname: 测试用户\n---\n\n## 专业技能\n\n- ${skill}`} theme={DEFAULT_THEME_CONFIG} />);
+    expect(container.querySelector('ul')).toHaveClass('skills-list-detailed');
+    const wrapped = skill.match(/.{1,18}/g)!.join('\n  ');
+    rerender(<ResumeRenderer markdown={`---\nname: 测试用户\n---\n\n## 专业技能\n\n- ${wrapped}`} theme={DEFAULT_THEME_CONFIG} />);
+    expect(container.querySelector('ul')).toHaveClass('skills-list-detailed');
+  });
+
+  it('keeps short keywords compact and classified descriptions in a reading column', () => {
+    const { container, rerender } = render(<ResumeRenderer markdown={'---\nname: 测试用户\n---\n\n## 技能\n\n- React\n- TypeScript'} theme={DEFAULT_THEME_CONFIG} />);
+    expect(container.querySelector('ul')).not.toHaveClass('skills-list-detailed');
+    rerender(<ResumeRenderer markdown={'---\nname: 测试用户\n---\n\n## 技能\n\n- **测试设计：** 制定系统级测试计划'} theme={DEFAULT_THEME_CONFIG} />);
+    expect(container.querySelector('ul')).toHaveClass('skills-list-detailed');
+  });
+
+  it('localizes the sidebar contact heading from resume content', () => {
+    const { rerender } = render(<ResumeRenderer markdown={defaultMarkdownZh} template="sidebar" theme={DEFAULT_THEME_CONFIG} />);
+    expect(screen.getByRole('heading', { name: '联系方式' })).toBeInTheDocument();
+    rerender(<ResumeRenderer markdown={defaultMarkdownEn} template="sidebar" theme={DEFAULT_THEME_CONFIG} />);
+    expect(screen.getByRole('heading', { name: 'CONTACT' })).toBeInTheDocument();
+  });
+
   it('renders from markdown input', () => {
     render(<ResumeRenderer markdown={defaultMarkdownEn} template="classic" theme={DEFAULT_THEME_CONFIG} />);
 
