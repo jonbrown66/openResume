@@ -45,7 +45,7 @@ test('measure cold and repeated component openings', async ({ page }, testInfo) 
         : component === 'Style' ? '[role=dialog][aria-label="Style Editor"] input[type=range]'
         : component === 'Assistant' ? '[role=dialog][aria-label="Resume Assistant"] textarea'
         : component === 'CSS' ? '[role=dialog][aria-label="Custom CSS"] textarea'
-        : component === 'Blocks' ? 'label:has(> span) input:not([type])' : '[role=menu] [role=menuitem]';
+        : component === 'Blocks' ? '[aria-label="Basic information"] input' : '[role=menu] [role=menuitem]';
       const values = await opening(page, trigger, selector);
       rows.push({ component, round, visible: Math.round(values.visible), ready: Math.round(values.ready) });
       if (component === 'Blocks') await page.getByRole('button', { name: 'Markdown', exact: true }).click();

@@ -45,6 +45,7 @@ interface ResumeRendererProps {
   draft?: ResumeDraft;
   template?: string;
   theme: ResumeThemeConfig;
+  inheritColors?: boolean;
 }
 
 const CustomCssInjector = memo(({ css, id }: { css: string; id: string }) => {
@@ -336,21 +337,23 @@ const SidebarTemplate = memo(({ draft, style, fontFamily }: { draft: ResumeDraft
 });
 SidebarTemplate.displayName = 'SidebarTemplate';
 
-export const ResumeRenderer = memo(({ markdown, draft, template = 'classic', theme }: ResumeRendererProps) => {
+export const ResumeRenderer = memo(({ markdown, draft, template = 'classic', theme, inheritColors = false }: ResumeRendererProps) => {
   const resumeDraft = useMemo(
     () => draft ?? parseMarkdownToResumeDraft(markdown ?? ''),
     [draft, markdown]
   );
 
   const style = useMemo(() => ({
-    '--primary-color': theme.primaryColor,
-    '--secondary-color': theme.secondaryColor,
+    '--primary-color': inheritColors ? 'var(--resume-theme-accent)' : theme.primaryColor,
+    '--secondary-color': inheritColors ? 'var(--resume-theme-secondary)' : theme.secondaryColor,
+    '--resume-paper': inheritColors ? 'var(--resume-theme-paper)' : theme.backgroundColor,
+    '--resume-ivory': inheritColors ? 'var(--resume-theme-paper)' : theme.backgroundColor,
     '--font-family': fontFamily(theme.fontFamily),
     '--font-size': `${theme.fontSize}pt`,
     '--line-height': theme.lineHeight,
     '--section-spacing': `${theme.sectionSpacing}px`,
     '--page-margin': `${theme.pageMargin}mm`,
-  } as React.CSSProperties), [theme]);
+  } as React.CSSProperties), [theme, inheritColors]);
 
   const customCssId = useId();
 

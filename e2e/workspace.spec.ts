@@ -34,11 +34,12 @@ test('block edits persist immediately and survive reload', async ({ page }) => {
 
 test('typing titles keeps focus, all section fields remain editable', async ({ page }) => {
   await page.getByRole('button', { name: 'Blocks', exact: true }).click();
-  const title = page.getByRole('textbox', { name: 'Section Title', exact: true }).first();
+  const title = page.getByRole('textbox', { name: 'Section name', exact: true }).first();
   await title.fill(''); await title.pressSequentially('Project XYZ');
   await expect(title).toHaveValue('Project XYZ'); await expect(title).toBeFocused();
-  await page.getByRole('textbox', { name: 'Section content', exact: true }).fill('Leading section content');
-  await page.getByRole('textbox', { name: 'Organization', exact: true }).fill('Visible organization');
+  await page.getByText('Section introduction (optional)', { exact: true }).click();
+  await page.getByRole('textbox', { name: 'Section introduction', exact: true }).fill('Leading section content');
+  await page.getByRole('textbox', { name: 'Organization (optional)', exact: true }).fill('Visible organization');
   await page.getByRole('button', { name: 'Markdown', exact: true }).click();
   await expect(page.getByRole('textbox', { name: 'Resume Markdown' })).toHaveValue(/Leading section content/);
 });
@@ -89,7 +90,14 @@ test('long resume pages do not split lines or multiply their text', async ({ pag
         )) crossings.push(walker.currentNode.textContent!);
       }
     }
-    return { crossings, items: document.querySelectorAll('.resume-canvas-screen-preview li').length };
+    // Page projections keep the layout tree intact; count painted items, not hidden copies.
+    const items = Array.from(document.querySelectorAll<HTMLElement>('.resume-canvas-screen-preview li')).filter(li => {
+      if (getComputedStyle(li).visibility === 'hidden') return false;
+      const bounds = li.closest('[data-page-viewport]')!.getBoundingClientRect();
+      const range = document.createRange(); range.selectNodeContents(li);
+      return Array.from(range.getClientRects()).some(rect => rect.bottom > bounds.top + 0.8 && rect.top < bounds.bottom - 0.8);
+    }).length;
+    return { crossings, items };
   });
   expect(result.crossings).toEqual([]);
   expect(result.items).toBeLessThan(110);

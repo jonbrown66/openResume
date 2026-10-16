@@ -10,8 +10,8 @@ describe('BlockEditor', () => {
   it('adds a clearly named section without inserting placeholder resume content', async () => {
     const onChange = vi.fn();
     render(<BlockEditor draft={parseMarkdownToResumeDraft(defaultMarkdownZh)} lang="zh" translations={translations.zh} onChange={onChange} />);
-    fireEvent.click(screen.getByRole('combobox', { name: '添加章节', exact: true }));
-    const option = await screen.findByRole('option', { name: '项目经历', exact: true });
+    fireEvent.click(screen.getByRole('combobox', { name: '添加章节' }));
+    const option = await screen.findByRole('option', { name: '项目经历' });
     fireEvent.pointerDown(option, { pointerType: 'mouse' });
     fireEvent.click(option, { detail: 1 });
     expect(onChange.mock.lastCall?.[0].sections.at(-1)).toMatchObject({ title: '项目经历', content: '', entries: [] });

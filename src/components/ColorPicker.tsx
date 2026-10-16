@@ -16,9 +16,8 @@ export const ColorPicker = memo(function ColorPicker({
   onChange,
 }: ColorPickerProps) {
   return (
-    <div className="space-y-2">
+    <div className="ui-color-picker">
       <span className="ui-label">{label}</span>
-      <div className="flex items-start gap-2">
       <motion.div
         className="relative w-11 h-11 rounded-xl overflow-hidden border border-[var(--app-border)] cursor-pointer flex-shrink-0"
         transition={{ type: "spring", stiffness: 300, damping: 20 }}
@@ -47,7 +46,6 @@ export const ColorPicker = memo(function ColorPicker({
             className={cn('ui-swatch')}
           ><span style={{ backgroundColor: color }} /></motion.button>
         ))}
-      </div>
       </div>
     </div>
   );

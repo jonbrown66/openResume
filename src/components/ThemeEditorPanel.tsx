@@ -1,6 +1,6 @@
 import { memo, useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
-import { RotateCcw, Type, Ruler, AlignVerticalSpaceAround } from 'lucide-react';
+import { RotateCcw, Ruler, AlignVerticalSpaceAround } from 'lucide-react';
 import type { ResumeThemeConfig } from '@/types/theme';
 import { translations } from '@/config/ui';
 import { AnchoredPanel } from './ui/AnchoredPanel';
@@ -92,31 +92,32 @@ export const ThemeEditorPanel = memo(function ThemeEditorPanel({
   if (typeof window === 'undefined' || !anchorRect) return null;
 
   return (
-    <AnchoredPanel title={t.styleEditor} closeLabel={t.close} triggerRef={triggerRef} anchorRect={anchorRect} onClose={onClose}
-      footer={<button type="button" onClick={() => { request.current++; setLoadingFont(null); setFontError(false); onReset(); }} className="app-secondary flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border text-sm font-medium transition-colors">
+    <AnchoredPanel compactPanel title={t.styleEditor} closeLabel={t.close} triggerRef={triggerRef} anchorRect={anchorRect} onClose={onClose}
+      footer={<button type="button" onClick={() => { request.current++; setLoadingFont(null); setFontError(false); onReset(); }} className="app-secondary flex min-h-9 w-full items-center justify-center gap-2 rounded-xl border text-xs font-medium transition-colors">
         <RotateCcw size={16} />{t.resetToDefault}
       </button>}>
       <motion.div 
         className="ui-style-form"
       >
         <motion.div>
-          <div className="space-y-3">
+          <div className="ui-style-colors">
             <ColorPicker
               label={t.primaryColor}
               value={theme.primaryColor}
               presets={PRESET_COLORS}
               onChange={(v) => onChange({ primaryColor: v })}
             />
+            <ColorPicker
+              label={t.backgroundColor}
+              value={theme.backgroundColor}
+              presets={['#ffffff', '#faf9f3', '#fff7ed', '#f0fdf4', '#eff6ff', '#faf5ff']}
+              onChange={(v) => onChange({ backgroundColor: v })}
+            />
           </div>
         </motion.div>
 
-        <motion.div>
-          <div className="flex items-center gap-2 mb-3">
-            <Type size={12} className="text-zinc-400" />
-            <span className="ui-label">
-              {t.typography}
-            </span>
-          </div>
+        <motion.div className="ui-style-font">
+          <span className="ui-label">{t.typography}</span>
           <Select
             value={resolveFont(theme.fontFamily)}
             onValueChange={selectFont}
@@ -163,6 +164,7 @@ export const ThemeEditorPanel = memo(function ThemeEditorPanel({
             max={2.0}
             step={0.05}
             icon={<Ruler size={14} className="text-zinc-400" />}
+            description={lang === 'zh' ? '正文会保留字体所需的最小行距，避免文字重叠和分页裁字。' : 'Body text keeps the font’s minimum safe line height to prevent overlap and clipped page breaks.'}
             onChange={(v: number) => onChange({ lineHeight: v })}
           />
 

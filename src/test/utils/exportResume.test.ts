@@ -56,7 +56,7 @@ describe('exportResume', () => {
     expect(bodyHtml).toContain('class="resume-paper"');
   });
 
-  it('builds multi-page card PDF document with physical pruning and zero margins', async () => {
+  it('builds measured PDF pages with zero margins and no inner print fragmentation', async () => {
     // 创建模拟多页卡片容器 DOM 结构
     const canvas = document.createElement('div');
     canvas.className = 'resume-canvas-screen-preview';
@@ -112,6 +112,8 @@ describe('exportResume', () => {
     expect(requestBody.html).toContain('background: var(--resume-paper, #faf9f3) !important');
     expect(requestBody.html).toContain('print-color-adjust: exact !important');
     expect(requestBody.html).toContain('break-after: page');
+    expect(requestBody.html).toContain('[data-export-mode="pdf"] .resume-pdf-page *');
+    expect(requestBody.html).toContain('break-inside: auto !important');
     expect(requestBody.html).toContain('box-shadow: none !important');
     expect(requestBody.html).toContain('[data-export-mode="pdf"] .resume-template');
     expect(requestBody.html).toContain('background: var(--resume-paper) !important');

@@ -109,6 +109,12 @@ function cloneSinglePageForHtmlExport(canvasElement: HTMLDivElement) {
   paper.style.transform = 'none';
 
   const template = projectedTemplate.cloneNode(true) as HTMLElement;
+  // The standalone HTML has no live canvas ancestor to supply the current colors.
+  const colors = getComputedStyle(projectedTemplate);
+  for (const property of ['--resume-theme-accent', '--resume-theme-secondary', '--resume-theme-paper']) {
+    const value = colors.getPropertyValue(property).trim();
+    if (value) template.style.setProperty(property, value);
+  }
   template.classList.remove('resume-paper-page-card');
   template.classList.remove('resume-pdf-page');
   template.classList.remove('relative');
@@ -324,6 +330,16 @@ async function buildExportHtml(
     [data-export-mode="pdf"] .resume-pdf-page:last-child {
       break-after: auto;
       page-break-after: auto;
+    }
+    /* Pages are already measured and clipped. Native print fragmentation must
+       not move a long list/paragraph inside an absolutely positioned projection. */
+    [data-export-mode="pdf"] .resume-pdf-page * {
+      break-inside: auto !important;
+      break-before: auto !important;
+      break-after: auto !important;
+      page-break-inside: auto !important;
+      page-break-before: auto !important;
+      page-break-after: auto !important;
     }
     [data-export-mode="pdf"] .resume-paper-page-card {
       box-shadow: none !important;

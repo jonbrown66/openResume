@@ -190,9 +190,9 @@ test('style sliders keep their label and unit aligned on a narrow panel', async 
     const range = element.getBoundingClientRect();
     const value = control.querySelector('.ui-slider-value')!.getBoundingClientRect();
     const unit = control.querySelector('.ui-slider-value > span')!.getBoundingClientRect();
-    return { labelAbove: label.bottom <= range.top, gap: value.left - range.right, unitInside: unit.left >= value.left && unit.right <= value.right, inside: value.right <= innerWidth, appearance: getComputedStyle(element).appearance };
+    return { labelBeside: label.right <= range.left && label.top < range.bottom && label.bottom > range.top, gap: value.left - range.right, unitInside: unit.left >= value.left && unit.right <= value.right, inside: value.right <= innerWidth, appearance: getComputedStyle(element).appearance };
   });
-  expect(geometry).toMatchObject({ labelAbove: true, unitInside: true, inside: true, appearance: 'none' });
+  expect(geometry).toMatchObject({ labelBeside: true, unitInside: true, inside: true, appearance: 'none' });
   expect(geometry.gap).toBeGreaterThanOrEqual(12);
   const reset = dialog.getByRole('button', { name: 'Reset to Default', exact: true });
   await expect(reset).toBeInViewport();

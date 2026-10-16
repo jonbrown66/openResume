@@ -6,7 +6,7 @@ import { ResumeCanvas } from './ResumeCanvas';
 import { TemplateSwitcher } from './TemplateSwitcher';
 import type { ResumeDraft } from '@/types/resume';
 import type { ResumeTemplate, TranslationSet } from '@/config/ui';
-import type { ResumeThemeConfig } from '@/types/theme';
+import { DEFAULT_THEME_CONFIG, type ResumeThemeConfig } from '@/types/theme';
 
 interface PreviewPaneProps {
   containerRef: RefObject<HTMLDivElement | null>;
@@ -74,11 +74,18 @@ export const PreviewPane = memo(function PreviewPane({
     lang,
   }), [resumeRef, scale, theme, template, previewPending, lang]);
 
+  // Color changes are painted through inherited variables; Markdown and its
+  // pagination input only change when content or typography/layout changes.
+  const { fontFamily, fontSize, lineHeight, sectionSpacing, pageMargin, customCss } = theme;
+  const renderTheme = useMemo(() => ({ ...DEFAULT_THEME_CONFIG,
+    fontFamily, fontSize, lineHeight, sectionSpacing, pageMargin, customCss,
+  }), [fontFamily, fontSize, lineHeight, sectionSpacing, pageMargin, customCss]);
   const rendererProps = useMemo(() => ({
     draft: deferredDraft,
     template,
-    theme,
-  }), [deferredDraft, template, theme]);
+    theme: renderTheme,
+    inheritColors: true,
+  }), [deferredDraft, template, renderTheme]);
   const renderedResume = useMemo(() => <ResumeRenderer {...rendererProps} />, [rendererProps]);
 
   return (

@@ -27,6 +27,7 @@ export function normalizeTheme(value: unknown): ResumeThemeConfig {
   return {
     primaryColor: /^#[\da-f]{6}$/i.test(raw.primaryColor ?? '') ? raw.primaryColor! : DEFAULT_THEME_CONFIG.primaryColor,
     secondaryColor: /^#[\da-f]{6}$/i.test(raw.secondaryColor ?? '') ? raw.secondaryColor! : DEFAULT_THEME_CONFIG.secondaryColor,
+    backgroundColor: /^#[\da-f]{6}$/i.test(raw.backgroundColor ?? '') ? raw.backgroundColor! : DEFAULT_THEME_CONFIG.backgroundColor,
     fontFamily: typeof raw.fontFamily === 'string' ? raw.fontFamily : DEFAULT_THEME_CONFIG.fontFamily,
     fontSize: number('fontSize', 6, 24), lineHeight: number('lineHeight', 1, 3),
     sectionSpacing: number('sectionSpacing', 0, 64), pageMargin: number('pageMargin', 5, 40),

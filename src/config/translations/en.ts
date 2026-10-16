@@ -53,6 +53,7 @@ export const enTranslations = {
   style: 'Style',
   styleEditor: 'Style Editor',
   primaryColor: 'Accent Color',
+  backgroundColor: 'Resume Background',
   secondaryColor: 'Secondary Color',
   colors: 'Colors',
   typography: 'Typography',

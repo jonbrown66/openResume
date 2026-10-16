@@ -1,6 +1,7 @@
 export interface ResumeThemeConfig {
   primaryColor: string;
   secondaryColor: string;
+  backgroundColor: string;
   fontFamily: string;
   fontSize: number;
   lineHeight: number;
@@ -12,6 +13,7 @@ export interface ResumeThemeConfig {
 export const DEFAULT_THEME_CONFIG: ResumeThemeConfig = {
   primaryColor: '#d48516',
   secondaryColor: '#404040',
+  backgroundColor: '#ffffff',
   fontFamily: 'Geist',
   fontSize: 11,
   lineHeight: 1.4,

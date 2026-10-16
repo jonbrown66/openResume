@@ -14,7 +14,7 @@ describe('CssEditorModal', () => {
       expect(style.sheet!.cssRules).toHaveLength(0);
       expect(editor.value).toContain(`.template-${template}`);
       expect(editor.value).not.toContain('.sidebar-section');
-      fireEvent.click(screen.getByRole('button', { name: 'Save', exact: true }));
+      fireEvent.click(screen.getByRole('button', { name: 'Save' }));
       expect(onSave).toHaveBeenCalledWith(editor.value);
     } finally { style.remove(); }
   });

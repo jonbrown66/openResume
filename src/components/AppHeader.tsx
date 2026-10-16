@@ -33,7 +33,7 @@ import { AnchoredPanel } from './ui/AnchoredPanel';
 import type { ResumeThemeConfig } from '@/types/theme';
 const ThemeEditorPanel = deferredComponent<ThemeEditorPanelProps>(
   () => import('./ThemeEditorPanel').then(module => ({ default: module.ThemeEditorPanel })),
-  props => <AnchoredPanel title={props.lang === 'zh' ? '样式编辑器' : 'Style Editor'} closeLabel={props.lang === 'zh' ? '关闭' : 'Close'} triggerRef={props.triggerRef} anchorRect={props.anchorRect} onClose={props.onClose}>
+  props => <AnchoredPanel compactPanel title={props.lang === 'zh' ? '样式编辑器' : 'Style Editor'} closeLabel={props.lang === 'zh' ? '关闭' : 'Close'} triggerRef={props.triggerRef} anchorRect={props.anchorRect} onClose={props.onClose}>
     <p role="status">{props.lang === 'zh' ? '加载样式…' : 'Loading styles…'}</p>
   </AnchoredPanel>,
 );

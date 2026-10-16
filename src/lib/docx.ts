@@ -76,7 +76,7 @@ export function buildDocx(draft: ResumeDraft, theme: ResumeThemeConfig, template
   const margin = Math.round(theme.pageMargin * 56.6929);
   const nativeFont = fontNativeName(theme.fontFamily);
   const eastAsiaFont = isBuiltinFont(theme.fontFamily) && !['Noto Serif SC', 'Noto Sans SC'].includes(resolveFont(theme.fontFamily)) ? (resolveFont(theme.fontFamily) === 'Noto Serif' ? 'Noto Serif SC' : 'Noto Sans SC') : nativeFont;
-  return new Document({ styles: { default: { document: { run: { font: { ascii: nativeFont, hAnsi: nativeFont, eastAsia: eastAsiaFont, cs: nativeFont }, size: theme.fontSize * 2 },
+  return new Document({ background: { color: theme.backgroundColor.slice(1) }, styles: { default: { document: { run: { font: { ascii: nativeFont, hAnsi: nativeFont, eastAsia: eastAsiaFont, cs: nativeFont }, size: theme.fontSize * 2 },
     paragraph: { spacing: { line: Math.round(theme.lineHeight * 240) } } } } },
     numbering: { config: [{ reference: 'resume-numbered', levels: Array.from({ length: 9 }, (_, level) => ({ level, format: LevelFormat.DECIMAL,
       text: `%${level + 1}.`, alignment: AlignmentType.LEFT, style: { paragraph: { indent: { left: 360 * (level + 1), hanging: 180 } } } })) }] },

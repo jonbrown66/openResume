@@ -8,6 +8,7 @@ interface SliderControlProps {
   max: number;
   step: number;
   icon: React.ReactNode;
+  description?: string;
   onChange: (value: number) => void;
 }
 
@@ -19,6 +20,7 @@ export const SliderControl = memo(function SliderControl({
   max,
   step,
   icon,
+  description,
   onChange,
 }: SliderControlProps) {
   const labelId = useId();
@@ -38,11 +40,12 @@ export const SliderControl = memo(function SliderControl({
     <div className="ui-slider-control">
       <div className="ui-slider-label">
         <span aria-hidden="true">{icon}</span>
-        <span id={labelId} className="ui-label">{label}</span>
+        <span id={labelId} className="ui-label" title={description}>{label}</span>
       </div>
       <div className="ui-slider-row">
         <input
           aria-labelledby={labelId}
+          aria-describedby={description ? `${labelId}-description` : undefined}
           aria-valuetext={`${value}${unit ? ` ${unit}` : ''}`}
           type="range"
           min={min}
@@ -56,6 +59,7 @@ export const SliderControl = memo(function SliderControl({
         <div className="ui-slider-value">
           <input
             aria-label={`${label} (${unit || 'value'})`}
+            aria-describedby={description ? `${labelId}-description` : undefined}
             type="number"
             min={min}
             max={max}
@@ -67,6 +71,7 @@ export const SliderControl = memo(function SliderControl({
           {unit && <span aria-hidden="true">{unit}</span>}
         </div>
       </div>
+      {description && <span id={`${labelId}-description`} className="sr-only">{description}</span>}
     </div>
   );
 });

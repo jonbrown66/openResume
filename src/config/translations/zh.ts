@@ -54,6 +54,7 @@ export const zhTranslations: TranslationDefinition = {
   style: '样式',
   styleEditor: '样式编辑器',
   primaryColor: '强调色',
+  backgroundColor: '简历背景色',
   secondaryColor: '辅色',
   colors: '颜色',
   typography: '字体',
