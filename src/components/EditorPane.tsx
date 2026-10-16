@@ -1,12 +1,20 @@
-import { memo, useMemo, useCallback } from 'react';
+import { memo, useMemo, useCallback, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
-import { ListRestart, Undo, Redo } from 'lucide-react';
+import { ListRestart, Undo, Redo, BookOpen } from 'lucide-react';
 
 import type { AppLanguage, EditorMode, TranslationSet } from '@/config/ui';
 import type { ResumeDraft } from '@/types/resume';
 import { sanitizeMarkdownForDisplay, restoreAvatarFromDisplay } from '@/utils/markdownDisplay';
-import { BlockEditor } from './BlockEditor';
+import type { BlockEditorProps } from './BlockEditor';
+import { deferredComponent, useIdlePreload } from '@/lib/deferredComponent';
 import { EditorSkeleton } from './Skeleton';
+import { MarkdownGuide } from './MarkdownGuide';
+
+const BlockEditor = deferredComponent<BlockEditorProps>(
+  () => import('./BlockEditor').then(module => ({ default: module.BlockEditor })),
+  () => <EditorSkeleton />,
+);
+const editorPreloads = [BlockEditor.preload];
 
 interface EditorPaneProps {
   containerRef: React.RefObject<HTMLDivElement | null>;
@@ -44,6 +52,10 @@ export const EditorPane = memo(function EditorPane({
   onRedo,
 }: EditorPaneProps) {
   const displayMarkdown = useMemo(() => sanitizeMarkdownForDisplay(markdown), [markdown]);
+  const [guideOpen, setGuideOpen] = useState(false);
+  const guideTriggerRef = useRef<HTMLButtonElement>(null);
+  const guideLabel = lang === 'zh' ? 'Markdown 写法与样式' : 'Markdown guide';
+  useIdlePreload(editorPreloads);
 
   const handleMarkdownChange = useCallback((value: string) => {
     const restored = restoreAvatarFromDisplay(value, markdown);
@@ -51,13 +63,13 @@ export const EditorPane = memo(function EditorPane({
   }, [markdown, onMarkdownChange]);
 
   return (
-    <div onKeyDown={event => {
+    <><div onKeyDown={event => {
       if (!(event.ctrlKey || event.metaKey) || event.nativeEvent.isComposing) return;
       const key = event.key.toLowerCase();
       if (key === 'z') { event.preventDefault(); if (event.shiftKey) onRedo(); else onUndo(); }
       if (key === 'y') { event.preventDefault(); onRedo(); }
-    }} className="group/editor relative z-10 grid h-full min-h-0 flex-1 grid-rows-[auto_minmax(0,1fr)] border-r-0 border-[var(--app-border)] bg-[var(--app-surface)] transition-colors duration-200 print:hidden lg:border-r">
-      <div className="relative min-h-16">
+    }} className="group/editor relative z-10 grid h-full min-h-0 flex-1 grid-rows-[auto_minmax(0,1fr)] overflow-clip border-r-0 border-[var(--app-border)] bg-[var(--app-surface)] transition-colors duration-200 print:hidden lg:border-r">
+      <div className="relative flex min-h-16 flex-wrap items-center justify-between gap-2 p-3 sm:px-5">
         {isImporting ? (
           <motion.div
             className="absolute inset-0 z-30 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-sm overflow-y-auto custom-scrollbar"
@@ -68,12 +80,7 @@ export const EditorPane = memo(function EditorPane({
             <EditorSkeleton />
           </motion.div>
         ) : null}
-        <div className="absolute inset-x-0 top-2 z-20 opacity-0 group-hover/editor:opacity-100 transition-opacity duration-200 print:hidden pointer-events-none" />
-      </div>
-
-      <div
-        className="absolute start-3 top-3 z-30 opacity-100 transition-opacity duration-200 print:hidden sm:start-1/2 sm:-translate-x-1/2 sm:top-5"
-      >
+      <div className="min-w-0 print:hidden">
         <div className="app-panel ui-toolbar relative inline-flex max-w-[calc(100vw-1rem)] rounded-xl border p-1">
           <button
             type="button"
@@ -116,8 +123,12 @@ export const EditorPane = memo(function EditorPane({
         </div>
       </div>
 
-      {(
-        <div className="absolute right-3 top-3 z-30 flex gap-1.5 sm:right-5 sm:top-5">
+        <div className="ms-auto flex items-center gap-1.5">
+          <button type="button" ref={guideTriggerRef} onClick={() => setGuideOpen(open => !open)}
+            title={guideLabel} aria-label={guideLabel} aria-expanded={guideOpen} aria-haspopup="dialog"
+            className="app-panel app-control inline-flex min-h-10 items-center justify-center gap-1.5 rounded-lg border px-2 text-xs sm:min-h-0">
+            <BookOpen size={16} aria-hidden="true" /><span>{lang === 'zh' ? '写法' : 'Guide'}</span>
+          </button>
           <button
             type="button"
             onClick={onUndo}
@@ -153,7 +164,7 @@ export const EditorPane = memo(function EditorPane({
             <ListRestart size={16} />
           </button>
         </div>
-      )}
+      </div>
 
       <div
         ref={containerRef}
@@ -175,5 +186,8 @@ export const EditorPane = memo(function EditorPane({
         )}
       </div>
     </div>
+    {guideOpen && <MarkdownGuide lang={lang} triggerRef={guideTriggerRef} onClose={() => setGuideOpen(false)}
+      onUseBlocks={() => { setGuideOpen(false); onEditorModeChange('blocks'); }} />}
+    </>
   );
 });

@@ -8,6 +8,23 @@ import {
 } from '@/utils/resumeDocument';
 
 describe('resumeDocument', () => {
+  it('keeps section text and separate untitled, company-only and date-only entries on round trip', () => {
+    const draft = { frontmatter: { name: 'Test', title: '', contact: '' }, summary: '', summaryTitle: '', sections: [{
+      title: '工作经历', content: '章节说明', entries: [
+        { heading: '', meta: '', organization: '', content: '- First' },
+        { heading: '', meta: '', organization: 'Company', content: '- Second' },
+        { heading: '', meta: '2020 - 2023', organization: '', content: '- Third' },
+      ],
+    }] };
+    expect(parseMarkdownToResumeDraft(serializeResumeDraftToMarkdown(draft))).toEqual(draft);
+  });
+  it('preserves body-only sections and literal pipes inside entry fields', () => {
+    const draft = { frontmatter: { name: 'Test', title: '', contact: '' }, summary: '', summaryTitle: '', sections: [
+      { title: '技能', content: '- React\n- CSS', entries: [] },
+      { title: '项目', content: '', entries: [{ heading: 'Lead | Platform', meta: '2020 | Remote', organization: '', content: '- Delivered' }] },
+    ] };
+    expect(parseMarkdownToResumeDraft(serializeResumeDraftToMarkdown(draft))).toEqual(draft);
+  });
   it('parses english markdown into a draft with frontmatter and sections', () => {
     const draft = parseMarkdownToResumeDraft(defaultMarkdownEn);
 
@@ -156,7 +173,8 @@ title: 高级软件测试工程师
       organization: '专科 · 软件技术',
       meta: '2015/9 - 2018/6 | 河源',
     });
-    expect(formatted).toContain('### 河源职业技术学院 | 2015/9 - 2018/6 | 河源');
+    expect(formatted).toContain('### 河源职业技术学院 | 2015/9 - 2018/6 \\| 河源');
+    expect(parseMarkdownToResumeDraft(formatted).sections[0].entries[0].meta).toBe('2015/9 - 2018/6 | 河源');
     expect(formatted).toContain('**专科 · 软件技术**');
   });
 
@@ -179,9 +197,9 @@ Realme移动通讯有限公司（软通动力） | Android系统模块测试负�
 
     const formatted = formatResumeMarkdown(markdown);
 
-    expect(formatted).toContain('### Android系统模块测试负责人 | 2022-04 - 2025-12 | 深圳');
+    expect(formatted).toContain('### Android系统模块测试负责人 | 2022-04 - 2025-12 \\| 深圳');
     expect(formatted).toContain('**Realme移动通讯有限公司（软通动力）**');
-    expect(formatted).toContain('### 专科 · 软件技术 | 2015/9 - 2018/6 | 河源');
+    expect(formatted).toContain('### 专科 · 软件技术 | 2015/9 - 2018/6 \\| 河源');
     expect(formatted).toContain('**河源职业技术学院**');
   });
 

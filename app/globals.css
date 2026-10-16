@@ -1238,6 +1238,11 @@ html, body {
 .app-ui button.app-panel { border-radius: var(--ui-radius-control); box-shadow: none; }
 .app-ui .app-panel.ui-toolbar { box-shadow: none; }
 .app-ui .ui-composer { border-radius: var(--ui-radius-control); box-shadow: none; }
+.app-ui .ui-composer textarea { display: block; border: 0; border-radius: 0; box-shadow: none; }
+.app-ui .ui-composer textarea:focus-visible { outline: 2px solid transparent; outline-offset: -2px; box-shadow: none; }
+@media (forced-colors: active) {
+  .app-ui .ui-composer:has(textarea:focus-visible) { outline: 2px solid Highlight; outline-offset: 2px; }
+}
 .app-ui .ui-chat-bubble { border-radius: var(--ui-radius-panel); box-shadow: none; }
 .app-ui .ui-entry-card { border-color: transparent; border-radius: var(--ui-radius-control); }
 .app-ui :where(input,textarea)::selection { background: var(--ui-selected-bg); color: var(--foreground); }
@@ -1250,6 +1255,10 @@ html, body {
 .ui-panel-heading h2 { font-size: 16px; font-weight: 600; color: var(--foreground); }
 .ui-panel-content { padding: 16px; min-block-size: 0; overflow-y: auto; overscroll-behavior: contain; scroll-padding-block: 12px; }
 .ui-panel-footer { flex-shrink: 0; padding: 16px; border-block-start: 1px solid var(--app-border); background: var(--app-surface); }
+.ui-anchored-panel[data-compact-panel] .ui-panel-heading { padding: 6px 12px; }
+.ui-anchored-panel[data-compact-panel] .ui-panel-heading h2 { font-size: 14px; }
+.ui-anchored-panel[data-compact-panel] .ui-panel-content { padding: 12px; }
+.ui-anchored-panel[data-compact-panel] .ui-panel-footer { padding: 8px 12px; }
 .ui-style-form { display: grid; gap: 24px; }
 .ui-style-sliders { display: grid; gap: 16px; }
 .ui-select-overlay { z-index: 240 !important; }
@@ -1307,7 +1316,7 @@ body:has([role=dialog][aria-modal=true]) .ui-floating-tools:not(:has([role=dialo
 @media (max-width: 1023px) { :root { --ui-control-size: 44px; --ui-field-size: 44px; } }
 @media (max-width: 639px) {
   .app-ui .app-shell { border-radius: 0; }
-  .ui-anchored-panel { inset-inline: 12px !important; inline-size: auto; }
+  .ui-anchored-panel:not([data-compact-panel]) { inset-inline: 12px !important; inline-size: auto; }
   .app-ui :where(input,textarea,select):not([data-code-editor],.resume-template *) { font-size: 16px; }
   .app-ui .ui-number-field { inline-size: 60px; }
   .app-ui .ui-slider-value .ui-number-field { font-size: 16px; }

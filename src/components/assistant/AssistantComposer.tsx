@@ -70,7 +70,7 @@ export function AssistantComposer({
           }}
           placeholder={placeholder}
           rows={2}
-          className="min-h-[72px] w-full resize-none bg-transparent px-2 py-1 text-sm leading-6 text-zinc-700 outline-none placeholder:text-zinc-400 dark:text-zinc-100 dark:placeholder:text-zinc-500"
+          className="min-h-[72px] w-full resize-none bg-transparent px-2 py-1 text-sm leading-6 text-zinc-700 placeholder:text-zinc-400 dark:text-zinc-100 dark:placeholder:text-zinc-500"
         />
         <div className="mt-1.5 flex justify-end">
           <button

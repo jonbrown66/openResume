@@ -40,20 +40,27 @@ function parseFrontmatter(markdown: string): {
   };
 }
 
+const escapeEntryField = (value: string) => value.replace(/\\/g, '\\\\').replace(/\|/g, '\\|');
+const unescapeEntryField = (value: string) => value.replace(/\\([\\|])/g, '$1');
+
 function parseEntry(block: string): ResumeEntry {
   const lines = block.trim().split('\n');
-  const rawHeading = lines.shift()?.replace(/^###\s+/, '').trim() ?? '';
+  const rawHeading = lines.shift()?.replace(/^###(?:\s+|$)/, '').trim() ?? '';
 
   // Use the LAST `|` to split heading and meta, so titles containing `|` are preserved
-  const lastPipeIndex = rawHeading.lastIndexOf('|');
+  let lastPipeIndex = -1;
+  for (let i = 0; i < rawHeading.length; i++) {
+    if (rawHeading[i] === '\\') { i++; continue; }
+    if (rawHeading[i] === '|') lastPipeIndex = i;
+  }
   let heading: string;
   let meta: string;
 
-  if (lastPipeIndex > 0) {
-    heading = rawHeading.slice(0, lastPipeIndex).trim();
-    meta = rawHeading.slice(lastPipeIndex + 1).trim();
+  if (lastPipeIndex >= 0) {
+    heading = unescapeEntryField(rawHeading.slice(0, lastPipeIndex).trim());
+    meta = unescapeEntryField(rawHeading.slice(lastPipeIndex + 1).trim());
   } else {
-    heading = rawHeading;
+    heading = unescapeEntryField(rawHeading);
     meta = '';
   }
 
@@ -91,26 +98,15 @@ function parseEntry(block: string): ResumeEntry {
 function parseSection(block: string): ResumeSection {
   const lines = block.trim().split('\n');
   const title = lines.shift()?.replace(/^##\s+/, '').trim() ?? '';
-  const entryStartIndex = lines.findIndex((line) => /^###\s+/.test(line.trim()));
+  const entryStartIndex = lines.findIndex((line) => /^###(?:\s|$)/.test(line.trim()));
 
   if (entryStartIndex === -1) {
-    // No explicit ### entries.
-    // To ensure this content is editable in the BlockEditor (which only renders entries),
-    // wrap the section-level content into a single, untitled entry.
+    // Body-only sections (e.g. skills) do not need artificial empty entries.
     const rawContent = lines.join('\n').trim();
     return {
       title,
-      content: '', // Clear section-level content
-      entries: rawContent
-        ? [
-            {
-              heading: '',
-              meta: '',
-              organization: '',
-              content: rawContent,
-            },
-          ]
-        : [],
+      content: rawContent,
+      entries: [],
     };
   }
 
@@ -118,7 +114,7 @@ function parseSection(block: string): ResumeSection {
   const entryBlocks = lines
     .slice(entryStartIndex)
     .join('\n')
-    .split(/\n(?=###\s+)/)
+    .split(/\n(?=###(?:[ \t]|$))/m)
     .map((item) => item.trim())
     .filter(Boolean);
 
@@ -219,11 +215,18 @@ function removeBulletMarkersFromSummary(summary: string) {
 
 export function formatResumeMarkdown(markdown: string): string {
   const cleanedMarkdown = removeBodyThematicBreaks(markdown);
-  const draft = parseRawResumeText(cleanedMarkdown, /[\u4e00-\u9fa5]/.test(cleanedMarkdown) ? 'zh' : 'en');
+  const draft = /^###(?:[ \t]|$)/m.test(cleanedMarkdown)
+    ? parseMarkdownToResumeDraft(cleanedMarkdown)
+    : parseRawResumeText(cleanedMarkdown, /[\u4e00-\u9fa5]/.test(cleanedMarkdown) ? 'zh' : 'en');
 
   return serializeResumeDraftToMarkdown({
     ...draft,
     summary: removeBulletMarkersFromSummary(draft.summary),
+    sections: draft.sections.map(section => {
+      const entry = section.entries[0];
+      return section.entries.length === 1 && !section.content && !entry.heading && !entry.meta && !entry.organization
+        ? { ...section, content: entry.content, entries: [] } : section;
+    }),
   });
 }
 
@@ -258,9 +261,9 @@ function serializeSection(section: ResumeSection): string {
   for (const entry of section.entries) {
     lines.push('');
 
-    if (entry.heading || entry.meta) {
-      lines.push(`### ${entry.heading}${entry.meta ? ` | ${entry.meta}` : ''}`.trim());
-    }
+    // Even an unfinished entry needs a boundary, so company/date-only entries
+    // and multiple untitled entries survive switching modes and reloading.
+    lines.push(`### ${escapeEntryField(entry.heading)}${entry.meta ? ` | ${escapeEntryField(entry.meta)}` : ''}`.trim());
 
     if (entry.organization) {
       lines.push(`**${entry.organization}**`);

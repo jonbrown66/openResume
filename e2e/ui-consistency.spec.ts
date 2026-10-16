@@ -46,6 +46,25 @@ test('markdown editor fills the pane without rounded focus borders or nested scr
   })).toBe(true);
 });
 
+test('assistant composer has one outer focus border and no inner textarea frame', async ({ page }) => {
+  await page.getByRole('button', { name: 'Open AI assistant', exact: true }).click();
+  const input = page.locator('.ui-composer textarea');
+  await input.fill('Polish my resume');
+  await expect(input).toBeFocused();
+  const style = await input.evaluate(element => {
+    const inner = getComputedStyle(element);
+    const outer = getComputedStyle(element.parentElement!);
+    return { outline: inner.outlineColor, border: inner.borderWidth, radius: inner.borderRadius,
+      display: inner.display, outerBorder: outer.borderWidth };
+  });
+  expect(style.outline).toBe('rgba(0, 0, 0, 0)');
+  expect(style.border).toBe('0px');
+  expect(style.radius).toBe('0px');
+  expect(style.display).toBe('block');
+  expect(style.outerBorder).toBe('1px');
+  await expect(page.locator('.ui-composer').getByRole('button', { name: 'Send', exact: true })).toBeEnabled();
+});
+
 test('short-screen settings scroll, stay above tools and restore keyboard focus', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 568 });
   const dialog = await settings(page);
