@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const { addToast, requestResumeAssistant } = vi.hoisted(() => ({
@@ -71,12 +71,10 @@ describe('AssistantWidget', () => {
     ).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Ask Anything' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Edit Resume' })).not.toBeInTheDocument();
-    const memoryHint = screen.getByText('Only the latest 20 messages are kept.');
-    const providerMeta = screen.getAllByText(/Google Gemini/).at(-1)!;
-
-    expect(memoryHint).toHaveClass('text-right');
-    expect(memoryHint.parentElement).toBe(providerMeta.parentElement);
-    expect(memoryHint.parentElement).toHaveClass('flex', 'items-center', 'justify-between');
+    expect(screen.queryByText('Only the latest 20 messages are kept.')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Settings.*Google Gemini/ })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Target role / job description (optional)' })).toHaveAttribute('aria-expanded', 'false');
+    expect(screen.getByRole('group', { name: 'Assistant tasks' })).toBeInTheDocument();
     expect(
       screen.getByPlaceholderText('Describe how the assistant should revise your resume...'),
     ).toBeInTheDocument();
@@ -100,8 +98,7 @@ describe('AssistantWidget', () => {
     const conversation = screen.getByTestId('assistant-conversation');
 
     expect(panel).toHaveClass(
-      'h-[min(720px,calc(100dvh-5.5rem))]',
-      'w-[calc(100vw-1rem)]',
+      'ui-assistant-panel',
       'sm:h-[min(680px,calc(100dvh-3rem))]',
       'sm:w-[min(540px,calc(100vw-2rem))]',
     );
@@ -272,12 +269,9 @@ contact: jane@example.com
     });
     fireEvent.click(screen.getByRole('button', { name: 'Send' }));
 
-    expect(
-      await screen.findByText((_, element) =>
-        element?.textContent ===
-        'High-risk changes detected: work experience order changed; work experience dates changed.',
-      ),
-    ).toBeInTheDocument();
+    expect(await screen.findByText('High-risk changes detected:')).toBeInTheDocument();
+    expect(screen.getByText('work experience order changed')).toBeInTheDocument();
+    expect(screen.getByText('work experience dates changed')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Apply to Resume' })).toBeInTheDocument();
   });
 
@@ -343,7 +337,7 @@ contact: jane@example.com
     fireEvent.click(screen.getByRole('button', { name: 'Open AI assistant' }));
 
     expect(screen.queryByText('Anthropic · claude-opus-4-8')).not.toBeInTheDocument();
-    expect(screen.getByText('The current AI provider is not fully configured. Configure it before using the assistant.')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Settings.*The current AI provider is not fully configured/ })).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Configure' }));
 
@@ -553,8 +547,8 @@ contact: jane@example.com
 
     expect(screen.queryByRole('button', { name: 'Clear History' })).not.toBeInTheDocument();
 
-    const confirmBtn = screen.getByRole('button', { name: '确认清空' });
-    const cancelBtn = screen.getByRole('button', { name: '取消' });
+    const confirmBtn = screen.getByRole('button', { name: 'Confirm clear' });
+    const cancelBtn = screen.getByRole('button', { name: 'Cancel' });
     expect(confirmBtn).toBeInTheDocument();
     expect(cancelBtn).toBeInTheDocument();
 
@@ -565,7 +559,7 @@ contact: jane@example.com
     expect(addToast).toHaveBeenCalledWith('Chat history cleared.', 'success');
 
     expect(screen.queryByRole('button', { name: 'Clear History' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: '确认清空' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Confirm clear' })).not.toBeInTheDocument();
   });
 
   it('does not clear history if the user cancels confirmation', async () => {
@@ -607,11 +601,93 @@ contact: jane@example.com
     const clearBtn = screen.getByRole('button', { name: 'Clear History' });
     fireEvent.click(clearBtn);
 
-    const cancelBtn = screen.getByRole('button', { name: '取消' });
+    const cancelBtn = screen.getByRole('button', { name: 'Cancel' });
     fireEvent.click(cancelBtn);
 
     expect(screen.getByText('Revise summary.')).toBeInTheDocument();
     expect(screen.getByText('Sure, here is the suggestion.')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Clear History' })).toBeInTheDocument();
+  });
+});
+
+describe('assistant task and request recovery', () => {
+  beforeEach(() => { requestResumeAssistant.mockReset(); addToast.mockClear(); localStorage.clear(); });
+  function setup() {
+    const props = { lang: 'en' as const, markdown: defaultMarkdownEn, projectId: 'assistant-workflow', translations: translations.en,
+      settings: createSettings({ activeProvider: 'openai', providers: { ...DEFAULT_SETTINGS.providers, openai: { ...DEFAULT_SETTINGS.providers.openai, apiKey: 'test-key', model: 'test-model' } } }),
+      onApplyMarkdown: vi.fn() };
+    const view = render(<AssistantWidget {...props} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Open AI assistant' }));
+    const input = screen.getByPlaceholderText('Describe how the assistant should revise your resume...');
+    return { ...view, props, input, send: () => fireEvent.click(screen.getByRole('button', { name: 'Send' })) };
+  }
+  it('prepares editable tasks without sending and passes the target role to advisory requests', async () => {
+    requestResumeAssistant.mockResolvedValue({ reply: 'Evidence-backed role advice' });
+    const { input, send } = setup();
+    fireEvent.click(screen.getByRole('button', { name: 'Review resume' }));
+    expect((input as HTMLTextAreaElement).value).toContain('Review this resume');
+    expect(requestResumeAssistant).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: 'Match a role' }));
+    expect((input as HTMLTextAreaElement).value).toContain('Compare this resume');
+    fireEvent.change(screen.getByRole('textbox', { name: 'Target job description' }), { target: { value: 'React and accessibility' } });
+    send();
+    expect(await screen.findByText('Evidence-backed role advice')).toBeInTheDocument();
+    expect(requestResumeAssistant).toHaveBeenCalledWith(expect.objectContaining({ mode: 'chat', jobDescription: 'React and accessibility' }));
+  });
+  it('does not overwrite a question already being written when choosing a task', () => {
+    const { input } = setup();
+    fireEvent.change(input, { target: { value: 'My detailed question' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Prepare interview' }));
+    expect(input).toHaveValue('My detailed question');
+  });
+  it('aborts a stopped request, restores the question and ignores late results', async () => {
+    let finish!: (value: { reply: string }) => void;
+    requestResumeAssistant.mockImplementation(() => new Promise(resolve => { finish = resolve; }));
+    const { input, send } = setup();
+    fireEvent.change(input, { target: { value: 'Review this resume' } });
+    send();
+    const signal = requestResumeAssistant.mock.lastCall![0].signal as AbortSignal;
+    fireEvent.click(screen.getByRole('button', { name: 'Stop' }));
+    expect(signal.aborted).toBe(true);
+    expect(input).toHaveValue('Review this resume');
+    expect(screen.queryByText('Review this resume', { selector: '[data-assistant-message] p' })).not.toBeInTheDocument();
+    await act(async () => finish({ reply: 'Late cancelled reply' }));
+    expect(screen.queryByText('Late cancelled reply')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Send' })).toBeEnabled();
+    requestResumeAssistant.mockResolvedValueOnce({ reply: 'Fresh response' });
+    fireEvent.click(screen.getByRole('button', { name: 'Send' }));
+    expect(await screen.findByText('Fresh response')).toBeInTheDocument();
+    expect(screen.getAllByText('Review this resume')).toHaveLength(1);
+  });
+  it('restores failed questions and retries without duplicating user messages', async () => {
+    requestResumeAssistant.mockRejectedValueOnce(new Error('offline')).mockResolvedValueOnce({ reply: 'Recovered response' });
+    const { input, send } = setup();
+    fireEvent.change(input, { target: { value: 'Review this resume' } });
+    send();
+    expect(await screen.findByRole('alert')).toHaveTextContent('offline');
+    expect(input).toHaveValue('Review this resume');
+    fireEvent.click(screen.getByRole('button', { name: 'Retry last request' }));
+    expect(await screen.findByText('Recovered response')).toBeInTheDocument();
+    expect(screen.getAllByText('Review this resume')).toHaveLength(1);
+    expect(requestResumeAssistant.mock.lastCall?.[0].history).toEqual([]);
+  });
+  it('does not expose an apply action for advisory requests even if the model proposes changes', async () => {
+    requestResumeAssistant.mockResolvedValue({ reply: 'Review result', proposedMarkdown: defaultMarkdownEn + '\nUnexpected change' });
+    const { input, send } = setup();
+    fireEvent.change(input, { target: { value: 'How can I improve this resume?' } });
+    send();
+    await screen.findByText('Review result');
+    expect(screen.queryByRole('button', { name: 'Apply to Resume' })).not.toBeInTheDocument();
+  });
+  it('marks candidates outdated after manual edits', async () => {
+    requestResumeAssistant.mockResolvedValue({ reply: 'Edited result', proposedMarkdown: defaultMarkdownEn.replace('EMMA SANCHEZ', 'Candidate name') });
+    const { input, send, rerender, props } = setup();
+    fireEvent.change(input, { target: { value: 'Rewrite the summary' } });
+    send();
+    await screen.findByText('Edited result');
+    expect(screen.getByRole('button', { name: 'Apply to Resume' })).toBeEnabled();
+    rerender(<AssistantWidget {...props} markdown={defaultMarkdownEn + '\nManual edit'} />);
+    expect(screen.getByRole('button', { name: 'Outdated proposal' })).toBeDisabled();
+    expect(props.onApplyMarkdown).not.toHaveBeenCalled();
   });
 });

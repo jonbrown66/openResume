@@ -8,8 +8,10 @@ import type { ResumeThemeConfig } from '@/types/theme';
 import { exportToPdf, exportToWord, exportToHtml } from '@/utils/exportResume';
 import { useToast } from '@/components/ui/Toast';
 import { overlayTransition } from '@/lib/motion';
+import { parseMarkdownToResumeDraft } from '@/utils/resumeDocument';
 
 interface ExportMenuProps {
+  markdown?: string;
   canvasRef: React.RefObject<HTMLDivElement | null>;
   draft: ResumeDraft;
   translations: TranslationSet;
@@ -21,6 +23,7 @@ interface ExportMenuProps {
 type ExportState = 'idle' | 'exporting' | 'success';
 
 export const ExportMenu = memo(function ExportMenu({
+  markdown,
   canvasRef,
   draft,
   translations,
@@ -77,15 +80,18 @@ export const ExportMenu = memo(function ExportMenu({
     setIsOpen(false);
 
     try {
+      // An explicit export always reads the current text, even while the
+      // background preview is still processing the preceding revision.
+      const exportDraft = markdown === undefined ? draft : parseMarkdownToResumeDraft(markdown);
       switch (format) {
         case 'pdf':
-          await exportToPdf(canvasRef.current, draft, theme, template);
+          await exportToPdf(canvasRef.current, exportDraft, theme, template);
           break;
         case 'word':
-          await exportToWord(canvasRef.current, draft, theme, template);
+          await exportToWord(canvasRef.current, exportDraft, theme, template);
           break;
         case 'html':
-          await exportToHtml(canvasRef.current, draft, theme, template);
+          await exportToHtml(canvasRef.current, exportDraft, theme, template);
           break;
       }
 

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ArrowLeft, Trash2, X, Check } from 'lucide-react';
+import { ArrowLeft, Settings2, Trash2, X, Check } from 'lucide-react';
 
 interface AssistantHeaderProps {
   title: string;
@@ -10,6 +10,10 @@ interface AssistantHeaderProps {
   backLabel?: string;
   onClear?: () => void;
   clearLabel?: string;
+  confirmLabel?: string;
+  cancelLabel?: string;
+  onConfigure?: () => void;
+  configureLabel?: string;
 }
 
 export function AssistantHeader({
@@ -21,6 +25,10 @@ export function AssistantHeader({
   backLabel,
   onClear,
   clearLabel,
+  confirmLabel = 'Confirm clear',
+  cancelLabel = 'Cancel',
+  onConfigure,
+  configureLabel,
 }: AssistantHeaderProps) {
   const [isConfirming, setIsConfirming] = useState(false);
 
@@ -51,6 +59,8 @@ export function AssistantHeader({
         </div>
       </div>
       <div className="flex items-center gap-1.5 shrink-0">
+        {onConfigure && <button type="button" onClick={onConfigure} aria-label={configureLabel} title={configureLabel}
+          className="app-control flex h-10 w-10 items-center justify-center rounded-full"><Settings2 size={16} /></button>}
         {onClear && (
           isConfirming ? (
             <div className="flex items-center gap-1">
@@ -61,8 +71,8 @@ export function AssistantHeader({
                   setIsConfirming(false);
                 }}
                 className="app-control flex min-h-10 min-w-10 shrink-0 items-center justify-center rounded-full p-2 transition-colors sm:min-h-0 sm:min-w-0 text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/20"
-                aria-label="确认清空"
-                title="确认清空"
+                aria-label={confirmLabel}
+                title={confirmLabel}
               >
                 <Check size={16} strokeWidth={2.5} />
               </button>
@@ -70,8 +80,8 @@ export function AssistantHeader({
                 type="button"
                 onClick={() => setIsConfirming(false)}
                 className="app-control flex min-h-10 min-w-10 shrink-0 items-center justify-center rounded-full p-2 transition-colors sm:min-h-0 sm:min-w-0 text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800"
-                aria-label="取消"
-                title="取消"
+                aria-label={cancelLabel}
+                title={cancelLabel}
               >
                 <X size={16} strokeWidth={2.5} />
               </button>

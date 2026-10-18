@@ -9,6 +9,7 @@ import type { ResumeTemplate, TranslationSet } from '@/config/ui';
 import { DEFAULT_THEME_CONFIG, type ResumeThemeConfig } from '@/types/theme';
 
 interface PreviewPaneProps {
+  pending?: boolean;
   containerRef: RefObject<HTMLDivElement | null>;
   draft: ResumeDraft;
   resumeRef: RefObject<HTMLDivElement | null>;
@@ -27,12 +28,13 @@ interface PreviewPaneProps {
 }
 
 export const PreviewPane = memo(function PreviewPane({
+  pending = false,
   containerRef,
   draft,
   resumeRef,
   scale,
   template,
-  theme,
+  theme: currentTheme,
   translations,
   zoomPercent,
   lang,
@@ -44,7 +46,8 @@ export const PreviewPane = memo(function PreviewPane({
   currentFont,
 }: PreviewPaneProps) {
   const deferredDraft = useDeferredValue(draft);
-  const previewPending = deferredDraft !== draft;
+  const theme = useDeferredValue(currentTheme);
+  const previewPending = pending || deferredDraft !== draft || theme !== currentTheme;
   const templateSwitcherProps = useMemo(() => ({
     template,
     translations,

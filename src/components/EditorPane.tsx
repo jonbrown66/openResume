@@ -9,6 +9,7 @@ import type { BlockEditorProps } from './BlockEditor';
 import { deferredComponent, useIdlePreload } from '@/lib/deferredComponent';
 import { EditorSkeleton } from './Skeleton';
 import { MarkdownGuide } from './MarkdownGuide';
+import { readEditorSelection, type EditContext, type EditorSelection } from '@/utils/editingHistory';
 
 const BlockEditor = deferredComponent<BlockEditorProps>(
   () => import('./BlockEditor').then(module => ({ default: module.BlockEditor })),
@@ -26,7 +27,7 @@ interface EditorPaneProps {
   translations: TranslationSet;
   onDraftChange: (draft: ResumeDraft) => void;
   onEditorModeChange: (mode: EditorMode) => void;
-  onMarkdownChange: (value: string) => void;
+  onMarkdownChange: (value: string, context?: EditContext) => void;
   onFormatMarkdown: () => void;
   canUndo: boolean;
   canRedo: boolean;
@@ -54,12 +55,17 @@ export const EditorPane = memo(function EditorPane({
   const displayMarkdown = useMemo(() => sanitizeMarkdownForDisplay(markdown), [markdown]);
   const [guideOpen, setGuideOpen] = useState(false);
   const guideTriggerRef = useRef<HTMLButtonElement>(null);
+  const composing = useRef(false);
+  const compositionGroup = useRef(0);
+  const beforeSelection = useRef<EditorSelection | undefined>(undefined);
   const guideLabel = lang === 'zh' ? 'Markdown 写法与样式' : 'Markdown guide';
   useIdlePreload(editorPreloads);
 
   const handleMarkdownChange = useCallback((value: string) => {
     const restored = restoreAvatarFromDisplay(value, markdown);
-    onMarkdownChange(restored);
+    onMarkdownChange(restored, { group: composing.current ? `composition-${compositionGroup.current}` : 'markdown',
+      composing: composing.current, beforeSelection: beforeSelection.current });
+    beforeSelection.current = undefined;
   }, [markdown, onMarkdownChange]);
 
   return (
@@ -176,6 +182,18 @@ export const EditorPane = memo(function EditorPane({
             aria-label={lang === 'zh' ? '简历 Markdown' : 'Resume Markdown'}
             className="block h-full min-h-0 w-full resize-none overflow-y-auto bg-transparent px-4 pbs-3 pbe-4 font-mono text-[13px] leading-[1.75] text-zinc-800 selection:bg-zinc-200 dark:text-zinc-200 dark:selection:bg-zinc-700 sm:px-6 custom-scrollbar"
             value={displayMarkdown}
+            onBeforeInput={event => { beforeSelection.current = readEditorSelection(event.currentTarget); }}
+            onCompositionStart={event => {
+              composing.current = true;
+              compositionGroup.current++;
+              beforeSelection.current = readEditorSelection(event.currentTarget);
+              onMarkdownChange(markdown, { composing: true });
+            }}
+            onCompositionEnd={event => {
+              handleMarkdownChange(event.currentTarget.value);
+              composing.current = false;
+              handleMarkdownChange(event.currentTarget.value);
+            }}
             onChange={(e) => handleMarkdownChange(e.target.value)}
             spellCheck={false}
             placeholder={t.markdownPlaceholder}

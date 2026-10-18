@@ -1,6 +1,6 @@
 import { useLayoutEffect, useRef, useState, type PropsWithChildren, type RefObject, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
-import { motion, useReducedMotion } from 'framer-motion';
+import { motion, useIsPresent, useReducedMotion } from 'framer-motion';
 import { X } from 'lucide-react';
 import { useCompactViewport } from '@/hooks/useCompactViewport';
 import { useOverlayDialog } from '@/hooks/useOverlayDialog';
@@ -21,8 +21,9 @@ export function AnchoredPanel({ title, closeLabel, onClose, triggerRef, anchorRe
   const ref = useRef<HTMLDivElement>(null);
   const compact = useCompactViewport();
   const reduced = useReducedMotion();
+  const present = useIsPresent();
   const [position, setPosition] = useState({ top: 72, left: 12, maxHeight: 400 });
-  useOverlayDialog(true, ref, onClose, compact, triggerRef);
+  useOverlayDialog(present, ref, onClose, compact, triggerRef);
   useLayoutEffect(() => {
     const update = () => {
       const viewport = window.visualViewport;
@@ -35,12 +36,12 @@ export function AnchoredPanel({ title, closeLabel, onClose, triggerRef, anchorRe
     update(); window.addEventListener('resize', update); window.visualViewport?.addEventListener('resize', update); window.visualViewport?.addEventListener('scroll', update);
     return () => { window.removeEventListener('resize', update); window.visualViewport?.removeEventListener('resize', update); window.visualViewport?.removeEventListener('scroll', update); };
   }, [compact, compactPanel, triggerRef, anchorRect, width]);
-  return createPortal(<div className="app-ui ui-overlay-root" data-overlay-portal>
+  return createPortal(<div className="app-ui ui-overlay-root" data-overlay-portal inert={!present} style={!present ? { pointerEvents: 'none' } : undefined}>
     {compact && <div className="ui-backdrop" style={compactPanel ? { background: 'transparent' } : undefined} onMouseDown={onClose} />}
     <motion.div ref={ref} role="dialog" aria-modal={compact} aria-label={title} tabIndex={-1}
       data-compact-panel={compactPanel || undefined}
       className="app-panel ui-anchored-panel" style={{ ...position, width: compact && !compactPanel ? undefined : width, transformOrigin: 'top right' }}
-      initial={{ opacity: 0, y: reduced ? 0 : -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: reduced ? 0 : -2 }} transition={overlayTransition}>
+      initial={{ opacity: 0, y: reduced ? 0 : -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: reduced ? 0 : -2 }} transition={reduced ? { duration: 0 } : overlayTransition}>
       <div className="ui-panel-heading"><h2>{title}</h2><button type="button" className="app-control ui-icon-button" aria-label={closeLabel} onClick={onClose}><X size={18} /></button></div>
       <div className="ui-panel-content">{children}</div>
       {footer && <div className="ui-panel-footer">{footer}</div>}

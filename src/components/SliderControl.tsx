@@ -1,4 +1,4 @@
-import { memo, useCallback, useId, type CSSProperties } from 'react';
+import { memo, useCallback, useId, useState, type CSSProperties } from 'react';
 
 interface SliderControlProps {
   label: string;
@@ -24,17 +24,29 @@ export const SliderControl = memo(function SliderControl({
   onChange,
 }: SliderControlProps) {
   const labelId = useId();
+  const [inputDraft, setInputDraft] = useState<string | null>(null);
 
   const handleSliderChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setInputDraft(null);
     onChange(parseFloat(e.target.value));
   }, [onChange]);
 
   const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = parseFloat(e.target.value);
-    if (!isNaN(val)) {
-      onChange(Math.min(max, Math.max(min, val)));
+    setInputDraft(e.target.value);
+  }, []);
+
+  const commitInput = () => {
+    if (inputDraft !== null && inputDraft.trim() !== '') {
+      const parsed = Number(inputDraft);
+      if (Number.isFinite(parsed)) {
+        const clamped = Math.min(max, Math.max(min, parsed));
+        const snapped = Number((min + Math.round((clamped - min) / step) * step).toFixed(6));
+        const next = Math.min(max, Math.max(min, snapped));
+        if (next !== value) onChange(next);
+      }
     }
-  }, [min, max, onChange]);
+    setInputDraft(null);
+  };
 
   return (
     <div className="ui-slider-control">
@@ -64,8 +76,22 @@ export const SliderControl = memo(function SliderControl({
             min={min}
             max={max}
             step={step}
-            value={value}
+            value={inputDraft ?? value}
             onChange={handleInputChange}
+            onBlur={commitInput}
+            onKeyDown={event => {
+              if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
+                event.preventDefault();
+                const current = inputDraft === null || inputDraft.trim() === '' ? value : Number(inputDraft);
+                const next = Math.min(max, Math.max(min, Number(((Number.isFinite(current) ? current : value) + (event.key === 'ArrowUp' ? step : -step)).toFixed(6))));
+                setInputDraft(null);
+                if (next !== value) onChange(next);
+              }
+              if (event.key === 'Enter') { event.preventDefault(); commitInput(); }
+              if (event.key === 'Escape' && inputDraft !== null) {
+                event.preventDefault(); event.stopPropagation(); setInputDraft(null);
+              }
+            }}
             className="ui-number-field"
           />
           {unit && <span aria-hidden="true">{unit}</span>}

@@ -3,6 +3,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
   ASSISTANT_MEMORY_LIMIT,
+  ASSISTANT_JOB_DESCRIPTION_LIMIT,
+  useAssistantContext,
   useAssistantMemory,
   type AssistantMessage,
 } from '@/hooks/useAssistantMemory';
@@ -90,5 +92,37 @@ describe('useAssistantMemory', () => {
 
     setItemSpy.mockRestore();
     removeItemSpy.mockRestore();
+  });
+});
+
+describe('useAssistantContext', () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it('preserves a per-project job description across remounts', async () => {
+    const first = renderHook(() => useAssistantContext('project-context'));
+    act(() => {
+      first.result.current.setJobDescription('React accessibility and design systems');
+      first.result.current.setShowJobDescription(true);
+    });
+    await waitFor(() => expect(localStorage.getItem('openresume-assistant-context-v1:project-context')).toContain('React accessibility'));
+    first.unmount();
+
+    const second = renderHook(() => useAssistantContext('project-context'));
+    expect(second.result.current.jobDescription).toBe('React accessibility and design systems');
+    expect(second.result.current.showJobDescription).toBe(true);
+  });
+
+  it('caps stored job descriptions and keeps projects isolated', async () => {
+    const { result, rerender } = renderHook(({ projectId }) => useAssistantContext(projectId), {
+      initialProps: { projectId: 'project-large-context' },
+    });
+    act(() => result.current.setJobDescription('x'.repeat(ASSISTANT_JOB_DESCRIPTION_LIMIT + 500)));
+    expect(result.current.jobDescription).toHaveLength(ASSISTANT_JOB_DESCRIPTION_LIMIT);
+
+    rerender({ projectId: 'project-other-context' });
+    expect(result.current.jobDescription).toBe('');
+    expect(result.current.showJobDescription).toBe(false);
   });
 });

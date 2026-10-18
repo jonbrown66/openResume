@@ -51,8 +51,73 @@ function geometry(element: HTMLElement, cache: GeometryCache) {
 
 /** Cut only between rendered text lines, images and table rows. Coordinates are unscaled. */
 export function paginateResume(source: HTMLElement, pageHeight: number, margin: number): PageSlice[] {
+  return Array.from(paginatePages(source, pageHeight, margin));
+}
+
+/** Yield between page projections so long documents do not monopolize input. */
+export async function paginateResumeAsync(
+  source: HTMLElement,
+  pageHeight: number,
+  margin: number,
+  cancelled: () => boolean,
+  onFirstPage?: (pages: PageSlice[]) => void,
+): Promise<PageSlice[] | null> {
+  const pages: PageSlice[] = [];
+  const iterator = paginatePages(source, pageHeight, margin);
+  while (!cancelled()) {
+    const next = iterator.next();
+    if (next.done) return pages;
+    pages.push(next.value);
+    if (pages.length === 1) onFirstPage?.([...pages]);
+    await new Promise<void>(resolve => setTimeout(resolve, 0));
+  }
+  iterator.return();
+  return null;
+}
+
+interface IntervalLookup {
+  firstStartAtOrAfter(offset: number): number;
+  findCrossing(start: number, end: number): [number, number] | undefined;
+}
+
+/** Prefix maxima locate page-edge crossings without scanning every line. */
+function buildIntervalLookup(merged: Array<[number, number]>): IntervalLookup {
+  const starts = merged.map(([start]) => start);
+  const prefixBottoms: number[] = [];
+  let prefixBottom = -Infinity;
+  for (const [, bottom] of merged) {
+    prefixBottom = Math.max(prefixBottom, bottom);
+    prefixBottoms.push(prefixBottom);
+  }
+
+  const firstStartAtOrAfter = (target: number) => {
+    let low = 0;
+    let high = starts.length;
+    while (low < high) {
+      const middle = Math.floor((low + high) / 2);
+      if (starts[middle] < target) low = middle + 1;
+      else high = middle;
+    }
+    return low;
+  };
+
+  return {
+    firstStartAtOrAfter,
+    findCrossing(start, end) {
+      for (let index = firstStartAtOrAfter(end) - 1; index >= 0; index -= 1) {
+        if (prefixBottoms[index] <= end + 0.1) return undefined;
+        if (merged[index][0] < start - 0.1 && merged[index][1] > end + 0.1) {
+          return merged[index];
+        }
+      }
+      return undefined;
+    },
+  };
+}
+
+function* paginatePages(source: HTMLElement, pageHeight: number, margin: number): Generator<PageSlice, void, unknown> {
   ensureTextLineHeight(source);
-  // Reuse geometry across page clones, never across edits, theme or font changes.
+  // Reuse geometry across page projections, never across edits, theme or font changes.
   const cache: GeometryCache = new Map();
   const top = source.getBoundingClientRect().top;
   const unsafe: Array<[number, number]> = [];
@@ -92,10 +157,10 @@ export function paginateResume(source: HTMLElement, pageHeight: number, margin: 
     if (previous && interval[0] < previous[1] - 0.1) previous[1] = Math.max(previous[1], interval[1]);
     else merged.push([...interval]);
   }
-  const slices: PageSlice[] = [];
+  const intervals = buildIntervalLookup(merged);
   for (let offset = 0; offset < total;) {
     let end = Math.min(offset + pageHeight, total);
-    const crossing = merged.find(([start, bottom]) => start < end - 0.1 && bottom > end + 0.1);
+    const crossing = intervals.findCrossing(offset, end);
     if (crossing && crossing[0] > offset + 1) end = crossing[0];
     // An oversized image/row cannot fit; advance rather than looping forever.
     if (end <= offset + 1) end = Math.min(offset + pageHeight, total);
@@ -104,10 +169,9 @@ export function paginateResume(source: HTMLElement, pageHeight: number, margin: 
     // Keep selector positions (:first-child/:nth-child) identical to the measured DOM.
     // The original styles remain mounted and are collected separately for export.
     clone.querySelectorAll('style').forEach(style => { style.textContent = ''; });
-    slices.push({ offset, inset, height: end - offset, html: clone.innerHTML });
+    yield { offset, inset, height: end - offset, html: clone.innerHTML };
     offset = end;
   }
-  return slices;
 }
 
 /** Hide off-page content without changing margins, grid tracks or selector matching. */

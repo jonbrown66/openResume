@@ -1,4 +1,4 @@
-import { memo, useState, useCallback, useEffect, useRef, useId } from 'react';
+import { memo, useState, useCallback, useRef, useId } from 'react';
 import { Plus, Trash2, ArrowUp, ArrowDown, List } from 'lucide-react';
 import type { AppLanguage, TranslationSet } from '@/config/ui';
 import type { ResumeDraft, ResumeSection, ResumeEntry } from '@/types/resume';
@@ -31,10 +31,15 @@ function Field({ label, value, onChange, multiline = false, hint, placeholder, l
 
 export const BlockEditor = memo(function BlockEditor({ draft, lang, translations: t, onChange }: BlockEditorProps) {
   const [state, setState] = useState(draft);
+  const [previousDraft, setPreviousDraft] = useState(draft);
   const stateRef = useRef(draft);
+  if (previousDraft !== draft) {
+    setPreviousDraft(draft);
+    setState(draft);
+    stateRef.current = draft;
+  }
   const zh = lang === 'zh';
   const sectionPickerId = useId();
-  useEffect(() => { setState(draft); stateRef.current = draft; }, [draft]);
   const update = useCallback((updater: (prev: ResumeDraft) => ResumeDraft) => {
     const next = updater(stateRef.current); stateRef.current = next; setState(next); onChange(next);
   }, [onChange]);

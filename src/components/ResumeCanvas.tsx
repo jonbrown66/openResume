@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { pageWidthPx, pageHeightPx } from '@/constants';
 import { ensureResumeFonts, fontFamily } from '@/lib/resumeFonts';
 import type { ResumeThemeConfig } from '@/types/theme';
-import { paginateResume, type PageSlice } from '@/utils/pagination';
+import { paginateResumeAsync, type PageSlice } from '@/utils/pagination';
 interface Props extends PropsWithChildren { canvasRef?: RefObject<HTMLDivElement | null>; scale: number; theme?: ResumeThemeConfig; template?: string; pending?: boolean; lang?: 'en' | 'zh' }
 // A fresh dangerouslySetInnerHTML prop can replace the entire subtree even when
 // only the surrounding page colors changed. Keep measured HTML mounted.
@@ -16,7 +16,8 @@ export const ResumeCanvas = memo(function ResumeCanvas({ canvasRef, children, sc
   const measureId = useId();
   const layoutKey = JSON.stringify([template, theme?.fontFamily, theme?.fontSize,
     theme?.lineHeight, theme?.sectionSpacing, theme?.pageMargin, theme?.customCss]);
-  const [measurement, setMeasurement] = useState<{ pages: PageSlice[]; content: typeof children; layoutKey: string }>({ pages: [], content: null, layoutKey: '' });
+  const [measurement, setMeasurement] = useState<{ pages: PageSlice[]; content: typeof children; layoutKey: string; complete: boolean }>({ pages: [], content: null, layoutKey: '', complete: false });
+  const expectedPageCount = useRef(1);
   const pages = measurement.pages;
   const [fontResult, setFontResult] = useState<{ content: typeof children; error?: string }>({ content: null });
   const [fontRetry, setFontRetry] = useState(0);
@@ -26,12 +27,34 @@ export const ResumeCanvas = memo(function ResumeCanvas({ canvasRef, children, sc
   useEffect(() => {
     const node = measureRef.current;
     if (!node) return;
-    let frame = 0; let disposed = false; let fontsReady = false;
+    let frame = 0; let timer: ReturnType<typeof setTimeout>; let disposed = false; let fontsReady = false;
+    let generation = 0;
+    let measuredSize = '';
+    const size = () => `${node.offsetWidth}:${node.offsetHeight}`;
     const measure = () => {
       cancelAnimationFrame(frame);
-      frame = requestAnimationFrame(() => {
-        if (!disposed && fontsReady) setMeasurement({ pages: paginateResume(node, viewportHeight, marginPx), content: children, layoutKey });
-      });
+      clearTimeout(timer);
+      const token = ++generation;
+      if (!fontsReady || disposed) return;
+      timer = setTimeout(() => {
+        frame = requestAnimationFrame(async () => {
+          if (disposed || generation !== token) return;
+          const pages = await paginateResumeAsync(
+            node,
+            viewportHeight,
+            marginPx,
+            () => disposed || generation !== token,
+            firstPage => {
+              if (disposed || generation !== token) return;
+              setMeasurement({ pages: firstPage, content: children, layoutKey, complete: false });
+            },
+          );
+          if (!pages || disposed || generation !== token) return;
+          measuredSize = size();
+          expectedPageCount.current = Math.max(1, pages.length);
+          setMeasurement({ pages, content: children, layoutKey, complete: true });
+        });
+      }, 40);
     };
     ensureResumeFonts(theme?.fontFamily ?? 'Geist', node.textContent ?? '').then(() => {
       if (disposed) return;
@@ -45,11 +68,13 @@ export const ResumeCanvas = memo(function ResumeCanvas({ canvasRef, children, sc
       setFontResult({ content: children, error: error instanceof Error ? error.message : 'Font could not be loaded. Choose a built-in font or retry.' });
       measure();
     });
-    const observer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(measure);
+    const observer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(() => {
+      if (size() !== measuredSize) measure();
+    });
     observer?.observe(node);
-    return () => { disposed = true; cancelAnimationFrame(frame); observer?.disconnect(); };
+    return () => { disposed = true; clearTimeout(timer); cancelAnimationFrame(frame); observer?.disconnect(); };
   }, [children, marginPx, viewportHeight, theme?.fontFamily, fontRetry, layoutKey]);
-  const pageCount = Math.max(1, pages.length);
+  const pageCount = Math.max(1, pages.length, expectedPageCount.current);
   const gap = 24;
   const variables = {
     '--resume-theme-accent': theme?.primaryColor, '--resume-theme-secondary': theme?.secondaryColor,
@@ -66,7 +91,7 @@ export const ResumeCanvas = memo(function ResumeCanvas({ canvasRef, children, sc
       style={{ ...variables, width: pageWidthPx, height: 'auto', insetInlineStart: -9999, insetBlockStart: -9999 }}>
       {children}
     </div>, document.body)}
-    <div ref={setCanvasRefs} data-measure-id={measureId} data-font-error={fontResult.content === children ? fontResult.error : undefined} aria-busy={pending || measurement.content !== children || measurement.layoutKey !== layoutKey || fontResult.content !== children} data-pagination-ready={!pending && !fontResult.error && fontResult.content === children && pages.length > 0 && measurement.content === children && measurement.layoutKey === layoutKey} className="resume-canvas-screen-preview relative shrink-0 flex flex-col items-start print:flex mx-auto"
+    <div ref={setCanvasRefs} data-measure-id={measureId} data-font-error={fontResult.content === children ? fontResult.error : undefined} aria-busy={pending || measurement.content !== children || measurement.layoutKey !== layoutKey || !measurement.complete || fontResult.content !== children} data-pagination-ready={!pending && !fontResult.error && fontResult.content === children && measurement.complete && pages.length > 0 && measurement.content === children && measurement.layoutKey === layoutKey} className="resume-canvas-screen-preview relative shrink-0 flex flex-col items-start print:flex mx-auto"
       style={{ width: pageWidthPx * scale, height: (pageCount * pageHeightPx + (pageCount - 1) * gap) * scale }}>
       {fontResult.content === children && fontResult.error && <div role="alert" className="app-ui absolute z-50 w-full max-w-sm rounded-lg border bg-[var(--app-surface)] p-3 text-sm shadow-sm">
         {lang === 'zh' ? '字体加载失败，当前为回退预览。请在样式中选择内置字体，或重试加载。' : 'Font loading failed. Showing a fallback preview. Choose a built-in font in Style or retry.'}

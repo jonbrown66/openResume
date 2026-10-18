@@ -25,6 +25,7 @@ export function useCanvasScale(containerRef: RefObject<HTMLDivElement | null>) {
     if (!container) {
       return;
     }
+    let frame = 0;
 
     const updateScale = () => {
       const availableWidth = getContainerWidth(container);
@@ -36,13 +37,18 @@ export function useCanvasScale(containerRef: RefObject<HTMLDivElement | null>) {
       initialized.current = true;
     }
 
-    const observer = new ResizeObserver(() => updateScale());
+    const scheduleScale = () => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(updateScale);
+    };
+    const observer = new ResizeObserver(scheduleScale);
     observer.observe(container);
-    window.addEventListener('resize', updateScale);
+    window.addEventListener('resize', scheduleScale);
 
     return () => {
       observer.disconnect();
-      window.removeEventListener('resize', updateScale);
+      cancelAnimationFrame(frame);
+      window.removeEventListener('resize', scheduleScale);
     };
   }, [containerRef]);
 

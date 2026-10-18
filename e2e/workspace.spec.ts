@@ -166,8 +166,8 @@ test('stale AI proposals cannot overwrite newer edits', async ({ page }) => {
   await page.getByRole('button', { name: 'Close AI assistant' }).click();
   await page.getByRole('textbox', { name: 'Resume Markdown' }).fill(resume('New manual edit'));
   await page.getByRole('button', { name: 'Open AI assistant' }).click();
-  await page.getByRole('button', { name: 'Apply to Resume' }).click();
-  await expect(page.getByRole('status')).toContainText('Your resume changed');
+  await expect(page.getByRole('button', { name: 'Outdated proposal' })).toBeDisabled();
+  await expect(page.getByText('Your resume has changed. Generate a new candidate from the current content.')).toBeVisible();
   await page.getByRole('button', { name: 'Close AI assistant' }).click();
   await expect(page.getByRole('textbox', { name: 'Resume Markdown' })).toHaveValue(/New manual edit/);
 });

@@ -18,8 +18,9 @@ export const CanvasScaleControls = memo(function CanvasScaleControls({ zoom, act
         <button
           type="button"
           aria-label={lang === 'zh' ? '放大画布' : 'Zoom in'}
+          disabled={zoom >= 250}
           onClick={() => onZoomChange(10)}
-          className="app-control flex w-full items-center justify-center rounded-md p-2 transition-colors"
+          className="app-control flex w-full items-center justify-center rounded-md p-2 transition-colors disabled:opacity-35 disabled:cursor-not-allowed"
         >
           <Plus size={14} />
         </button>
@@ -29,8 +30,9 @@ export const CanvasScaleControls = memo(function CanvasScaleControls({ zoom, act
         <button
           type="button"
           aria-label={lang === 'zh' ? '缩小画布' : 'Zoom out'}
+          disabled={zoom <= 60}
           onClick={() => onZoomChange(-10)}
-          className="app-control flex w-full items-center justify-center rounded-md p-2 transition-colors"
+          className="app-control flex w-full items-center justify-center rounded-md p-2 transition-colors disabled:opacity-35 disabled:cursor-not-allowed"
         >
           <Minus size={14} />
         </button>

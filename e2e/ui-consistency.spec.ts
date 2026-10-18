@@ -177,12 +177,14 @@ test('style sliders keep their label and unit aligned on a narrow panel', async 
   const margin = dialog.getByRole('slider', { name: 'Page Margin', exact: true });
   const number = dialog.getByRole('spinbutton', { name: 'Page Margin (mm)', exact: true });
   await number.fill('24');
+  await number.press('Enter');
   await expect(margin).toHaveValue('24');
   await margin.focus(); await page.keyboard.press('Home');
   await expect(number).toHaveValue('10');
   await page.keyboard.press('End');
   await expect(number).toHaveValue('30');
   await number.fill('20');
+  await number.press('Enter');
   await margin.scrollIntoViewIfNeeded();
   const geometry = await margin.evaluate(element => {
     const control = element.closest('.ui-slider-control')!;

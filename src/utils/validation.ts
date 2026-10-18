@@ -36,8 +36,31 @@ export function normalizeTheme(value: unknown): ResumeThemeConfig {
 }
 
 export function withDraftIds(draft: ResumeDraft): ResumeDraft {
-  return { ...draft, sections: draft.sections.map(section => ({ ...section,
-    id: section.id ?? crypto.randomUUID(),
-    entries: section.entries.map(entry => ({ ...entry, id: entry.id ?? crypto.randomUUID() })),
-  })) };
+  let changed = false;
+  const sections = draft.sections.map(section => {
+    const entries = section.entries.map(entry => entry.id ? entry : { ...entry, id: crypto.randomUUID() });
+    if (section.id && entries.every((entry, index) => entry === section.entries[index])) return section;
+    changed = true;
+    return { ...section, id: section.id ?? crypto.randomUUID(), entries };
+  });
+  return changed ? { ...draft, sections } : draft;
+}
+
+/** Reuse untouched content after parsing to preserve memoized sections. */
+export function reconcileDraft(draft: ResumeDraft, previous: ResumeDraft): ResumeDraft {
+  const sections = draft.sections.map((section, index) => {
+    const old = previous.sections[index];
+    if (!old) return section;
+    const entries = section.entries.map((entry, entryIndex) => {
+      const oldEntry = old.entries[entryIndex];
+      if (!oldEntry) return entry;
+      return ['heading', 'meta', 'organization', 'content'].every(key => entry[key as 'heading'] === oldEntry[key as 'heading'])
+        ? oldEntry : { ...entry, id: oldEntry.id };
+    });
+    return section.title === old.title && section.content === old.content && entries.length === old.entries.length && entries.every((entry, i) => entry === old.entries[i])
+      ? old : { ...section, id: old.id, entries };
+  });
+  const frontmatter = Object.keys({ ...draft.frontmatter, ...previous.frontmatter }).every(key => draft.frontmatter[key as 'name'] === previous.frontmatter[key as 'name'])
+    ? previous.frontmatter : draft.frontmatter;
+  return withDraftIds({ ...draft, frontmatter, sections });
 }

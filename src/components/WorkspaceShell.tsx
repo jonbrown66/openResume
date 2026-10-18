@@ -21,6 +21,7 @@ import { slideUpVariants } from '@/lib/motion';
 import type { ResumeDraft } from '@/types/resume';
 import type { ResumeProject } from '@/types/resumeProject';
 import type { ResumeThemeConfig } from '@/types/theme';
+import type { EditContext } from '@/utils/editingHistory';
 
 import { deferredComponent, useIdlePreload } from '@/lib/deferredComponent';
 import type { AssistantWidgetProps } from '@/components/AssistantWidget';
@@ -48,6 +49,7 @@ interface WorkspaceShellProps {
   markdown: string;
   draft: ResumeDraft;
   activeDraft: ResumeDraft;
+  previewPending?: boolean;
   editorMode: EditorMode;
   activeView: ActiveView;
   template: ResumeTemplate;
@@ -72,7 +74,7 @@ interface WorkspaceShellProps {
   onProjectRename: (id: string, newName: string) => void;
   onProjectDelete: (id: string) => void;
   onDraftChange: (draft: ResumeDraft) => void;
-  onMarkdownChange: (markdown: string) => void;
+  onMarkdownChange: (markdown: string, context?: EditContext) => void;
   onFormatMarkdown: () => void;
   onEditorModeChange: (mode: EditorMode) => void;
   onTemplateChange: (template: ResumeTemplate) => void;
@@ -101,6 +103,7 @@ export function WorkspaceShell({
   markdown,
   draft,
   activeDraft,
+  previewPending,
   editorMode,
   activeView,
   template,
@@ -167,6 +170,7 @@ export function WorkspaceShell({
               translations={t}
               canvasRef={canvasRef}
               draft={draft}
+              markdown={markdown}
               onImportClick={onImportClick}
               onLanguageToggle={onLanguageToggle}
               onThemeToggle={onThemeToggle}
@@ -217,6 +221,7 @@ export function WorkspaceShell({
                 <PreviewPane
                   containerRef={previewContainerRef}
                   draft={activeDraft}
+                  pending={previewPending}
                   resumeRef={canvasRef}
                   scale={scale}
                   template={template}

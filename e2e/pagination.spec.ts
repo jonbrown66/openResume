@@ -71,9 +71,11 @@ for (const fontFamily of ['Geist', 'Noto Serif SC']) {
       else await page.getByRole('button', { name: 'Style', exact: true }).click();
       const panel = page.getByRole('dialog', { name: 'Style Editor' });
       await panel.getByRole('spinbutton', { name: 'Line Height (value)', exact: true }).fill('1.8');
+      await panel.getByRole('spinbutton', { name: 'Line Height (value)', exact: true }).press('Enter');
       await assertCompleteLines(page);
       await expect(page.locator('.resume-measure .resume-content p').first()).not.toHaveAttribute('data-resume-safe-line-height', '');
       await panel.getByRole('spinbutton', { name: 'Line Height (value)', exact: true }).fill('1');
+      await panel.getByRole('spinbutton', { name: 'Line Height (value)', exact: true }).press('Enter');
       await assertCompleteLines(page);
       await page.keyboard.press('Escape');
       const sourceText = await page.locator('.resume-measure').evaluate(element => {
@@ -121,6 +123,7 @@ for (const template of ['classic', 'minimal', 'standard', 'sidebar']) {
     const panel = page.getByRole('dialog', { name: 'Style Editor' });
     for (const [label, value] of [['Font Size (pt)', '12.5'], ['Line Height (value)', '1.65'], ['Page Margin (mm)', '17'], ['Section Spacing (px)', '27']]) {
       await panel.getByRole('spinbutton', { name: label, exact: true }).fill(value);
+      await panel.getByRole('spinbutton', { name: label, exact: true }).press('Enter');
       await assertCompleteLines(page);
     }
     if (template === 'classic') {
@@ -131,6 +134,7 @@ for (const template of ['classic', 'minimal', 'standard', 'sidebar']) {
     }
     // Export immediately after the final style edit; the export path must await its pagination.
     await panel.getByRole('spinbutton', { name: 'Section Spacing (px)', exact: true }).fill('28');
+    await panel.getByRole('spinbutton', { name: 'Section Spacing (px)', exact: true }).press('Enter');
     await page.keyboard.press('Escape');
     await page.getByRole('button', { name: 'Export', exact: true }).click();
     const requestPromise = page.waitForRequest(request => request.url().endsWith('/api/export/pdf'));

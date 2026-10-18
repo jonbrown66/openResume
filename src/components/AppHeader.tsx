@@ -57,6 +57,7 @@ const LogoIcon = () => (
 );
 
 interface AppHeaderProps {
+  markdown?: string;
   fileInputRef: RefObject<HTMLInputElement | null>;
   onFileChange: (event: ChangeEvent<HTMLInputElement>) => void;
   isImporting: boolean;
@@ -87,6 +88,7 @@ interface AppHeaderProps {
 }
 
 export const AppHeader = memo(function AppHeader({
+  markdown,
   fileInputRef,
   onFileChange,
   isImporting,
@@ -241,12 +243,13 @@ export const AppHeader = memo(function AppHeader({
   }), [resumeTheme, lang, onThemeChange, onThemeReset, isStylePanelOpen, styleAnchorRect]);
 
   const exportMenuProps = useMemo(() => ({
+    markdown,
     canvasRef,
     draft,
     theme: resumeTheme,
     template,
     translations: t,
-  }), [canvasRef, draft, resumeTheme, template, t]);
+  }), [canvasRef, draft, markdown, resumeTheme, template, t]);
 
   const themeIcon = useMemo(() => {
     if (theme === 'system') return <Monitor size={16} />;

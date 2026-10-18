@@ -1297,6 +1297,19 @@ html, body {
 .app-ui .ui-entry-card { border-color: transparent; border-radius: var(--ui-radius-control); }
 .app-ui :where(input,textarea)::selection { background: var(--ui-selected-bg); color: var(--foreground); }
 .ui-assistant-backdrop { position: fixed; inset: 0; z-index: -1; }
+@media (max-width: 639px) {
+  .app-ui .app-panel.ui-assistant-panel {
+    position: fixed;
+    inset: 0;
+    inline-size: 100%;
+    block-size: 100dvh;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    padding-block: env(safe-area-inset-top) env(safe-area-inset-bottom);
+    padding-inline: env(safe-area-inset-left) env(safe-area-inset-right);
+  }
+}
 .ui-icon-button { display: inline-flex; align-items: center; justify-content: center; min-inline-size: var(--ui-control-size); padding: 8px; }
 .ui-overlay-root { position: fixed; inset: 0; z-index: 120; pointer-events: none; }
 .ui-backdrop { position: absolute; inset: 0; background: oklch(0.15 0.008 110 / 0.4); pointer-events: auto; }

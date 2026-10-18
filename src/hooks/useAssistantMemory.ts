@@ -3,7 +3,9 @@ import { useCallback, useEffect, useState } from 'react';
 import type { ResumeDiffResult } from '@/utils/resumeDiff';
 
 const STORAGE_KEY_PREFIX = 'openresume-assistant-memory-v1';
+const CONTEXT_STORAGE_KEY_PREFIX = 'openresume-assistant-context-v1';
 export const ASSISTANT_MEMORY_LIMIT = 20;
+export const ASSISTANT_JOB_DESCRIPTION_LIMIT = 12000;
 
 export interface AssistantMessage {
   id: string;
@@ -20,8 +22,17 @@ interface PersistedAssistantMemory {
   messages: AssistantMessage[];
 }
 
+interface AssistantProjectContext {
+  jobDescription: string;
+  showJobDescription: boolean;
+}
+
 function getStorageKey(projectId: string) {
   return `${STORAGE_KEY_PREFIX}:${projectId}`;
+}
+
+function getContextStorageKey(projectId: string) {
+  return `${CONTEXT_STORAGE_KEY_PREFIX}:${projectId}`;
 }
 
 function trimAssistantMessages(messages: AssistantMessage[]) {
@@ -119,6 +130,38 @@ function saveAssistantMemory(projectId: string, messages: AssistantMessage[]) {
   }
 }
 
+function loadAssistantContext(projectId: string): AssistantProjectContext {
+  try {
+    const raw = localStorage.getItem(getContextStorageKey(projectId));
+    if (!raw) return { jobDescription: '', showJobDescription: false };
+    const parsed = JSON.parse(raw) as Partial<AssistantProjectContext>;
+    return {
+      jobDescription: typeof parsed.jobDescription === 'string'
+        ? parsed.jobDescription.slice(0, ASSISTANT_JOB_DESCRIPTION_LIMIT)
+        : '',
+      showJobDescription: parsed.showJobDescription === true,
+    };
+  } catch {
+    return { jobDescription: '', showJobDescription: false };
+  }
+}
+
+function saveAssistantContext(projectId: string, context: AssistantProjectContext) {
+  try {
+    const key = getContextStorageKey(projectId);
+    if (!context.jobDescription && !context.showJobDescription) {
+      localStorage.removeItem(key);
+      return;
+    }
+    localStorage.setItem(key, JSON.stringify({
+      jobDescription: context.jobDescription.slice(0, ASSISTANT_JOB_DESCRIPTION_LIMIT),
+      showJobDescription: context.showJobDescription,
+    }));
+  } catch {
+    // The conversation remains usable when context storage is unavailable.
+  }
+}
+
 export function useAssistantMemory(projectId: string) {
   const [state, setState] = useState(() => ({
     projectId,
@@ -172,5 +215,53 @@ export function useAssistantMemory(projectId: string) {
   return {
     messages: visibleMessages,
     setMessages,
+  };
+}
+
+export function useAssistantContext(projectId: string) {
+  const [state, setState] = useState(() => ({
+    projectId,
+    ...loadAssistantContext(projectId),
+  }));
+
+  const context = state.projectId === projectId
+    ? state
+    : { projectId, ...loadAssistantContext(projectId) };
+
+  useEffect(() => {
+    if (state.projectId !== projectId) {
+      setState({
+        projectId,
+        ...loadAssistantContext(projectId),
+      });
+    }
+  }, [projectId, state.projectId]);
+
+  useEffect(() => {
+    if (state.projectId !== projectId) return;
+    saveAssistantContext(projectId, state);
+  }, [projectId, state]);
+
+  const setJobDescription = useCallback((value: string) => {
+    setState(previous => ({
+      projectId,
+      jobDescription: value.slice(0, ASSISTANT_JOB_DESCRIPTION_LIMIT),
+      showJobDescription: previous.showJobDescription,
+    }));
+  }, [projectId]);
+
+  const setShowJobDescription = useCallback((value: boolean) => {
+    setState(previous => ({
+      projectId,
+      jobDescription: previous.jobDescription,
+      showJobDescription: value,
+    }));
+  }, [projectId]);
+
+  return {
+    jobDescription: context.jobDescription,
+    showJobDescription: context.showJobDescription,
+    setJobDescription,
+    setShowJobDescription,
   };
 }

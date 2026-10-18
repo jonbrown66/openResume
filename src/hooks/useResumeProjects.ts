@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import type { ResumeProject, StorageSchema } from '@/types/resumeProject';
 import { STORAGE_KEY, generateId } from '@/types/resumeProject';
 import { parseMarkdownToResumeDraft } from '@/utils/resumeDocument';
@@ -47,9 +47,12 @@ export function useResumeProjects(language: 'zh' | 'en' = 'zh') {
   const [storageError, setStorageError] = useState(initial.error);
   const latest = useRef(storageData);
   const mustBackup = useRef(initial.error === 'unavailable');
-  const commit = useCallback((data: StorageSchema) => {
-    latest.current = data;
-    setStorageData(data);
+  const dirty = useRef(false);
+  const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const flush = useCallback(() => {
+    if (saveTimer.current !== null) clearTimeout(saveTimer.current);
+    saveTimer.current = null;
+    if (!dirty.current) return;
     try {
       if (mustBackup.current) {
         const raw = localStorage.getItem(STORAGE_KEY);
@@ -60,10 +63,29 @@ export function useResumeProjects(language: 'zh' | 'en' = 'zh') {
         }
         mustBackup.current = false;
       }
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(latest.current));
+      dirty.current = false;
       setStorageError('');
     } catch { setStorageError('save-failed'); }
   }, []);
+  const commit = useCallback((data: StorageSchema, batch = false) => {
+    latest.current = data;
+    setStorageData(data);
+    dirty.current = true;
+    // Bound the save delay even during continuous typing or slider dragging.
+    if (!batch) flush();
+    else if (saveTimer.current === null) saveTimer.current = setTimeout(flush, 250);
+  }, [flush]);
+  useEffect(() => {
+    const onVisibilityChange = () => { if (document.visibilityState === 'hidden') flush(); };
+    window.addEventListener('pagehide', flush);
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    return () => {
+      window.removeEventListener('pagehide', flush);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+      flush();
+    };
+  }, [flush]);
   const currentProject = storageData.projects.find(p => p.id === storageData.currentProjectId) ?? storageData.projects[0];
   const createProject = useCallback((copyFrom?: string) => {
     const previous = latest.current;
@@ -86,7 +108,7 @@ export function useResumeProjects(language: 'zh' | 'en' = 'zh') {
       const previous = project[key as keyof ResumeProject];
       return Object.is(previous, value) || (typeof value === 'object' && typeof previous === 'object' && JSON.stringify(previous) === JSON.stringify(value));
     })) return;
-    commit({ ...previous, projects: previous.projects.map(p => p.id === id ? { ...p, ...updates, updatedAt: Date.now() } : p) });
+    commit({ ...previous, projects: previous.projects.map(p => p.id === id ? { ...p, ...updates, updatedAt: Date.now() } : p) }, !('name' in updates));
   }, [commit]);
   const deleteProject = useCallback((id: string) => {
     const previous = latest.current;

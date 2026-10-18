@@ -50,6 +50,7 @@ export default function App() {
     handleImportComplete,
     handleFormatMarkdown,
     activeDraft,
+    previewPending,
     editorContainerRef,
     previewContainerRef,
     resumeRef,
@@ -125,6 +126,7 @@ export default function App() {
         markdown={markdown}
         draft={draft}
         activeDraft={activeDraft}
+        previewPending={previewPending}
         editorMode={editorMode}
         activeView={activeView}
         template={template}

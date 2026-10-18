@@ -212,17 +212,17 @@ async function buildExportHtml(
   centered: boolean = false,
   exportMode: 'pdf' | 'html' = 'pdf'
 ): Promise<string> {
-  const measure = document.querySelector<HTMLElement>(`[data-resume-measure-id="${canvasElement.dataset.measureId}"]`);
-  const text = measure?.innerText ?? canvasElement.textContent ?? '';
   if (!isBuiltinFont(theme?.fontFamily ?? 'Geist')) throw new FontExportError('本地字体无法嵌入 PDF/HTML，请先选择内置字体。Local fonts cannot be embedded; choose a built-in font.');
-  try { await ensureResumeFonts(theme?.fontFamily ?? 'Geist', text); }
-  catch { throw new FontExportError('字体尚未加载成功，请重试或选择其他内置字体。Font loading failed; retry or choose another built-in font.'); }
   const deadline = Date.now() + 5000;
   while (canvasElement.dataset.paginationReady === 'false') {
     if (canvasElement.dataset.fontError) throw new FontExportError(canvasElement.dataset.fontError);
     if (Date.now() > deadline) throw new Error('Preview is still updating. Try exporting again.');
     await new Promise(resolve => setTimeout(resolve, 16));
   }
+  const measure = document.querySelector<HTMLElement>(`[data-resume-measure-id="${canvasElement.dataset.measureId}"]`);
+  const text = measure?.innerText ?? canvasElement.textContent ?? '';
+  try { await ensureResumeFonts(theme?.fontFamily ?? 'Geist', text); }
+  catch { throw new FontExportError('字体尚未加载成功，请重试或选择其他内置字体。Font loading failed; retry or choose another built-in font.'); }
   const origin = window.location.origin;
   const styleNodes = await collectExportStyles(theme?.fontFamily, text);
   const exportCanvas = exportMode === 'pdf'
