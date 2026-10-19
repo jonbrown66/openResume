@@ -91,7 +91,7 @@ export const BlockEditor = memo(function BlockEditor({ draft, lang, translations
           <div className="flex items-center">
             <button type="button" className={actionClass} disabled={sectionIndex === 0} aria-label={zh ? `上移${section.title}` : `Move ${section.title} up`} onClick={() => moveSection(sectionIndex, -1)}><ArrowUp size={14} /></button>
             <button type="button" className={actionClass} disabled={sectionIndex === state.sections.length - 1} aria-label={zh ? `下移${section.title}` : `Move ${section.title} down`} onClick={() => moveSection(sectionIndex, 1)}><ArrowDown size={14} /></button>
-            <button type="button" className={actionClass} aria-label={zh ? `删除章节：${section.title}` : `Delete section: ${section.title}`}
+            <button type="button" className={`${actionClass} ui-destructive-subtle`} aria-label={zh ? `删除章节：${section.title}` : `Delete section: ${section.title}`}
               onClick={() => update(prev => ({ ...prev, sections: prev.sections.filter((_, i) => i !== sectionIndex) }))}><Trash2 size={14} />{zh ? '删除' : 'Delete'}</button>
           </div>
         </div>
@@ -106,7 +106,7 @@ export const BlockEditor = memo(function BlockEditor({ draft, lang, translations
           <legend className="sr-only">{section.title} {entryIndex + 1}</legend>
           <div className="flex items-center justify-between gap-2">
             <p className="text-xs font-medium text-muted-foreground">{zh ? `第 ${entryIndex + 1} 条` : `Entry ${entryIndex + 1}`}</p>
-            <button type="button" className={actionClass} aria-label={zh ? `删除${section.title}第${entryIndex + 1}条` : `Delete ${section.title} entry ${entryIndex + 1}`}
+            <button type="button" className={`${actionClass} ui-destructive-subtle`} aria-label={zh ? `删除${section.title}第${entryIndex + 1}条` : `Delete ${section.title} entry ${entryIndex + 1}`}
               onClick={() => updateSection(sectionIndex, current => ({ ...current, entries: current.entries.filter((_, i) => i !== entryIndex) }))}><Trash2 size={14} />{zh ? '删除' : 'Delete'}</button>
           </div>
           <div className="grid gap-3 sm:grid-cols-2">

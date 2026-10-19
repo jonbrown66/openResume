@@ -71,7 +71,7 @@ test('failed questions can be retried without duplicate messages', async ({ page
   });
   await page.locator('[data-assistant-input]').fill('请诊断这份简历');
   await page.getByRole('button', { name: '发送', exact: true }).click();
-  await expect(page.getByRole('alert')).toContainText('Test service unavailable');
+  await expect(page.getByRole('dialog', { name: '简历助手', exact: true }).getByRole('alert')).toContainText('Test service unavailable');
   await expect(page.locator('[data-assistant-input]')).toHaveValue('请诊断这份简历');
   await page.getByRole('button', { name: '重试刚才的问题' }).click();
   await expect(page.getByRole('heading', { name: '已恢复' })).toBeVisible();
@@ -110,11 +110,12 @@ test('job context and completed conversation stay attached to their resume proje
   await page.getByRole('textbox', { name: '目标岗位描述', exact: true }).fill('前端工程师：React、TypeScript、无障碍设计。');
   await page.getByRole('button', { name: '发送', exact: true }).click();
   await expect(page.getByRole('heading', { name: '岗位匹配' })).toBeVisible();
+  await page.getByRole('button', { name: '关闭 AI 助手', exact: true }).click();
   const projectName = page.getByTestId('project-selector');
   await projectName.click();
   await page.getByRole('button', { name: '新建简历', exact: true }).click();
   await page.getByTestId('project-selector').click();
-  await page.getByRole('button', { name: /示例简历/ }).click();
+  await page.getByRole('group', { name: '选择简历', exact: true }).getByRole('button', { name: '示例简历', exact: true }).click();
   await page.getByRole('button', { name: '打开 AI 助手' }).click();
   await expect(page.getByRole('textbox', { name: '目标岗位描述', exact: true })).toHaveValue(/无障碍设计/);
   await expect(page.getByRole('heading', { name: '岗位匹配' })).toBeVisible();

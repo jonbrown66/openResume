@@ -133,7 +133,7 @@ export const EditorPane = memo(function EditorPane({
           <button type="button" ref={guideTriggerRef} onClick={() => setGuideOpen(open => !open)}
             title={guideLabel} aria-label={guideLabel} aria-expanded={guideOpen} aria-haspopup="dialog"
             className="app-panel app-control inline-flex min-h-10 items-center justify-center gap-1.5 rounded-lg border px-2 text-xs sm:min-h-0">
-            <BookOpen size={16} aria-hidden="true" /><span>{lang === 'zh' ? '写法' : 'Guide'}</span>
+            <BookOpen size={16} aria-hidden="true" /><span className="hidden sm:inline">{lang === 'zh' ? '写法' : 'Guide'}</span>
           </button>
           <button
             type="button"
@@ -174,13 +174,13 @@ export const EditorPane = memo(function EditorPane({
 
       <div
         ref={containerRef}
-        className={`row-start-2 min-h-0 ${editorMode === 'markdown' ? 'overflow-hidden' : 'overflow-y-auto overflow-x-hidden pbe-4 custom-scrollbar'}`}
+        className={`row-start-2 min-h-0 ${editorMode === 'markdown' ? 'overflow-hidden' : 'overflow-y-auto overflow-x-hidden pbe-[calc(6.75rem+env(safe-area-inset-bottom))] sm:pbe-4 custom-scrollbar'}`}
       >
         {editorMode === 'markdown' ? (
           <textarea
             data-code-editor
             aria-label={lang === 'zh' ? '简历 Markdown' : 'Resume Markdown'}
-            className="block h-full min-h-0 w-full resize-none overflow-y-auto bg-transparent px-4 pbs-3 pbe-4 font-mono text-[13px] leading-[1.75] text-zinc-800 selection:bg-zinc-200 dark:text-zinc-200 dark:selection:bg-zinc-700 sm:px-6 custom-scrollbar"
+            className="block h-full min-h-0 w-full resize-none overflow-y-auto bg-transparent px-4 pbs-3 pbe-[calc(6.75rem+env(safe-area-inset-bottom))] font-mono text-[13px] leading-[1.75] text-zinc-800 selection:bg-zinc-200 dark:text-zinc-200 dark:selection:bg-zinc-700 sm:px-6 sm:pbe-4 custom-scrollbar"
             value={displayMarkdown}
             onBeforeInput={event => { beforeSelection.current = readEditorSelection(event.currentTarget); }}
             onCompositionStart={event => {

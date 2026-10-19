@@ -3,6 +3,15 @@ import { MotionConfig } from 'framer-motion';
 
 import { ToastProvider } from '@/components/ui/Toast';
 import { WorkspaceShell } from '@/components/WorkspaceShell';
+import { WorkspaceAssistant } from '@/components/WorkspaceAssistant';
+import { AppHeader } from '@/components/AppHeader';
+import { ProjectSelector } from '@/components/ProjectSelector';
+import { ImportResumeButton } from '@/components/ImportResumeButton';
+import type { ExportMenuProps } from '@/components/ExportMenu';
+import { deferredComponent, useIdlePreload } from '@/lib/deferredComponent';
+import { Loader2, ChevronDown } from 'lucide-react';
+import { EditorPane } from '@/components/EditorPane';
+import { PreviewPane } from '@/components/PreviewPane';
 import {
   translations,
   type AppTheme,
@@ -15,7 +24,18 @@ import { useSettings } from '@/hooks/useSettings';
 import { resolveImportNoticeMessage } from '@/utils/importNotice';
 import { startInitialModelRefresh } from '@/hooks/useModelCatalog';
 
+const ExportMenu = deferredComponent<ExportMenuProps>(
+  () => import('@/components/ExportMenu').then(module => ({ default: module.ExportMenu })),
+  props => <button type="button" disabled aria-busy="true" aria-label={props.translations.export}
+    className="app-primary flex min-h-10 min-w-10 items-center justify-center gap-2 rounded-lg p-2 lg:min-h-0 lg:px-4 lg:py-2">
+    <Loader2 size={16} className="animate-spin" /><span className="hidden lg:inline">{props.translations.export}</span>
+    <ChevronDown size={12} className="hidden lg:block" />
+  </button>,
+);
+const exportPreloads = [ExportMenu.preload];
+
 export default function App() {
+  useIdlePreload(exportPreloads);
   const { settings, updateSettings, updateProvider, setActiveProvider, storageError: settingsStorageError } = useSettings();
   useEffect(() => {
     startInitialModelRefresh();
@@ -30,6 +50,7 @@ export default function App() {
     renameProject,
     deleteProject,
     storageError,
+    saveState,
   } = useResumeProjects(settings.language);
   const {
     markdown,
@@ -110,60 +131,41 @@ export default function App() {
     translations: t,
   });
 
+  const resetCustomCss = useCallback(() => updateCustomCss(''), [updateCustomCss]);
+
   return (
     <MotionConfig reducedMotion="user"><ToastProvider language={lang}>
       <WorkspaceShell
-        settings={settings}
         lang={lang}
-        theme={settings.theme}
-        resolvedTheme={resolvedTheme}
         translations={t}
-        fileInputRef={fileInputRef}
-        onFileChange={handleFileChange}
-        isImporting={isImporting}
-        importStep={importStep}
         noticeMessage={noticeMessage}
-        markdown={markdown}
-        draft={draft}
-        activeDraft={activeDraft}
-        previewPending={previewPending}
-        editorMode={editorMode}
         activeView={activeView}
-        template={template}
-        resumeTheme={resumeTheme}
-        projects={projects}
-        currentProject={currentProject}
-        canvasRef={resumeRef}
-        editorContainerRef={editorContainerRef}
-        previewContainerRef={previewContainerRef}
-        scale={scale}
-        zoomPercent={zoomPercent}
-        onImportClick={triggerImport}
-        onLanguageToggle={handleLanguageToggle}
-        onThemeToggle={handleThemeToggle}
-        onUpdateProvider={updateProvider}
-        onSetActiveProvider={setActiveProvider}
-        onThemeChange={updateTheme}
-        onThemeReset={resetTheme}
-        onUpdateSettings={updateSettings}
-        onProjectSwitch={switchProject}
-        onProjectCreate={createProject}
-        onProjectRename={renameProject}
-        onProjectDelete={deleteProject}
-        onDraftChange={setDraft}
-        onMarkdownChange={setMarkdown}
-        onFormatMarkdown={handleFormatMarkdown}
-        onEditorModeChange={handleEditorModeChange}
-        onTemplateChange={setTemplate}
         onActiveViewChange={setActiveView}
-        onZoomChange={updateZoom}
-        onZoomReset={resetZoom}
-        onCustomCssChange={updateCustomCss}
-        onAssistantApply={handleAssistantApply}
-        canUndo={canUndo}
-        canRedo={canRedo}
-        onUndo={onUndo}
-        onRedo={onRedo}
+        header={<AppHeader
+          lang={lang} theme={settings.theme} resolvedTheme={resolvedTheme} translations={t}
+          onLanguageToggle={handleLanguageToggle} onThemeToggle={handleThemeToggle}
+          settings={settings} onUpdateProvider={updateProvider} onSetActiveProvider={setActiveProvider}
+          resumeTheme={resumeTheme} onThemeChange={updateTheme} onThemeReset={resetTheme}
+          saveStatus={storageMessage ? undefined : saveState}
+          projectSelector={<ProjectSelector lang={lang} projects={projects} currentProject={currentProject}
+            onSwitch={switchProject} onCreate={createProject} onRename={renameProject} onDelete={deleteProject} />}
+          importControl={<ImportResumeButton fileInputRef={fileInputRef} onFileChange={handleFileChange}
+            isImporting={isImporting} importStep={importStep} onImportClick={triggerImport} translations={t} />}
+          exportControl={<ExportMenu markdown={markdown} canvasRef={resumeRef} draft={draft}
+            theme={resumeTheme} template={template} translations={t} />}
+        />}
+        editor={<EditorPane containerRef={editorContainerRef} draft={draft} editorMode={editorMode}
+          lang={lang} isImporting={isImporting} markdown={markdown} translations={t}
+          onDraftChange={setDraft} onEditorModeChange={handleEditorModeChange} onMarkdownChange={setMarkdown}
+          onFormatMarkdown={handleFormatMarkdown} canUndo={canUndo} canRedo={canRedo} onUndo={onUndo} onRedo={onRedo} />}
+        preview={<PreviewPane containerRef={previewContainerRef} draft={activeDraft} pending={previewPending}
+          resumeRef={resumeRef} scale={scale} template={template} theme={resumeTheme} translations={t}
+          zoomPercent={zoomPercent} lang={lang} onTemplateChange={setTemplate} onZoomChange={updateZoom}
+          onZoomReset={resetZoom} onCustomCssChange={updateCustomCss} onCustomCssReset={resetCustomCss}
+          currentFont={resumeTheme.fontFamily} />}
+        assistant={<WorkspaceAssistant lang={lang} markdown={markdown} projectId={currentProject?.id ?? 'default-project'}
+          settings={settings} translations={t} onApplyMarkdown={handleAssistantApply}
+          onUpdateProvider={updateProvider} onSetActiveProvider={setActiveProvider} />}
       />
     </ToastProvider></MotionConfig>
   );

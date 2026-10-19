@@ -12,27 +12,26 @@ interface AvatarProps {
   src?: string;
   alt?: string;
   size?: 'sm' | 'md' | 'lg' | 'xl';
-  shape?: 'circle' | 'square';
   className?: string;
 }
 
-const Avatar = memo(({ src, alt = 'Profile', size = 'md', shape = 'circle', className = '' }: AvatarProps) => {
+const Avatar = memo(({ src, alt = 'Profile', size = 'md', className = '' }: AvatarProps) => {
   if (!src) return null;
 
   const sizeClasses = {
-    sm: 'w-10 h-10',
-    md: 'w-16 h-16',
-    lg: 'w-20 h-20',
-    xl: 'w-24 h-24',
+    sm: 'w-10',
+    md: 'w-16',
+    lg: 'w-20',
+    xl: 'w-24',
   };
-
-  const shapeClass = shape === 'circle' ? 'rounded-full' : 'rounded-lg';
 
   return (
     <img
       src={src}
       alt={alt}
-      className={`${sizeClasses[size]} ${shapeClass} object-cover ${className}`}
+      width={250}
+      height={350}
+      className={`${sizeClasses[size]} h-auto aspect-[5/7] shrink-0 rounded-[2px] object-cover ${className}`}
       referrerPolicy="no-referrer"
       crossOrigin="anonymous"
     />
@@ -164,7 +163,7 @@ const HeaderClassic = memo(({ frontmatter }: { frontmatter: ResumeDraft['frontma
     <div className={`resume-header resume-header-classic ${hasImage ? 'has-avatar' : 'no-avatar'}`}>
       {hasImage && (
         <div className="resume-header-media">
-          <Avatar src={frontmatter.image} size="lg" shape="circle" className="resume-avatar" />
+          <Avatar src={frontmatter.image} size="lg" className="resume-avatar" />
         </div>
       )}
       <div className="resume-header-main">
@@ -197,7 +196,7 @@ const HeaderStandard = memo(({ frontmatter }: { frontmatter: ResumeDraft['frontm
         )}
       </div>
       {hasImage && (
-        <Avatar src={frontmatter.image} size="md" shape="circle" className="resume-avatar" />
+        <Avatar src={frontmatter.image} size="md" className="resume-avatar" />
       )}
     </div>
   );
@@ -209,10 +208,10 @@ const HeaderMinimal = memo(({ frontmatter }: { frontmatter: ResumeDraft['frontma
   return (
     <div className={`resume-header resume-header-minimal ${hasImage ? 'has-avatar' : 'no-avatar'}`}>
       {hasImage && (
-        <Avatar src={frontmatter.image} size="md" shape="square" className="resume-avatar" />
+        <Avatar src={frontmatter.image} size="md" className="resume-avatar" />
       )}
       <div className="resume-header-main">
-        <div className="resume-minimal-title-group">
+        <div className={`resume-minimal-title-group${frontmatter.name ? ' has-name' : ''}`}>
           <h1>{frontmatter.name || 'NAME'}</h1>
           {frontmatter.title && <span className="resume-minimal-role">{frontmatter.title}</span>}
         </div>
@@ -256,7 +255,7 @@ const SidebarTemplate = memo(({ draft, style, fontFamily }: { draft: ResumeDraft
         <aside className="sidebar-aside p-[var(--page-margin)]">
           {hasImage && (
             <div className="sidebar-avatar-wrapper">
-              <Avatar src={draft.frontmatter.image} size="xl" shape="circle" className="resume-avatar" />
+              <Avatar src={draft.frontmatter.image} size="xl" className="resume-avatar" />
             </div>
           )}
 

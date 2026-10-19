@@ -72,11 +72,15 @@ test('short-screen settings scroll, stay above tools and restore keyboard focus'
   await expect.poll(() => dialog.evaluate(element => element.contains(document.activeElement))).toBe(true);
   await expect.poll(() => page.locator('main').evaluate(element => (element as HTMLElement).inert)).toBe(true);
   const connection = dialog.getByRole('button', { name: 'Test Connection', exact: true });
-  await connection.scrollIntoViewIfNeeded();
-  expect(await connection.evaluate(element => {
-    const rect = element.getBoundingClientRect();
-    return rect.top >= 0 && rect.bottom <= innerHeight && element.contains(document.elementFromPoint(rect.x + rect.width / 2, rect.y + rect.height / 2));
-  })).toBe(true);
+  // A catalog response can add model guidance after the first scroll.
+  // Recheck reachability after that layout change without relaxing the geometry.
+  await expect.poll(async () => {
+    await connection.scrollIntoViewIfNeeded();
+    return connection.evaluate(element => {
+      const rect = element.getBoundingClientRect();
+      return rect.top >= 0 && rect.bottom <= innerHeight && element.contains(document.elementFromPoint(rect.x + rect.width / 2, rect.y + rect.height / 2));
+    });
+  }).toBe(true);
   await expect(page.getByRole('button', { name: 'Open AI assistant' })).toBeHidden();
   await page.keyboard.press('Escape');
   await expect(dialog).toBeHidden();

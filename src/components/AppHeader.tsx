@@ -1,55 +1,38 @@
-import { type ChangeEvent, type RefObject, memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { createPortal } from 'react-dom';
-import { motion, AnimatePresence } from 'framer-motion';
-import {
-  Loader2,
-  Moon,
-  Printer,
-  Settings,
-  Sun,
-  Monitor,
-  Upload,
-  ChevronDown,
-  Palette,
-  Github,
-  MoreHorizontal,
-  Globe,
-} from 'lucide-react';
-
-import type { AppLanguage, AppTheme, TranslationSet, ResumeTemplate } from '@/config/ui';
+import { type ReactNode, memo, useCallback, useEffect, useRef, useState } from 'react';
+import { AnimatePresence } from 'framer-motion';
+import { Moon, Settings, Sun, Monitor, Palette, Github, MoreHorizontal, Globe } from 'lucide-react';
+import type { AppLanguage, AppTheme, TranslationSet } from '@/config/ui';
 import type { AppSettings, ApiProviderId } from '@/config/settings';
-import type { ResumeDraft } from '@/types/resume';
-import type { ResumeProject } from '@/types/resumeProject';
+import type { ResumeThemeConfig } from '@/types/theme';
 import { deferredComponent, useIdlePreload } from '@/lib/deferredComponent';
 import type { AiSettingsProps } from './settings/AiSettings';
 import type { ThemeEditorPanelProps } from './ThemeEditorPanel';
+import { AnchoredPanel } from './ui/AnchoredPanel';
+import type { HeaderMoreMenuProps } from './HeaderMoreMenu';
+const HeaderMoreMenu = deferredComponent<HeaderMoreMenuProps>(
+  () => import('./HeaderMoreMenu').then(module => ({ default: module.HeaderMoreMenu })),
+  props => <button type="button" disabled aria-busy="true" aria-label={props.label}
+    className="app-control flex min-h-10 min-w-10 items-center justify-center rounded-lg p-2"><MoreHorizontal size={18} /></button>,
+);
+
 const AiSettings = deferredComponent<AiSettingsProps>(
   () => import('./settings/AiSettings').then(module => ({ default: module.AiSettings })),
   props => <p role="status">{props.settings.language === 'zh' ? '加载设置…' : 'Loading settings…'}</p>,
 );
-import { ExportMenu } from './ExportMenu';
-import { ProjectSelector } from './ProjectSelector';
-import { AnchoredPanel } from './ui/AnchoredPanel';
-import type { ResumeThemeConfig } from '@/types/theme';
 const ThemeEditorPanel = deferredComponent<ThemeEditorPanelProps>(
   () => import('./ThemeEditorPanel').then(module => ({ default: module.ThemeEditorPanel })),
   props => <AnchoredPanel compactPanel title={props.lang === 'zh' ? '样式编辑器' : 'Style Editor'} closeLabel={props.lang === 'zh' ? '关闭' : 'Close'} triggerRef={props.triggerRef} anchorRect={props.anchorRect} onClose={props.onClose}>
     <p role="status">{props.lang === 'zh' ? '加载样式…' : 'Loading styles…'}</p>
   </AnchoredPanel>,
 );
-const headerPreloads = [AiSettings.preload, ThemeEditorPanel.preload];
-import { springTransition, overlayTransition } from '@/lib/motion';
-
+const headerPreloads = [AiSettings.preload, ThemeEditorPanel.preload, HeaderMoreMenu.preload];
 const PROJECT_GITHUB_URL = 'https://github.com/jonbrown66/openResume';
 
 const LogoIcon = () => (
   <svg className="w-5 h-5 shrink-0" viewBox="0 0 32 32" fill="none" aria-hidden="true">
-    <defs>
-      <linearGradient id="header-logo-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#a9d56b" />
-        <stop offset="100%" stopColor="#54702d" />
-      </linearGradient>
-    </defs>
+    <defs><linearGradient id="header-logo-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stopColor="#a9d56b" /><stop offset="100%" stopColor="#54702d" />
+    </linearGradient></defs>
     <circle cx="16" cy="16" r="12" stroke="url(#header-logo-grad)" strokeWidth="2.5" />
     <path d="M12 21V11C12 10 13 9 14 9H17C18.5 9 19.5 10 19.5 11.5C19.5 13 18.5 14 17 14H12" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
     <path d="M16 14L20 21" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
@@ -57,18 +40,10 @@ const LogoIcon = () => (
 );
 
 interface AppHeaderProps {
-  markdown?: string;
-  fileInputRef: RefObject<HTMLInputElement | null>;
-  onFileChange: (event: ChangeEvent<HTMLInputElement>) => void;
-  isImporting: boolean;
-  importStep: 'idle' | 'extracting' | 'parsing' | 'formatting' | 'done';
   lang: AppLanguage;
   theme: AppTheme;
   resolvedTheme: 'light' | 'dark';
   translations: TranslationSet;
-  canvasRef: RefObject<HTMLDivElement | null>;
-  draft: ResumeDraft;
-  onImportClick: () => void;
   onLanguageToggle: () => void;
   onThemeToggle: () => void;
   settings: AppSettings;
@@ -77,438 +52,101 @@ interface AppHeaderProps {
   resumeTheme: ResumeThemeConfig;
   onThemeChange: (newConfig: Partial<ResumeThemeConfig>) => void;
   onThemeReset: () => void;
-  template: ResumeTemplate;
-  onUpdateSettings: (updates: Partial<AppSettings>) => void;
-  projects: ResumeProject[];
-  currentProject: ResumeProject | undefined;
-  onProjectSwitch: (id: string) => void;
-  onProjectCreate: () => void;
-  onProjectRename: (id: string, newName: string) => void;
-  onProjectDelete: (id: string) => void;
+  saveStatus?: 'saved' | 'saving';
+  projectSelector: ReactNode;
+  importControl: ReactNode;
+  exportControl: ReactNode;
 }
 
 export const AppHeader = memo(function AppHeader({
-  markdown,
-  fileInputRef,
-  onFileChange,
-  isImporting,
-  importStep,
-  lang,
-  theme,
-  resolvedTheme,
-  translations: t,
-  canvasRef,
-  draft,
-  onImportClick,
-  onLanguageToggle,
-  onThemeToggle,
-  settings,
-  onUpdateProvider,
-  onSetActiveProvider,
-  resumeTheme,
-  onThemeChange,
-  onThemeReset,
-  template,
-  onUpdateSettings: _onUpdateSettings,
-  projects,
-  currentProject,
-  onProjectSwitch,
-  onProjectCreate,
-  onProjectRename,
-  onProjectDelete,
+  lang, theme, resolvedTheme, translations: t, onLanguageToggle, onThemeToggle,
+  settings, onUpdateProvider, onSetActiveProvider, resumeTheme, onThemeChange, onThemeReset, saveStatus,
+  projectSelector, importControl, exportControl,
 }: AppHeaderProps) {
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   useIdlePreload(headerPreloads);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isStylePanelOpen, setIsStylePanelOpen] = useState(false);
-  const [isMobileMoreOpen, setIsMobileMoreOpen] = useState(false);
   const styleButtonRef = useRef<HTMLButtonElement>(null);
-  const mobileMoreRef = useRef<HTMLDivElement>(null);
-  const mobileMoreMenuRef = useRef<HTMLDivElement>(null);
   const mobileMoreButtonRef = useRef<HTMLButtonElement>(null);
-  const mobileStyleTriggerRef = useRef<HTMLButtonElement>(null);
-  const [mobileMoreRect, setMobileMoreRect] = useState<DOMRect | null>(null);
-  const [styleAnchorRect, setStyleAnchorRect] = useState<DOMRect | null>(null);
+  const settingsButtonRef = useRef<HTMLButtonElement>(null);
   const settingsTriggerRef = useRef<HTMLElement>(null);
   const styleReturnFocusRef = useRef<HTMLElement>(null);
+  const [styleAnchorRect, setStyleAnchorRect] = useState<DOMRect | null>(null);
 
   const handleToggleSettings = useCallback(() => {
-    settingsTriggerRef.current = window.innerWidth >= 1024 ? settingsRef.current?.querySelector('button') ?? null : mobileMoreButtonRef.current;
+    settingsTriggerRef.current = window.innerWidth >= 1024 ? settingsButtonRef.current : mobileMoreButtonRef.current;
     setIsStylePanelOpen(false);
-    setIsMobileMoreOpen(false);
-    setIsSettingsOpen(prev => !prev);
+    setIsSettingsOpen(previous => !previous);
   }, []);
-  const settingsRef = useRef<HTMLDivElement>(null);
-
   useEffect(() => {
     if (!isSettingsOpen) return;
-    const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target;
-      const targetNode = target instanceof Node ? target : null;
-      const targetElement = target instanceof Element ? target : null;
-      const isSettingsMenuItem = Boolean(targetElement?.closest('[role="menuitem"]'));
-      const isSelectPortal = Boolean(targetElement?.closest('[data-slot="select-content"]'));
-
-      if (
-        settingsRef.current &&
-        (!targetNode || !settingsRef.current.contains(targetNode)) &&
-        !isSettingsMenuItem &&
-        !isSelectPortal && !targetElement?.closest('[data-overlay-portal]')
-      ) {
-        setIsSettingsOpen(false);
-      }
+    const outside = (event: MouseEvent) => {
+      const target = event.target instanceof Element ? event.target : null;
+      if (target && !settingsButtonRef.current?.contains(target)
+        && !target.closest('[data-slot="select-content"],[data-overlay-portal],[role="menuitem"]')) setIsSettingsOpen(false);
     };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener('mousedown', outside);
+    return () => document.removeEventListener('mousedown', outside);
   }, [isSettingsOpen]);
-  const handleToggleStylePanel = useCallback(() => {
-    styleReturnFocusRef.current = styleButtonRef.current;
+
+  const openStyle = (mobile: boolean) => {
+    const trigger = mobile ? mobileMoreButtonRef.current : styleButtonRef.current;
+    styleReturnFocusRef.current = trigger;
+    setStyleAnchorRect(trigger?.getBoundingClientRect() ?? null);
     setIsSettingsOpen(false);
-    setStyleAnchorRect(styleButtonRef.current?.getBoundingClientRect() ?? null);
-    setIsStylePanelOpen(prev => !prev);
-  }, []);
-  const handleMobileStylePanelOpen = useCallback(() => {
-    styleReturnFocusRef.current = mobileMoreButtonRef.current;
-    setIsSettingsOpen(false);
-    setStyleAnchorRect(mobileMoreButtonRef.current?.getBoundingClientRect() ?? null);
-    setIsStylePanelOpen(true);
-    setIsMobileMoreOpen(false);
-  }, []);
-  const handleToggleTheme = useCallback(() => {
-    setIsMobileMoreOpen(false);
-    onThemeToggle();
-  }, [onThemeToggle]);
-  const handleToggleLanguage = useCallback(() => {
-    setIsMobileMoreOpen(false);
-    onLanguageToggle();
-  }, [onLanguageToggle]);
-
-  useEffect(() => {
-    if (!isMobileMoreOpen) return;
-
-    const handlePointerDown = (event: PointerEvent) => {
-      const target = event.target as Node;
-      if (!mobileMoreRef.current?.contains(target) && !mobileMoreMenuRef.current?.contains(target)) {
-        setIsMobileMoreOpen(false);
-      }
-    };
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        event.preventDefault();
-        setIsMobileMoreOpen(false);
-        mobileMoreButtonRef.current?.focus();
-      } else if (['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) {
-        event.preventDefault();
-        const items = Array.from(mobileMoreMenuRef.current?.querySelectorAll<HTMLElement>('[role=menuitem]') ?? []);
-        const index = items.indexOf(document.activeElement as HTMLElement);
-        const next = event.key === 'Home' ? 0 : event.key === 'End' ? items.length - 1 : (index + (event.key === 'ArrowDown' ? 1 : items.length - 1)) % items.length;
-        items[next]?.focus();
-      }
-    };
-
-    const frame = requestAnimationFrame(() => mobileMoreMenuRef.current?.querySelector<HTMLElement>('[role=menuitem]')?.focus());
-    document.addEventListener('pointerdown', handlePointerDown);
-    document.addEventListener('keydown', handleKeyDown);
-    return () => {
-      cancelAnimationFrame(frame);
-      document.removeEventListener('pointerdown', handlePointerDown);
-      document.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [isMobileMoreOpen]);
-
-  useEffect(() => {
-    if (!isMobileMoreOpen) return;
-
-    const updateMenuPosition = () => {
-      setMobileMoreRect(mobileMoreButtonRef.current?.getBoundingClientRect() ?? null);
-    };
-
-    updateMenuPosition();
-    window.addEventListener('resize', updateMenuPosition);
-    window.addEventListener('scroll', updateMenuPosition, true);
-    return () => {
-      window.removeEventListener('resize', updateMenuPosition);
-      window.removeEventListener('scroll', updateMenuPosition, true);
-    };
-  }, [isMobileMoreOpen]);
-
-  const stylePanelProps = useMemo(() => ({
-    triggerRef: styleReturnFocusRef,
-    anchorRect: isStylePanelOpen ? styleAnchorRect : null,
-    theme: resumeTheme,
-    lang,
-    onChange: onThemeChange,
-    onReset: onThemeReset,
-    onClose: () => setIsStylePanelOpen(false),
-  }), [resumeTheme, lang, onThemeChange, onThemeReset, isStylePanelOpen, styleAnchorRect]);
-
-  const exportMenuProps = useMemo(() => ({
-    markdown,
-    canvasRef,
-    draft,
-    theme: resumeTheme,
-    template,
-    translations: t,
-  }), [canvasRef, draft, markdown, resumeTheme, template, t]);
-
-  const themeIcon = useMemo(() => {
-    if (theme === 'system') return <Monitor size={16} />;
-    return resolvedTheme === 'dark' ? <Moon size={16} /> : <Sun size={16} />;
-  }, [theme, resolvedTheme]);
-
-  const themeLabel = useMemo(() => {
-    if (theme === 'system') return t.themeAuto;
-    if (theme === 'dark') return t.themeDark;
-    return t.themeLight;
-  }, [theme, t]);
-
-  const mobileMenuItemClass = 'app-control ui-menu-item';
+    setIsStylePanelOpen(previous => mobile || !previous);
+  };
+  const themeIcon = theme === 'system' ? <Monitor size={16} /> : resolvedTheme === 'dark' ? <Moon size={16} /> : <Sun size={16} />;
+  const themeLabel = theme === 'system' ? t.themeAuto : theme === 'dark' ? t.themeDark : t.themeLight;
 
   return (
     <header className="app-header relative flex shrink-0 items-center gap-2 border-b border-[var(--app-border)] bg-[var(--app-surface)] px-3 py-2.5 transition-colors duration-200 2xl:grid 2xl:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] sm:px-6 sm:py-4 print:hidden z-50">
       <div className="hidden min-w-0 items-center 2xl:flex">
-        <div className="hidden 2xl:flex items-center gap-2 mr-2">
-          <motion.div
-            className="w-3 h-3 rounded-lg bg-red-400 dark:bg-red-500"
-            transition={springTransition}
-          />
-          <motion.div
-            className="w-3 h-3 rounded-lg bg-amber-400 dark:bg-amber-500"
-            transition={springTransition}
-          />
-          <motion.div
-            className="w-3 h-3 rounded-lg bg-green-400 dark:bg-green-500"
-            transition={springTransition}
-          />
+        <div className="flex items-center gap-2 mr-2">
+          <span className="w-3 h-3 rounded-lg bg-red-400 dark:bg-red-500" />
+          <span className="w-3 h-3 rounded-lg bg-amber-400 dark:bg-amber-500" />
+          <span className="w-3 h-3 rounded-lg bg-green-400 dark:bg-green-500" />
         </div>
       </div>
-
       <div className="flex shrink-0 items-center gap-1.5 justify-self-center sm:gap-3" aria-label="OpenResume">
         <LogoIcon />
-        <span className="hidden text-xs font-semibold tracking-wider text-zinc-500 dark:text-zinc-400 sm:inline sm:text-sm sm:tracking-wide">
-          OpenResume
-        </span>
+        <span className="hidden text-xs font-semibold tracking-wider text-zinc-500 dark:text-zinc-400 sm:inline sm:text-sm sm:tracking-wide">OpenResume</span>
       </div>
-
       <div className="col-start-3 ms-auto flex min-w-0 items-center justify-end gap-0.5 sm:gap-2 relative">
-        <ProjectSelector
-          lang={lang}
-          projects={projects}
-          currentProject={currentProject}
-          onSwitch={onProjectSwitch}
-          onCreate={onProjectCreate}
-          onRename={onProjectRename}
-          onDelete={onProjectDelete}
-        />
-        <div className="hidden lg:block">
-          <motion.button
-            ref={styleButtonRef}
-            onClick={handleToggleStylePanel}
-            className="app-control flex items-center justify-center rounded-lg p-2 transition-colors"
-            title={t.style}
-            aria-label={t.style}
-          >
-            <Palette size={16} />
-          </motion.button>
-          <AnimatePresence>
-            {isStylePanelOpen && (
-              <ThemeEditorPanel {...stylePanelProps} />
-            )}
-          </AnimatePresence>
+        {projectSelector}
+        {saveStatus && <span aria-live="polite" className="hidden shrink-0 text-xs text-[var(--ui-text-secondary)] xl:inline">
+          {saveStatus === 'saving' ? (lang === 'zh' ? '保存中…' : 'Saving…') : (lang === 'zh' ? '已保存' : 'Saved')}
+        </span>}
+        <button type="button" ref={styleButtonRef} onClick={() => openStyle(false)}
+          className="app-control hidden items-center justify-center rounded-lg p-2 lg:flex" title={t.style} aria-label={t.style}>
+          <Palette size={16} />
+        </button>
+        <button type="button" onClick={onThemeToggle} className="app-control hidden items-center justify-center rounded-lg p-2 lg:flex" title={themeLabel} aria-label={themeLabel}>{themeIcon}</button>
+        <button type="button" onClick={onLanguageToggle} className="app-control hidden items-center justify-center rounded-lg p-2 lg:flex" title={t.toggleLanguage} aria-label={t.toggleLanguage}><Globe size={16} /></button>
+        <button type="button" ref={settingsButtonRef} onClick={handleToggleSettings}
+          className="app-control hidden items-center justify-center rounded-lg p-2 lg:flex" title={t.apiSettings} aria-label={t.apiSettings}><Settings size={16} /></button>
+        <a href={PROJECT_GITHUB_URL} target="_blank" rel="noreferrer" className="app-control hidden items-center justify-center rounded-lg p-2 lg:flex" title={t.githubProject} aria-label={t.githubProject}><Github size={16} /></a>
+
+        <div className="relative lg:hidden">
+          <HeaderMoreMenu label={t.moreActions} triggerRef={mobileMoreButtonRef} onOpen={() => setIsStylePanelOpen(false)} actions={[
+            { label: t.style, icon: <Palette size={16} />, onClick: () => openStyle(true), opensDialog: true },
+            { label: themeLabel, icon: themeIcon, onClick: onThemeToggle },
+            { label: t.toggleLanguage, icon: <Globe size={16} />, onClick: onLanguageToggle },
+            { label: t.apiSettings, icon: <Settings size={16} />, onClick: handleToggleSettings, opensDialog: true },
+            { label: t.githubProject, icon: <Github size={16} />, href: PROJECT_GITHUB_URL },
+          ]} />
         </div>
-
-        <motion.button
-          onClick={handleToggleTheme}
-          className="app-control hidden items-center justify-center rounded-lg p-2 transition-colors lg:flex"
-          title={themeLabel}
-          aria-label={themeLabel}
-        >
-          {themeIcon}
-        </motion.button>
-
-        <motion.button
-          onClick={handleToggleLanguage}
-          className="app-control hidden items-center justify-center rounded-lg p-2 transition-colors lg:flex"
-          title={t.toggleLanguage}
-          aria-label={t.toggleLanguage}
-        >
-          <Globe size={16} className="shrink-0" aria-hidden="true" />
-        </motion.button>
-
-        <div className="relative" ref={settingsRef}>
-          <motion.button
-            onClick={handleToggleSettings}
-            className="app-control hidden items-center justify-center rounded-lg p-2 transition-colors lg:flex"
-            title={t.apiSettings}
-            aria-label={t.apiSettings}
-          >
-            <Settings size={16} />
-          </motion.button>
-
-          <AnimatePresence>
-            {isSettingsOpen && (
-              <AnchoredPanel title={t.settingsTitle} closeLabel={t.close} triggerRef={settingsTriggerRef} onClose={() => setIsSettingsOpen(false)}>
-                <AiSettings
-                  settings={settings}
-                  onUpdateProvider={onUpdateProvider}
-                  onSetActiveProvider={onSetActiveProvider}
-                />
-              </AnchoredPanel>
-            )}
-          </AnimatePresence>
-        </div>
-
-        <motion.a
-          href={PROJECT_GITHUB_URL}
-          target="_blank"
-          rel="noreferrer"
-          className="app-control hidden items-center justify-center rounded-lg p-2 transition-colors lg:flex"
-          title={t.githubProject}
-          aria-label={t.githubProject}
-        >
-          <Github size={16} />
-        </motion.a>
-
-        <div className="relative lg:hidden" ref={mobileMoreRef}>
-          <motion.button
-            ref={mobileMoreButtonRef}
-            type="button"
-            onClick={() => {
-              setIsStylePanelOpen(false);
-              setMobileMoreRect(mobileMoreButtonRef.current?.getBoundingClientRect() ?? null);
-              setIsMobileMoreOpen(prev => !prev);
-            }}
-            className="app-control flex min-h-10 min-w-10 items-center justify-center rounded-lg p-2 transition-colors"
-            aria-label={t.moreActions}
-            aria-expanded={isMobileMoreOpen}
-          >
-            <MoreHorizontal size={18} />
-          </motion.button>
-          {typeof document !== 'undefined' ? createPortal(
-            <AnimatePresence>
-              {isMobileMoreOpen && (
-              <motion.div
-                ref={mobileMoreMenuRef}
-                role="menu"
-                aria-label={t.moreActions}
-                initial={{ opacity: 0, y: -4, scale: 0.98 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: -4, scale: 0.98 }}
-                transition={overlayTransition}
-                style={{
-                  position: 'fixed',
-                  top: mobileMoreRect ? mobileMoreRect.bottom + 8 : 56,
-                  right: mobileMoreRect ? Math.max(8, window.innerWidth - mobileMoreRect.right) : 8,
-                  maxHeight: Math.max(120, window.innerHeight - (mobileMoreRect?.bottom ?? 56) - 20),
-                  transformOrigin: 'top right',
-                }}
-                className="app-ui app-panel ui-menu z-[120] w-56 overflow-y-auto rounded-xl border p-1.5"
-              >
-                <button
-                  ref={mobileStyleTriggerRef}
-                  type="button"
-                  role="menuitem"
-                  onClick={handleMobileStylePanelOpen}
-                  className={mobileMenuItemClass}
-                >
-                  <Palette size={16} />
-                  <span>{t.style}</span>
-                </button>
-                <button
-                  type="button"
-                  role="menuitem"
-                  onClick={handleToggleTheme}
-                  className={mobileMenuItemClass}
-                >
-                  {themeIcon}
-                  <span>{themeLabel}</span>
-                </button>
-                <button
-                  type="button"
-                  role="menuitem"
-                  onClick={handleToggleLanguage}
-                  className={mobileMenuItemClass}
-                >
-                  <Globe size={16} className="shrink-0" aria-hidden="true" />
-                  <span>{t.toggleLanguage}</span>
-                </button>
-                <button
-                  type="button"
-                  role="menuitem"
-                  onClick={handleToggleSettings}
-                  className={mobileMenuItemClass}
-                >
-                  <Settings size={16} />
-                  <span>{t.apiSettings}</span>
-                </button>
-                <a
-                  role="menuitem"
-                  href={PROJECT_GITHUB_URL}
-                  target="_blank"
-                  rel="noreferrer"
-                  onClick={() => setIsMobileMoreOpen(false)}
-                  className={mobileMenuItemClass}
-                >
-                  <Github size={16} />
-                  <span>{t.githubProject}</span>
-                </a>
-              </motion.div>
-              )}
-            </AnimatePresence>,
-            document.body
-          ) : null}
-        </div>
-
-        <div className="hidden sm:block w-px h-4 bg-[var(--app-border)] mx-1 sm:mx-2"></div>
-
-        <input
-          type="file"
-          ref={fileInputRef}
-          onChange={onFileChange}
-          accept=".txt,.md,.pdf,.docx"
-          className="hidden"
-        />
-
-        <motion.button
-          onClick={onImportClick}
-          disabled={isImporting}
-          className="app-secondary hidden shrink-0 items-center gap-2 whitespace-nowrap rounded-lg border px-4 py-2 text-xs font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50 lg:flex"
-        >
-          {isImporting ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />}
-          {isImporting && importStep === 'extracting' && t.extracting}
-          {isImporting && importStep === 'parsing' && t.parsing}
-          {isImporting && importStep === 'formatting' && t.aiFormatting}
-          {isImporting && importStep !== 'extracting' && importStep !== 'parsing' && importStep !== 'formatting' && t.importing}
-          {!isImporting && t.import}
-        </motion.button>
-
-        <motion.button
-          onClick={onImportClick}
-          disabled={isImporting}
-          className="app-control flex min-h-10 min-w-10 items-center justify-center rounded-lg p-2 transition-colors disabled:opacity-50 lg:hidden"
-          aria-label={t.import}
-        >
-          {isImporting ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
-        </motion.button>
-
-        <ExportMenu {...exportMenuProps}>
-          <motion.button
-            className="app-primary hidden items-center gap-2 rounded-lg px-4 py-2 text-xs font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50 lg:flex"
-          >
-            <Printer size={14} />
-            {t.export}
-            <ChevronDown size={12} />
-          </motion.button>
-          <motion.button
-            className="app-primary flex min-h-10 min-w-10 items-center justify-center rounded-lg p-2 transition-colors disabled:opacity-50 lg:hidden"
-            aria-label={t.export}
-          >
-            <Printer size={16} />
-          </motion.button>
-        </ExportMenu>
-
-
+        <div className="hidden sm:block w-px h-4 bg-[var(--app-border)] mx-1 sm:mx-2" />
+        {importControl}
+        {exportControl}
       </div>
+      <AnimatePresence>
+        {isStylePanelOpen && <ThemeEditorPanel key="style" triggerRef={styleReturnFocusRef} anchorRect={styleAnchorRect} theme={resumeTheme} lang={lang}
+          onChange={onThemeChange} onReset={onThemeReset} onClose={() => setIsStylePanelOpen(false)} />}
+        {isSettingsOpen && <AnchoredPanel key="settings" title={t.settingsTitle} closeLabel={t.close} triggerRef={settingsTriggerRef} onClose={() => setIsSettingsOpen(false)}>
+          <AiSettings settings={settings} onUpdateProvider={onUpdateProvider} onSetActiveProvider={onSetActiveProvider} />
+        </AnchoredPanel>}
+      </AnimatePresence>
     </header>
   );
 });

@@ -77,7 +77,7 @@ export async function paginateResumeAsync(
 
 interface IntervalLookup {
   firstStartAtOrAfter(offset: number): number;
-  findCrossing(start: number, end: number): [number, number] | undefined;
+  findCrossing(end: number): [number, number] | undefined;
 }
 
 /** Prefix maxima locate page-edge crossings without scanning every line. */
@@ -103,10 +103,10 @@ function buildIntervalLookup(merged: Array<[number, number]>): IntervalLookup {
 
   return {
     firstStartAtOrAfter,
-    findCrossing(start, end) {
+    findCrossing(end) {
       for (let index = firstStartAtOrAfter(end) - 1; index >= 0; index -= 1) {
         if (prefixBottoms[index] <= end + 0.1) return undefined;
-        if (merged[index][0] < start - 0.1 && merged[index][1] > end + 0.1) {
+        if (merged[index][0] < end - 0.1 && merged[index][1] > end + 0.1) {
           return merged[index];
         }
       }
@@ -160,7 +160,7 @@ function* paginatePages(source: HTMLElement, pageHeight: number, margin: number)
   const intervals = buildIntervalLookup(merged);
   for (let offset = 0; offset < total;) {
     let end = Math.min(offset + pageHeight, total);
-    const crossing = intervals.findCrossing(offset, end);
+    const crossing = intervals.findCrossing(end);
     if (crossing && crossing[0] > offset + 1) end = crossing[0];
     // An oversized image/row cannot fit; advance rather than looping forever.
     if (end <= offset + 1) end = Math.min(offset + pageHeight, total);

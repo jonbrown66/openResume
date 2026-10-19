@@ -45,6 +45,7 @@ export function useResumeProjects(language: 'zh' | 'en' = 'zh') {
   const [initial] = useState(() => load(language));
   const [storageData, setStorageData] = useState<StorageSchema>(initial.data);
   const [storageError, setStorageError] = useState(initial.error);
+  const [saveState, setSaveState] = useState<'saved' | 'saving'>('saved');
   const latest = useRef(storageData);
   const mustBackup = useRef(initial.error === 'unavailable');
   const dirty = useRef(false);
@@ -66,12 +67,14 @@ export function useResumeProjects(language: 'zh' | 'en' = 'zh') {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(latest.current));
       dirty.current = false;
       setStorageError('');
+      setSaveState('saved');
     } catch { setStorageError('save-failed'); }
   }, []);
   const commit = useCallback((data: StorageSchema, batch = false) => {
     latest.current = data;
     setStorageData(data);
     dirty.current = true;
+    setSaveState('saving');
     // Bound the save delay even during continuous typing or slider dragging.
     if (!batch) flush();
     else if (saveTimer.current === null) saveTimer.current = setTimeout(flush, 250);
@@ -120,5 +123,5 @@ export function useResumeProjects(language: 'zh' | 'en' = 'zh') {
     if (name.trim()) updateProject(id, { name: name.trim() });
   }, [updateProject]);
   return { projects: storageData.projects, currentProject, createProject, switchProject,
-    updateProject, deleteProject, renameProject, storageError };
+    updateProject, deleteProject, renameProject, storageError, saveState };
 }

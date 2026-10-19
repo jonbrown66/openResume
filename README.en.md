@@ -29,6 +29,8 @@ GitHub: [https://github.com/jonbrown66/openResume](https://github.com/jonbrown66
 - Project-scoped assistant memory with a default limit of 20 recent messages
 - Export to `PDF / DOCX / HTML`
 - Local multi-project resume management with optimized mobile layout and UI details
+- ID photo upload with a 25:35 portrait crop, drag-and-drop, replace and remove
+- Autosave to local storage with a save-status indicator in the header
 - Support for OpenAI, Anthropic, Gemini, DeepSeek, and OpenRouter (supports custom models and connectivity test)
 
 ## Tech Stack
@@ -120,6 +122,7 @@ Export endpoints:
 
 ```text
 app/                         Next.js App Router and export APIs
+app/styles/                  theme tokens, workbench controls, resume templates, print styles
 src/components/              page, editor, preview, and assistant components
 src/components/assistant/    assistant subcomponents
 src/components/settings/     settings panels

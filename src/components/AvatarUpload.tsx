@@ -1,5 +1,5 @@
-import { memo, useRef, useState, useCallback } from 'react';
-import { Upload, X } from 'lucide-react';
+import { memo, useRef, useState, useCallback, useId } from 'react';
+import { Upload, Trash2 } from 'lucide-react';
 
 interface AvatarUploadProps {
   value?: string;
@@ -9,6 +9,8 @@ interface AvatarUploadProps {
 
 export const AvatarUpload = memo(function AvatarUpload({ value, onChange, lang }: AvatarUploadProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const uploadButtonRef = useRef<HTMLButtonElement>(null);
+  const hintId = useId();
   const [isDragging, setIsDragging] = useState(false);
 
   const handleFileSelect = useCallback((file: File) => {
@@ -93,15 +95,15 @@ export const AvatarUpload = memo(function AvatarUpload({ value, onChange, lang }
     }
   }, [handleFileSelect]);
 
-  const handleRemove = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation();
+  const handleRemove = useCallback(() => {
     onChange(undefined);
+    uploadButtonRef.current?.focus();
   }, [onChange]);
 
   return (
     <div className="block">
       <span className="block text-xs font-medium text-[var(--ui-text-secondary)] mb-2">
-        {lang === 'zh' ? '头像' : 'Avatar'}
+        {lang === 'zh' ? '证件照' : 'ID photo'}
       </span>
 
       <input
@@ -112,54 +114,57 @@ export const AvatarUpload = memo(function AvatarUpload({ value, onChange, lang }
         onChange={handleFileChange}
       />
 
-      <div
-        role="button"
-        tabIndex={0}
-        aria-label={lang === 'zh' ? '上传头像' : 'Upload avatar'}
-        onKeyDown={event => { if (event.target === event.currentTarget && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); handleClick(); } }}
-        onClick={handleClick}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
-        className={`
-          relative w-24 h-24 rounded-full cursor-pointer
-          border-2 border-dashed transition-colors
-          ${isDragging
-            ? 'border-[var(--app-accent)] bg-[var(--app-accent-soft)]'
-            : 'border-[var(--app-border)] hover:border-[var(--app-accent)]'
-          }
-          ${value ? 'border-solid' : ''}
-        `}
-      >
-        {value ? (
-          <>
+      <div className="flex flex-wrap items-center gap-4">
+        <button
+          ref={uploadButtonRef}
+          type="button"
+          aria-label={lang === 'zh' ? '上传头像' : 'Upload avatar'}
+          aria-describedby={hintId}
+          onClick={handleClick}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+          data-dragging={isDragging || undefined}
+          data-has-photo={Boolean(value) || undefined}
+          className="ui-photo-upload"
+        >
+          {value ? (
             <img
               src={value}
-              alt="Avatar"
-              className="w-full h-full rounded-full object-cover"
+              alt={lang === 'zh' ? '证件照预览' : 'ID photo preview'}
+              className="block h-full w-full object-cover"
             />
-            <button
-              type="button"
-              onClick={handleRemove}
-              className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center shadow-lg hover:bg-red-600 transition-colors"
-              title={lang === 'zh' ? '删除' : 'Remove'}
-            >
-              <X size={14} />
-            </button>
-          </>
-        ) : (
-          <div className="w-full h-full rounded-full bg-[var(--app-surface-muted)] flex flex-col items-center justify-center gap-1">
-            <Upload size={20} className="text-[var(--muted-foreground)]" />
-            <span className="text-xs text-[var(--muted-foreground)]">
-              {lang === 'zh' ? '点击上传' : 'Upload'}
+          ) : (
+            <span className="flex h-full w-full flex-col items-center justify-center gap-2 text-[var(--ui-text-secondary)]">
+              <Upload size={20} aria-hidden="true" />
+              <span className="text-xs">{lang === 'zh' ? '点击上传' : 'Upload'}</span>
             </span>
-          </div>
-        )}
-      </div>
+          )}
+        </button>
 
-      <p className="mt-2 text-xs text-[var(--ui-text-secondary)]">
-        {lang === 'zh' ? '支持 JPG、PNG，最大 5MB' : 'JPG, PNG, max 5MB'}
-      </p>
+        <div className="min-w-0 space-y-2">
+          <p id={hintId} className="text-xs leading-relaxed text-[var(--ui-text-secondary)]">
+            {lang === 'zh' ? '一寸证件照比例 25:35' : 'ID photo ratio 25:35'}
+            <br />
+            {lang === 'zh' ? '支持 JPG、PNG，最大 5MB' : 'JPG, PNG, max 5MB'}
+          </p>
+          {value && (
+            <>
+              <p className="text-xs text-[var(--ui-text-secondary)]">
+                {lang === 'zh' ? '点击照片可更换' : 'Click the photo to replace it'}
+              </p>
+              <button
+                type="button"
+                onClick={handleRemove}
+                className="ui-destructive-control inline-flex items-center justify-center gap-1.5 px-3"
+              >
+                <Trash2 size={14} aria-hidden="true" />
+                {lang === 'zh' ? '删除照片' : 'Remove photo'}
+              </button>
+            </>
+          )}
+        </div>
+      </div>
     </div>
   );
 });
