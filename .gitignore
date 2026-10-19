@@ -24,6 +24,10 @@ promo-video/work-*/
 promo-video/*.mp4
 promo-video/*.webm
 
+# Local exports, downloaded assets, and scratch files
+/output/
+/tmp/
+
 # E2E artifacts
 /test-results/
 /playwright-report/

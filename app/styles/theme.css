@@ -1,0 +1,169 @@
+/* App colors and control tokens have one light/dark source of truth. */
+@theme {
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  --font-serif: "Playfair Display", ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+  --font-cursive: "Dancing Script", cursive;
+}
+
+@theme inline {
+  --font-sans: 'Geist Variable', sans-serif;
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-foreground: var(--foreground);
+  --color-background: var(--background);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+:root {
+  color-scheme: light dark;
+  --background: #fbfcf8;
+  --foreground: #1b1f16;
+  --card: #ffffff;
+  --card-foreground: #171717;
+  --popover: #ffffff;
+  --popover-foreground: #171717;
+  --primary: #a9d56b;
+  --primary-foreground: #16210d;
+  --secondary: #eef3e7;
+  --secondary-foreground: #26311d;
+  --muted: #f1f4ed;
+  --muted-foreground: var(--ui-text-secondary);
+  --accent: #a9d56b;
+  --accent-foreground: #16210d;
+  --destructive: #dc2626;
+  --border: #dfe7d5;
+  --input: #dfe7d5;
+  --ring: #a9d56b;
+  --radius: 0.75rem;
+  --app-bg: oklch(0.965 0.006 110);
+  --app-shell: oklch(0.995 0.002 110);
+  --app-surface: oklch(1 0 0);
+  --app-surface-muted: oklch(0.975 0.004 110);
+  --app-border: oklch(0.89 0.008 110);
+  --app-shadow: 0 24px 70px -42px rgba(38, 49, 29, 0.42);
+  --app-accent: #a9d56b;
+  --app-accent-hover: #9ac95b;
+  --app-accent-soft: var(--ui-selected-bg);
+  --chart-1: oklch(0.809 0.105 251.813);
+  --chart-2: oklch(0.623 0.214 259.815);
+  --chart-3: oklch(0.546 0.245 262.881);
+  --chart-4: oklch(0.488 0.243 264.376);
+  --chart-5: oklch(0.424 0.199 265.638);
+  --ui-radius-menu: 12px;
+  --ui-radius-menu-item: 8px;
+  --ui-radius-control: 12px;
+  --ui-radius-panel: 16px;
+  --ui-radius-dialog: 20px;
+  --ui-control-size: 36px;
+  --ui-field-size: 40px;
+  --ui-focus: oklch(0.48 0.11 130);
+  --ui-text-secondary: oklch(0.46 0.012 110);
+  --ui-selected-bg: oklch(0.94 0.035 128);
+  --ui-selected-ink: oklch(0.32 0.06 130);
+  --ui-hover-bg: oklch(0.965 0.008 110);
+  --ui-shadow-panel: 0 8px 28px -8px oklch(0.2 0.015 110 / 0.18), 0 2px 6px oklch(0.2 0.015 110 / 0.05);
+  --ui-shadow-dialog: 0 20px 64px -16px oklch(0.15 0.01 110 / 0.3);
+  --ui-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --ui-duration: 180ms;
+}
+
+:root.dark, :root[data-theme="dark"] {
+  color-scheme: dark;
+  --background: #11150e;
+  --foreground: #f5f8f0;
+  --card: #171d13;
+  --card-foreground: #fafafa;
+  --popover: #171d13;
+  --popover-foreground: #f5f8f0;
+  --primary: #a9d56b;
+  --primary-foreground: #16210d;
+  --secondary: #232b1d;
+  --secondary-foreground: #f5f8f0;
+  --muted: #232b1d;
+  --muted-foreground: var(--ui-text-secondary);
+  --accent: #a9d56b;
+  --accent-foreground: #16210d;
+  --destructive: #ef4444;
+  --border: #2d3824;
+  --input: #2d3824;
+  --ring: #a9d56b;
+  --app-bg: oklch(0.155 0.006 110);
+  --app-shell: oklch(0.19 0.006 110);
+  --app-surface: oklch(0.22 0.006 110);
+  --app-surface-muted: oklch(0.255 0.006 110);
+  --app-border: oklch(0.34 0.008 110);
+  --app-shadow: 0 24px 70px -42px rgba(0, 0, 0, 0.8);
+  --app-accent: #a9d56b;
+  --app-accent-hover: #b6de7f;
+  --app-accent-soft: var(--ui-selected-bg);
+  --ui-focus: oklch(0.82 0.12 130);
+  --ui-text-secondary: oklch(0.76 0.012 110);
+  --ui-selected-bg: oklch(0.29 0.035 128);
+  --ui-selected-ink: oklch(0.88 0.09 128);
+  --ui-hover-bg: oklch(0.28 0.008 110);
+  --ui-shadow-panel: 0 8px 28px -8px oklch(0 0 0 / 0.45), 0 2px 6px oklch(0 0 0 / 0.15);
+}
+
+@media (prefers-color-scheme: dark) {
+  html:not([data-theme="light"]) {
+    color-scheme: dark;
+    --background: #11150e;
+    --foreground: #f5f8f0;
+    --card: #171d13;
+    --card-foreground: #fafafa;
+    --popover: #171d13;
+    --popover-foreground: #f5f8f0;
+    --primary: #a9d56b;
+    --primary-foreground: #16210d;
+    --secondary: #232b1d;
+    --secondary-foreground: #f5f8f0;
+    --muted: #232b1d;
+    --muted-foreground: var(--ui-text-secondary);
+    --accent: #a9d56b;
+    --accent-foreground: #16210d;
+    --destructive: #ef4444;
+    --border: #2d3824;
+    --input: #2d3824;
+    --ring: #a9d56b;
+    --app-bg: oklch(0.155 0.006 110);
+    --app-shell: oklch(0.19 0.006 110);
+    --app-surface: oklch(0.22 0.006 110);
+    --app-surface-muted: oklch(0.255 0.006 110);
+    --app-border: oklch(0.34 0.008 110);
+    --app-shadow: 0 24px 70px -42px rgba(0, 0, 0, 0.8);
+    --app-accent: #a9d56b;
+    --app-accent-hover: #b6de7f;
+    --app-accent-soft: var(--ui-selected-bg);
+    --ui-focus: oklch(0.82 0.12 130);
+    --ui-text-secondary: oklch(0.76 0.012 110);
+    --ui-selected-bg: oklch(0.29 0.035 128);
+    --ui-selected-ink: oklch(0.88 0.09 128);
+    --ui-hover-bg: oklch(0.28 0.008 110);
+    --ui-shadow-panel: 0 8px 28px -8px oklch(0 0 0 / 0.45), 0 2px 6px oklch(0 0 0 / 0.15);
+  }
+}
