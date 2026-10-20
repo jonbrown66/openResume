@@ -104,6 +104,8 @@ contact: 138-0000-0000 | zhangsan@example.com | 北京市朝阳区
 - 人力资源流程支持与入职培训
 `;
 
+export const starterMarkdownEn = defaultMarkdownEn;
+
 export const pageWidthPx = 794;
 export const pageHeightPx = 1123;
 

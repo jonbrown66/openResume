@@ -17,6 +17,8 @@ interface Snapshot { markdown: string; draft: ResumeDraft; draftMarkdown: string
 function loadProject(project?: ResumeProject) {
   const markdown = project?.markdown ?? (project ? serializeResumeDraftToMarkdown(project.data) : defaultMarkdownEn);
   return { projectId: project?.id, markdown, draftMarkdown: markdown,
+    // Markdown carries explicit section types; legacy documents acquire them once
+    // when loaded, then the next block edit serializes them with the content.
     draft: withDraftIds(parseMarkdownToResumeDraft(markdown)),
     template: project?.templateId ?? 'classic' as ResumeTemplate,
     theme: project?.theme ?? DEFAULT_THEME_CONFIG, selection: undefined as EditorSelection | undefined,

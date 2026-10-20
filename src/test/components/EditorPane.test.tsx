@@ -39,7 +39,7 @@ describe('EditorPane', () => {
     fireEvent.click(formatButton);
 
     expect(props.onFormatMarkdown).toHaveBeenCalledTimes(1);
-    expect(formatButton).toHaveClass('rounded-full');
+    expect(formatButton.className).toContain('rounded-[var(--ui-radius-control)]');
     expect(formatButton).not.toHaveTextContent('格式整理');
   });
 

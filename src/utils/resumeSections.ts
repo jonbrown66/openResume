@@ -1,4 +1,17 @@
-export type ResumeSectionType = 'experience' | 'education' | 'project' | 'skill' | 'custom';
+import type { ResumeSection, ResumeSectionType } from '@/types/resume';
+export type { ResumeSectionType } from '@/types/resume';
+
+export function isResumeSectionType(value: unknown): value is ResumeSectionType {
+  return ['experience', 'education', 'project', 'skill', 'custom'].includes(value as string);
+}
+
+export function getResumeSectionType(section: ResumeSection): ResumeSectionType {
+  return section.type ?? inferResumeSectionType(section.title);
+}
+
+export function getEntrySummary(entry: { organization: string; heading: string; meta: string }, fallback: string) {
+  return [entry.organization, entry.heading, entry.meta].map(value => value.trim()).filter(Boolean).join(' · ') || fallback;
+}
 
 export function inferResumeSectionType(title: string): ResumeSectionType {
   if (/教育|学历|education/i.test(title)) return 'education';

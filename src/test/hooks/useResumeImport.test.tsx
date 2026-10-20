@@ -31,6 +31,21 @@ function createSettings(overrides?: Partial<AppSettings>): AppSettings {
 }
 
 describe('useResumeImport', () => {
+  it.each(['new', 'replace'] as const)('binds %s imports before asynchronous extraction and project switching', async target => {
+    let resolve!: (text: string) => void;
+    vi.mocked(extractTextFromFile).mockImplementation(() => new Promise(done => { resolve = done; }));
+    const complete = vi.fn();
+    const { result, rerender } = renderHook(({ id }) => useResumeImport({ projectId: id, lang: 'en', settings: DEFAULT_SETTINGS, onImportComplete: complete }), { initialProps: { id: 'first' } });
+    act(() => result.current.setImportTarget(target));
+    act(() => result.current.triggerImport());
+    rerender({ id: 'second' });
+    let pending!: Promise<void>;
+    act(() => { pending = result.current.handleFileChange({ target: { files: [new File(['content'], 'Candidate.md')] } } as unknown as React.ChangeEvent<HTMLInputElement>); });
+    rerender({ id: 'third' });
+    await act(async () => { resolve('original content'); await pending; });
+    expect(complete).toHaveBeenCalledExactlyOnceWith('original content', { projectId: target === 'replace' ? 'first' : undefined, fileName: 'Candidate.md' });
+  });
+
   it('preserves the existing resume when extraction is empty', async () => {
     const onImportComplete = vi.fn();
     const { result } = renderHook(() => useResumeImport({ lang: 'en', settings: DEFAULT_SETTINGS, onImportComplete }));
@@ -79,7 +94,7 @@ describe('useResumeImport', () => {
 
     expect(result.current.importNotice).toBe('missing-model');
     expect(result.current.importNoticeDetail).toBe('');
-    expect(onImportComplete).toHaveBeenCalledWith('parsed markdown');
+    expect(onImportComplete).toHaveBeenCalledWith('parsed markdown', { projectId: undefined, fileName: 'resume.txt' });
   });
 
   it('shows a fallback notice with detail when AI formatting fails for the selected model', async () => {
@@ -116,6 +131,6 @@ describe('useResumeImport', () => {
 
     expect(result.current.importNotice).toBe('ai-format-fallback');
     expect(result.current.importNoticeDetail).toContain('gpt-5-custom-preview');
-    expect(onImportComplete).toHaveBeenCalledWith('parsed markdown');
+    expect(onImportComplete).toHaveBeenCalledWith('parsed markdown', { projectId: undefined, fileName: 'resume.txt' });
   });
 });

@@ -1,8 +1,12 @@
+export type ResumeSectionType = 'experience' | 'education' | 'project' | 'skill' | 'custom';
+
 export interface ResumeFrontmatter {
   name: string;
   title: string;
   contact: string;
   image?: string;
+  /** Opaque source lines; never evaluated as YAML or assigned as object keys. */
+  sourceLines?: string[];
 }
 
 export interface ResumeEntry {
@@ -15,6 +19,7 @@ export interface ResumeEntry {
 
 export interface ResumeSection {
   id?: string;
+  type?: ResumeSectionType;
   title: string;
   content: string;
   entries: ResumeEntry[];

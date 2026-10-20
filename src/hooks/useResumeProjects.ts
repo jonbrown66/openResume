@@ -2,13 +2,14 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import type { ResumeProject, StorageSchema } from '@/types/resumeProject';
 import { STORAGE_KEY, generateId } from '@/types/resumeProject';
 import { parseMarkdownToResumeDraft } from '@/utils/resumeDocument';
-import { defaultMarkdownEn } from '@/constants';
+import { starterMarkdownEn } from '@/constants';
 import { DEFAULT_THEME_CONFIG } from '@/types/theme';
 import { isResumeDraft, normalizeTheme } from '@/utils/validation';
 
 function defaultProject(language: 'zh' | 'en' = 'zh'): ResumeProject {
-  return { id: generateId(), name: language === 'en' ? 'Resume 1' : '我的简历1', data: parseMarkdownToResumeDraft(defaultMarkdownEn),
-    markdown: defaultMarkdownEn, theme: { ...DEFAULT_THEME_CONFIG }, layout: {}, templateId: 'classic',
+  const markdown = starterMarkdownEn;
+  return { id: generateId(), name: language === 'en' ? 'Resume 1' : '我的简历1', data: parseMarkdownToResumeDraft(markdown),
+    markdown, theme: { ...DEFAULT_THEME_CONFIG }, layout: {}, templateId: 'classic',
     createdAt: Date.now(), updatedAt: Date.now() };
 }
 function load(language: 'zh' | 'en') {
@@ -90,14 +91,15 @@ export function useResumeProjects(language: 'zh' | 'en' = 'zh') {
     };
   }, [flush]);
   const currentProject = storageData.projects.find(p => p.id === storageData.currentProjectId) ?? storageData.projects[0];
-  const createProject = useCallback((copyFrom?: string) => {
+  const createProject = useCallback((content?: { markdown: string; name?: string }) => {
     const previous = latest.current;
-    const source = previous.projects.find(p => p.id === copyFrom);
     const project = defaultProject(language);
     const number = Math.max(0, ...previous.projects.map(p => Number(p.name.match(/^(?:我的简历|Resume )(\d+)$/)?.[1]) || 0)) + 1;
     project.name = language === 'en' ? `Resume ${number}` : `我的简历${number}`;
-    if (source) Object.assign(project, { data: structuredClone(source.data), markdown: source.markdown,
-      theme: { ...source.theme }, templateId: source.templateId });
+    const markdown = content?.markdown ?? project.markdown!;
+    project.markdown = markdown;
+    project.data = parseMarkdownToResumeDraft(markdown);
+    if (content?.name?.trim()) project.name = content.name.trim();
     commit({ projects: [...previous.projects, project], currentProjectId: project.id });
     return project;
   }, [commit, language]);

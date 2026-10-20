@@ -6,6 +6,8 @@ import { extractTextFromFile } from '../utils/fileExtractor';
 import { aiFormatResume } from '../utils/aiFormatter';
 import { autoFormatResume } from '../utils/resumeParser';
 
+export interface ImportTarget { projectId?: string; fileName: string }
+
 type ImportStep = 'idle' | 'extracting' | 'parsing' | 'formatting' | 'done';
 type ImportNotice = '' | 'missing-api-key' | 'missing-model' | 'ai-format-fallback';
 
@@ -13,12 +15,12 @@ interface UseResumeImportOptions {
   projectId?: string;
   lang: AppLanguage;
   settings: AppSettings;
-  onImportComplete: (markdown: string) => void;
+  onImportComplete: (markdown: string, target: ImportTarget) => void;
 }
 
 export function useResumeImport({ lang, settings, onImportComplete, projectId }: UseResumeImportOptions) {
-  const activeProject = useRef(projectId);
-  activeProject.current = projectId;
+  const [importTarget, setImportTarget] = useState<'new' | 'replace'>('new');
+  const selectedTarget = useRef<{ projectId?: string } | null>(null);
   const busy = useRef(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isImporting, setIsImporting] = useState(false);
@@ -27,7 +29,10 @@ export function useResumeImport({ lang, settings, onImportComplete, projectId }:
   const [importNotice, setImportNotice] = useState<ImportNotice>('');
   const [importNoticeDetail, setImportNoticeDetail] = useState('');
 
-  const triggerImport = () => fileInputRef.current?.click();
+  const triggerImport = () => {
+    selectedTarget.current = { projectId: importTarget === 'replace' ? projectId : undefined };
+    fileInputRef.current?.click();
+  };
 
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -37,11 +42,11 @@ export function useResumeImport({ lang, settings, onImportComplete, projectId }:
 
     try {
       busy.current = true;
-      const targetProject = projectId;
+      const target: ImportTarget = { ...(selectedTarget.current ?? { projectId: importTarget === 'replace' ? projectId : undefined }), fileName: file.name };
+      selectedTarget.current = null;
       const apply = (formatted: string) => {
         if (!formatted.trim()) throw new Error(lang === 'zh' ? '未提取到有效内容，原简历已保留。' : 'No content was extracted. Your resume was preserved.');
-        if (activeProject.current !== targetProject) throw new Error(lang === 'zh' ? '导入期间切换了简历，请在目标简历中重新导入。' : 'The project changed during import. Import again in the intended project.');
-        startTransition(() => onImportComplete(formatted));
+        startTransition(() => onImportComplete(formatted, target));
       };
       setIsImporting(true);
       setImportError('');
@@ -105,6 +110,8 @@ export function useResumeImport({ lang, settings, onImportComplete, projectId }:
 
   return {
     fileInputRef,
+    importTarget,
+    setImportTarget,
     handleFileChange,
     importError,
     importNotice,

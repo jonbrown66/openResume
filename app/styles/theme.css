@@ -76,11 +76,11 @@
   --chart-5: oklch(0.424 0.199 265.638);
   --ui-radius-menu: 12px;
   --ui-radius-menu-item: 8px;
-  --ui-radius-control: 12px;
-  --ui-radius-panel: 16px;
-  --ui-radius-dialog: 20px;
+  --ui-radius-control: 8px;
+  --ui-radius-panel: 12px;
+  --ui-radius-dialog: 16px;
   --ui-control-size: 36px;
-  --ui-field-size: 40px;
+  --ui-field-size: 36px;
   --ui-focus: oklch(0.48 0.11 130);
   --ui-text-secondary: oklch(0.46 0.012 110);
   --ui-selected-bg: oklch(0.94 0.035 128);

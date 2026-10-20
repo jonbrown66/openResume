@@ -43,7 +43,7 @@
   transition-timing-function: var(--ui-ease);
 }
 .app-ui :where(button):disabled { opacity: 0.45; cursor: not-allowed; }
-.app-ui :where(button):focus-visible { outline: 2px solid var(--ui-focus); outline-offset: 3px; box-shadow: none; }
+.app-ui :where(button):focus-visible { outline: 2px solid var(--ui-focus); outline-offset: 2px; box-shadow: none; }
 .app-ui :where(button):active:not(:disabled) { opacity: 0.85; }
 .app-ui :where(svg.lucide):not(.resume-template *) { stroke-width: 1.75; }
 .app-ui :where(input:not([type=range],[type=color],[type=file],[type=hidden]),select,textarea):not([data-code-editor],[data-ui-plain],.resume-template *) {
@@ -57,8 +57,21 @@
   box-shadow: none;
   transition: border-color 140ms var(--ui-ease), background-color 140ms var(--ui-ease);
 }
+.app-ui :where(input:not([type=range],[type=color],[type=file],[type=hidden]),select,textarea):not([data-code-editor],[data-ui-plain],.resume-template *):hover {
+  border-color: color-mix(in srgb, var(--ui-focus) 45%, var(--app-border));
+}
 .app-ui :where(input,textarea,select):focus-visible { outline: 2px solid var(--ui-focus); outline-offset: 2px; box-shadow: none; }
 .app-ui :where(input,textarea)::placeholder { color: var(--ui-text-secondary); opacity: 0.8; }
+/* Dark surfaces are close in value; fields need a distinct fill to read as editable. */
+:root.dark .app-ui :where(input:not([type=range],[type=color],[type=file],[type=hidden]),select,textarea):not([data-code-editor],[data-ui-plain],.resume-template *),
+:root[data-theme="dark"] .app-ui :where(input:not([type=range],[type=color],[type=file],[type=hidden]),select,textarea):not([data-code-editor],[data-ui-plain],.resume-template *) {
+  background: var(--app-surface-muted);
+}
+@media (prefers-color-scheme: dark) {
+  html:not([data-theme="light"]) .app-ui :where(input:not([type=range],[type=color],[type=file],[type=hidden]),select,textarea):not([data-code-editor],[data-ui-plain],.resume-template *) {
+    background: var(--app-surface-muted);
+  }
+}
 .app-ui :where(label > span:first-child,[data-slot=label]),.ui-label { color: var(--ui-text-secondary); font-size: 13px; font-weight: 500; letter-spacing: normal; text-transform: none; line-height: 1.5; }
 .app-ui :where(button[data-slot=select-trigger]) { min-block-size: var(--ui-field-size); background: var(--app-surface); border-color: var(--app-border); }
 .app-ui [aria-pressed=true]:not([data-color-swatch]) { background: var(--ui-selected-bg); color: var(--ui-selected-ink); font-weight: 600; }
@@ -209,8 +222,10 @@
 .app-ui .ui-slider-value input:focus-visible { outline: 2px solid transparent; }
 .app-ui .ui-toast { background: var(--app-surface); color: var(--foreground); border-radius: var(--ui-radius-panel); border: 1px solid var(--app-border); box-shadow: var(--ui-shadow-panel); }
 body:has([role=dialog][aria-modal=true]) .ui-floating-tools:not(:has([role=dialog])) { visibility: hidden; }
+body:has([role=dialog][aria-modal=true]) .ui-edge-nav { visibility: hidden; }
 @media (hover: hover) and (pointer: fine) {
   .app-ui .app-control:hover,.app-ui .app-secondary:hover { background: var(--ui-hover-bg); }
+  .app-ui .app-secondary:hover { border-color: color-mix(in srgb, var(--ui-text-secondary) 30%, var(--app-border)); }
   .app-ui [aria-pressed=true]:not([data-color-swatch]):hover { background: var(--ui-selected-bg); }
   .app-ui .app-primary:hover { background: var(--app-accent-hover); }
 }

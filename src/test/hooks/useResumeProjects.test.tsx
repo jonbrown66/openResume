@@ -5,6 +5,22 @@ import { useResumeProjects } from '@/hooks/useResumeProjects';
 import { STORAGE_KEY } from '@/types/resumeProject';
 
 describe('useResumeProjects', () => {
+  it('uses the full English example for new resumes and supports named imports', () => {
+    const { result } = renderHook(({ lang }) => useResumeProjects(lang), { initialProps: { lang: 'zh' as 'zh' | 'en' } });
+    expect(result.current.currentProject.data.frontmatter.name).toBe('EMMA SANCHEZ');
+    expect(result.current.currentProject.data.sections).toHaveLength(5);
+    act(() => { result.current.createProject(); });
+    expect(result.current.currentProject.data.frontmatter.name).toBe('EMMA SANCHEZ');
+    expect(result.current.currentProject.data.sections[0].entries).toHaveLength(2);
+    expect(result.current.currentProject.data.sections.find(section => section.title === 'SKILLS')?.entries).toHaveLength(0);
+    act(() => result.current.createProject({ markdown: `---
+name: Imported
+---
+`, name: 'Candidate' }));
+    expect(result.current.currentProject.name).toBe('Candidate');
+    expect(result.current.currentProject.data.frontmatter.name).toBe('Imported');
+  });
+
   beforeEach(() => {
     localStorage.removeItem(STORAGE_KEY);
   });

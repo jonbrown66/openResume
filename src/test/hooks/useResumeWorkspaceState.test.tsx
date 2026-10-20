@@ -25,6 +25,33 @@ function createProject(): ResumeProject {
 describe('useResumeWorkspaceState', () => {
   afterEach(() => { vi.useRealTimers(); vi.restoreAllMocks(); });
 
+  it('does not transfer old positional types to a replacement Markdown document', () => {
+    const { result } = renderHook(() => useResumeWorkspaceState({ currentProject: createProject(), updateProject: vi.fn() }));
+    act(() => result.current.setMarkdown('---\nname: New\n---\n\n## 教育经历\n\n### 本科\n**大学**\n\n## 项目经历\n\n### 新项目\n- 开发'));
+    act(() => result.current.handleEditorModeChange('blocks'));
+    expect(result.current.draft.sections.map(section => section.type)).toEqual(['education', 'project']);
+  });
+
+  it('persists a renamed section type across mode changes, reload and history', () => {
+    const project = createProject();
+    const updateProject = vi.fn();
+    const { result, unmount } = renderHook(() => useResumeWorkspaceState({ currentProject: project, updateProject }));
+    const original = result.current.draft;
+    act(() => result.current.setDraft({ ...original, sections: original.sections.map((section, i) => i ? section : { ...section, title: '技能' }) }));
+    expect(result.current.draft.sections[0].type).toBe('experience');
+    act(() => result.current.handleEditorModeChange('markdown'));
+    act(() => result.current.setMarkdown(result.current.markdown.replace('## 技能', '## 自定义标题')));
+    act(() => result.current.handleEditorModeChange('blocks'));
+    expect(result.current.draft.sections[0].type).toBe('experience');
+    act(() => result.current.onUndo());
+    expect(result.current.draft.sections[0]).toMatchObject({ title: '技能', type: 'experience' });
+    act(() => result.current.onRedo());
+    const persisted = { ...project, ...updateProject.mock.lastCall?.[1] };
+    unmount();
+    const reloaded = renderHook(() => useResumeWorkspaceState({ currentProject: persisted, updateProject: vi.fn() }));
+    expect(reloaded.result.current.draft.sections[0]).toMatchObject({ title: '自定义标题', type: 'experience' });
+  });
+
   it('updates and persists raw input immediately, parsing only the latest revision', () => {
     vi.useFakeTimers();
     const updateProject = vi.fn();

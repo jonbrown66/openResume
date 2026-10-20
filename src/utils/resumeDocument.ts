@@ -1,5 +1,6 @@
 import type { ResumeDraft, ResumeEntry, ResumeFrontmatter, ResumeSection } from '../types/resume';
 import { parseRawResumeText } from './resumeParser';
+import { isResumeSectionType } from './resumeSections';
 
 // ---------------------------------------------------------------------------
 // Parsing
@@ -9,7 +10,7 @@ function parseFrontmatter(markdown: string): {
   frontmatter: ResumeFrontmatter;
   body: string;
 } {
-  const match = markdown.match(/^---\s*\n([\s\S]*?)\n---\s*\n?([\s\S]*)$/);
+  const match = markdown.replace(/\r\n/g, '\n').match(/^---\s*\n([\s\S]*?)\n---\s*\n?([\s\S]*)$/);
   const frontmatter: ResumeFrontmatter = {
     name: '',
     title: '',
@@ -20,7 +21,12 @@ function parseFrontmatter(markdown: string): {
     return { frontmatter, body: markdown.trim() };
   }
 
-  for (const line of match[1].split('\n')) {
+  const sourceLines = match[1].split('\n');
+  if (sourceLines.some(line => !/^(name|title|contact|image): [^\r]*$/.test(line))) {
+    frontmatter.sourceLines = sourceLines;
+  }
+  for (const line of sourceLines) {
+    if (!/^(name|title|contact|image)\s*:/.test(line)) continue;
     const separatorIndex = line.indexOf(':');
     if (separatorIndex === -1) {
       continue;
@@ -97,7 +103,11 @@ function parseEntry(block: string): ResumeEntry {
 
 function parseSection(block: string): ResumeSection {
   const lines = block.trim().split('\n');
-  const title = lines.shift()?.replace(/^##\s+/, '').trim() ?? '';
+  const title = lines.shift()?.replace(/^##(?:\s+|$)/, '').trim() ?? '';
+  const marker = lines[0]?.match(/^<!-- resume-section-type: (\w+) -->$/);
+  const type = marker && isResumeSectionType(marker[1]) ? marker[1] : undefined;
+  if (type) lines.shift();
+  const metadata = type ? { type } : {};
   const entryStartIndex = lines.findIndex((line) => /^###(?:\s|$)/.test(line.trim()));
 
   if (entryStartIndex === -1) {
@@ -105,6 +115,7 @@ function parseSection(block: string): ResumeSection {
     const rawContent = lines.join('\n').trim();
     return {
       title,
+      ...metadata,
       content: rawContent,
       entries: [],
     };
@@ -120,6 +131,7 @@ function parseSection(block: string): ResumeSection {
 
   return {
     title,
+    ...metadata,
     content: leadingContent,
     entries: entryBlocks.map(parseEntry),
   };
@@ -135,13 +147,13 @@ export function parseMarkdownToResumeDraft(markdown: string): ResumeDraft {
     return parseRawResumeText(markdown, /[\u4e00-\u9fa5]/.test(markdown) ? 'zh' : 'en');
   }
 
-  const blocks = body.split(/(?=^##\s+)/m).map((block) => block.trim()).filter(Boolean);
+  const blocks = body.split(/(?=^##(?:[ \t]|$))/m).map((block) => block.trim()).filter(Boolean);
   const summaryBlocks: string[] = [];
   const sections: ResumeSection[] = [];
   let summaryTitle = '';
 
   for (const block of blocks) {
-    if (/^##\s+/m.test(block)) {
+    if (/^##(?:[ \t]|$)/m.test(block)) {
       sections.push(parseSection(block));
       continue;
     }
@@ -151,7 +163,7 @@ export function parseMarkdownToResumeDraft(markdown: string): ResumeDraft {
   let summary = '';
 
   // Check if the first section looks like a summary section
-  if (sections[0] && SUMMARY_PATTERN.test(sections[0].title)) {
+  if (sections[0] && !sections[0].type && SUMMARY_PATTERN.test(sections[0].title)) {
     const summarySection = sections.shift()!;
     summaryTitle = summarySection.title;
     // Combine section content and any entry content into summary text
@@ -215,7 +227,7 @@ function removeBulletMarkersFromSummary(summary: string) {
 
 export function formatResumeMarkdown(markdown: string): string {
   const cleanedMarkdown = removeBodyThematicBreaks(markdown);
-  const draft = /^###(?:[ \t]|$)/m.test(cleanedMarkdown)
+  const draft = /^###(?:[ \t]|$)|^<!-- resume-section-type:/m.test(cleanedMarkdown)
     ? parseMarkdownToResumeDraft(cleanedMarkdown)
     : parseRawResumeText(cleanedMarkdown, /[\u4e00-\u9fa5]/.test(cleanedMarkdown) ? 'zh' : 'en');
 
@@ -235,6 +247,22 @@ export function formatResumeMarkdown(markdown: string): string {
 // ---------------------------------------------------------------------------
 
 function serializeFrontmatter(frontmatter: ResumeFrontmatter): string {
+  if (frontmatter.sourceLines) {
+    const seen = new Set<string>();
+    const lines = frontmatter.sourceLines.flatMap(line => {
+      const match = line.match(/^(name|title|contact|image)\s*:(.*)$/);
+      if (!match) return [line];
+      const key = match[1] as 'name' | 'title' | 'contact' | 'image';
+      seen.add(key);
+      const value = frontmatter[key] ?? '';
+      if (!value && key === 'image') return [];
+      return [match[2].trim() === value ? line : `${key}: ${value.replace(/[\r\n]+/g, ' ')}`];
+    });
+    for (const key of ['name', 'title', 'contact', 'image'] as const) {
+      if (!seen.has(key) && frontmatter[key]) lines.push(`${key}: ${frontmatter[key]!.replace(/[\r\n]+/g, ' ')}`);
+    }
+    return ['---', ...lines, '---'].join('\n');
+  }
   const lines = ['---'];
   lines.push(`name: ${frontmatter.name}`);
   lines.push(`title: ${frontmatter.title}`);
@@ -252,7 +280,8 @@ function serializeFrontmatter(frontmatter: ResumeFrontmatter): string {
 }
 
 function serializeSection(section: ResumeSection): string {
-  const lines = [`## ${section.title}`];
+  const lines = [`## ${section.title}`.trimEnd()];
+  if (section.type) lines.push(`<!-- resume-section-type: ${section.type} -->`);
 
   if (section.content) {
     lines.push('', section.content);

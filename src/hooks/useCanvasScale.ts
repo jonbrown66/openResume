@@ -11,8 +11,7 @@ function getContainerWidth(element: HTMLDivElement) {
 }
 
 function getInitialZoom(): number {
-  if (typeof window === 'undefined') return 90;
-  return window.innerWidth < 640 ? 100 : 90;
+  return 100;
 }
 
 export function useCanvasScale(containerRef: RefObject<HTMLDivElement | null>) {

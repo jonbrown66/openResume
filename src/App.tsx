@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { MotionConfig } from 'framer-motion';
 
 import { ToastProvider } from '@/components/ui/Toast';
@@ -17,6 +17,7 @@ import {
   type AppTheme,
 } from '@/config/ui';
 import { useAppTheme } from '@/hooks/useAppTheme';
+import { parseMarkdownToResumeDraft } from '@/utils/resumeDocument';
 import { useResumeImport } from '@/hooks/useResumeImport';
 import { useResumeProjects } from '@/hooks/useResumeProjects';
 import { useResumeWorkspaceState } from '@/hooks/useResumeWorkspaceState';
@@ -28,7 +29,7 @@ const ExportMenu = deferredComponent<ExportMenuProps>(
   () => import('@/components/ExportMenu').then(module => ({ default: module.ExportMenu })),
   props => <button type="button" disabled aria-busy="true" aria-label={props.translations.export}
     className="app-primary flex min-h-10 min-w-10 items-center justify-center gap-2 rounded-lg p-2 lg:min-h-0 lg:px-4 lg:py-2">
-    <Loader2 size={16} className="animate-spin" /><span className="hidden lg:inline">{props.translations.export}</span>
+    <Loader2 size={16} className="animate-spin" /><span className="text-xs lg:text-sm">{props.translations.export}</span>
     <ChevronDown size={12} className="hidden lg:block" />
   </button>,
 );
@@ -91,7 +92,11 @@ export default function App() {
   const lang = settings.language;
   const t = useMemo(() => translations[lang], [lang]);
 
+  const currentProjectRef = useRef(currentProject);
+  currentProjectRef.current = currentProject;
   const {
+    importTarget,
+    setImportTarget,
     fileInputRef,
     handleFileChange,
     importError,
@@ -104,7 +109,15 @@ export default function App() {
     projectId: currentProject?.id,
     lang,
     settings,
-    onImportComplete: handleImportComplete,
+    onImportComplete: (content, target) => {
+      if (!target.projectId) {
+        createProject({ markdown: content, name: target.fileName.replace(/\.[^.]+$/, '') });
+      } else if (target.projectId === currentProjectRef.current?.id) {
+        handleImportComplete(content);
+      } else {
+        updateProject(target.projectId, { markdown: content, data: parseMarkdownToResumeDraft(content) });
+      }
+    },
   });
 
   const handleLanguageToggle = useCallback(() => {
@@ -150,11 +163,12 @@ export default function App() {
           projectSelector={<ProjectSelector lang={lang} projects={projects} currentProject={currentProject}
             onSwitch={switchProject} onCreate={createProject} onRename={renameProject} onDelete={deleteProject} />}
           importControl={<ImportResumeButton fileInputRef={fileInputRef} onFileChange={handleFileChange}
-            isImporting={isImporting} importStep={importStep} onImportClick={triggerImport} translations={t} />}
+            isImporting={isImporting} importStep={importStep} onImportClick={triggerImport} translations={t}
+            lang={lang} projectName={currentProject?.name ?? ''} importTarget={importTarget} onTargetChange={setImportTarget} />}
           exportControl={<ExportMenu markdown={markdown} canvasRef={resumeRef} draft={draft}
             theme={resumeTheme} template={template} translations={t} />}
         />}
-        editor={<EditorPane containerRef={editorContainerRef} draft={draft} editorMode={editorMode}
+        editor={<EditorPane key={currentProject?.id ?? 'default-project'} containerRef={editorContainerRef} draft={draft} editorMode={editorMode}
           lang={lang} isImporting={isImporting} markdown={markdown} translations={t}
           onDraftChange={setDraft} onEditorModeChange={handleEditorModeChange} onMarkdownChange={setMarkdown}
           onFormatMarkdown={handleFormatMarkdown} canUndo={canUndo} canRedo={canRedo} onUndo={onUndo} onRedo={onRedo} />}

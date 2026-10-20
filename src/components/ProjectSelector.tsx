@@ -77,7 +77,7 @@ export const ProjectSelector = memo(function ProjectSelector({ projects, current
         </>}
       </div>)}
       <div className="ui-menu-separator" /><button type="button" className="app-control ui-menu-item"
-        onClick={() => { onCreate(); close(); }}><Plus size={16} />{labels.create}</button>
+        onClick={() => { onCreate(); close(); }}><Plus size={16} />{lang === 'zh' ? '新建简历' : 'New resume'}</button>
     </motion.div>}</AnimatePresence>, document.body)}
   </div>;
 });

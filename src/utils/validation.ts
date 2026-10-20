@@ -1,4 +1,5 @@
 import type { ResumeDraft } from '@/types/resume';
+import { getResumeSectionType, isResumeSectionType } from './resumeSections';
 import { DEFAULT_THEME_CONFIG, type ResumeThemeConfig } from '@/types/theme';
 
 export function isResumeDraft(value: unknown): value is ResumeDraft {
@@ -7,10 +8,13 @@ export function isResumeDraft(value: unknown): value is ResumeDraft {
   return Boolean(draft.frontmatter) && ['name', 'title', 'contact'].every(key =>
     typeof draft.frontmatter[key as 'name' | 'title' | 'contact'] === 'string') &&
     (draft.frontmatter.image === undefined || typeof draft.frontmatter.image === 'string') &&
+    (draft.frontmatter.sourceLines === undefined || (Array.isArray(draft.frontmatter.sourceLines) &&
+      draft.frontmatter.sourceLines.every(line => typeof line === 'string' && !/[\r\n]/.test(line) && line.trim() !== '---'))) &&
     typeof draft.summary === 'string' &&
     (draft.summaryTitle === undefined || typeof draft.summaryTitle === 'string') &&
     Array.isArray(draft.sections) && draft.sections.every(section => section &&
       typeof section.title === 'string' && typeof section.content === 'string' &&
+      (section.type === undefined || isResumeSectionType(section.type)) &&
       Array.isArray(section.entries) && section.entries.every(entry => entry &&
         ['heading', 'meta', 'organization', 'content'].every(key => typeof entry[key as 'heading'] === 'string')));
 }
@@ -39,9 +43,9 @@ export function withDraftIds(draft: ResumeDraft): ResumeDraft {
   let changed = false;
   const sections = draft.sections.map(section => {
     const entries = section.entries.map(entry => entry.id ? entry : { ...entry, id: crypto.randomUUID() });
-    if (section.id && entries.every((entry, index) => entry === section.entries[index])) return section;
+    if (section.id && section.type && entries.every((entry, index) => entry === section.entries[index])) return section;
     changed = true;
-    return { ...section, id: section.id ?? crypto.randomUUID(), entries };
+    return { ...section, type: getResumeSectionType(section), id: section.id ?? crypto.randomUUID(), entries };
   });
   return changed ? { ...draft, sections } : draft;
 }
@@ -57,8 +61,13 @@ export function reconcileDraft(draft: ResumeDraft, previous: ResumeDraft): Resum
       return ['heading', 'meta', 'organization', 'content'].every(key => entry[key as 'heading'] === oldEntry[key as 'heading'])
         ? oldEntry : { ...entry, id: oldEntry.id };
     });
-    return section.title === old.title && section.content === old.content && entries.length === old.entries.length && entries.every((entry, i) => entry === old.entries[i])
-      ? old : { ...section, id: old.id, entries };
+    // A wholesale Markdown replacement must not inherit an unrelated section's
+    // form merely because it occupies the same array position. Untagged title
+    // edits can retain their type when the body is otherwise unchanged.
+    const sameBody = section.content === old.content && entries.length === old.entries.length && entries.every((entry, i) => entry === old.entries[i]);
+    const type = section.type ?? (section.title === old.title || sameBody ? getResumeSectionType(old) : getResumeSectionType(section));
+    return type === old.type && section.title === old.title && section.content === old.content && entries.length === old.entries.length && entries.every((entry, i) => entry === old.entries[i])
+      ? old : { ...section, type, id: old.id, entries };
   });
   const frontmatter = Object.keys({ ...draft.frontmatter, ...previous.frontmatter }).every(key => draft.frontmatter[key as 'name'] === previous.frontmatter[key as 'name'])
     ? previous.frontmatter : draft.frontmatter;

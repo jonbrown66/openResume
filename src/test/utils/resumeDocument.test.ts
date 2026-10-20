@@ -8,6 +8,32 @@ import {
 } from '@/utils/resumeDocument';
 
 describe('resumeDocument', () => {
+  it('preserves opaque custom frontmatter and unchanged values without evaluating YAML', () => {
+    const source = ['---', 'name: Original', 'title: "Engineer: lead"', 'contact: a@example.com', 'image: data:image/png;base64,YWJj', 'custom: 00123', 'enabled: false', 'nested:', '  list: [a, b]', '__proto__: { polluted: true }', 'script: !!js/function evil', 'notes: |', '  original note', '---', '', '## Skills', '', '- React'].join('\n');
+    const draft = parseMarkdownToResumeDraft(source);
+    draft.frontmatter.name = 'Updated';
+    const serialized = serializeResumeDraftToMarkdown(draft);
+    for (const line of source.split('\n').filter(line => !line.startsWith('name:'))) expect(serialized).toContain(line);
+    expect(serialized).toContain('name: Updated');
+    expect(parseMarkdownToResumeDraft(serialized).frontmatter.image).toBe('data:image/png;base64,YWJj');
+    expect(({} as Record<string, unknown>).polluted).toBeUndefined();
+    expect(serializeResumeDraftToMarkdown(parseMarkdownToResumeDraft(serialized))).toBe(serialized);
+  });
+
+  it('preserves explicit types for renamed, empty and summary-named sections through Markdown and formatting', () => {
+    const draft = parseMarkdownToResumeDraft(defaultMarkdownZh);
+    draft.sections = [
+      { title: '技能', type: 'experience', content: '', entries: [] },
+      { title: '', type: 'education', content: '', entries: [] },
+      { title: '个人简介', type: 'custom', content: '自定义内容', entries: [] },
+    ];
+    const markdown = serializeResumeDraftToMarkdown(draft);
+    expect(parseMarkdownToResumeDraft(markdown)).toEqual(draft);
+    expect(parseMarkdownToResumeDraft(formatResumeMarkdown(markdown))).toEqual(draft);
+    expect(parseMarkdownToResumeDraft(markdown.replace('## 技能', '## Summary')).sections[0].type).toBe('experience');
+    expect(parseMarkdownToResumeDraft(markdown.replace('resume-section-type: experience', 'resume-section-type: invalid')).sections[0].content).toContain('<!-- resume-section-type: invalid -->');
+  });
+
   it('keeps section text and separate untitled, company-only and date-only entries on round trip', () => {
     const draft = { frontmatter: { name: 'Test', title: '', contact: '' }, summary: '', summaryTitle: '', sections: [{
       title: '工作经历', content: '章节说明', entries: [

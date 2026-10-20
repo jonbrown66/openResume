@@ -66,7 +66,7 @@ export const ExportMenu = memo(function ExportMenu({ markdown, canvasRef, draft,
         <DropdownMenuTrigger disabled={exportState === 'exporting'} aria-busy={exportState === 'exporting'} aria-label={t.export}
           className="app-primary flex min-h-10 min-w-10 items-center justify-center gap-2 rounded-lg p-2 lg:min-h-0 lg:px-4 lg:py-2">
           <Icon size={16} className={exportState === 'exporting' ? 'animate-spin' : undefined} />
-          <span className="hidden lg:inline">{t.export}</span>
+          <span className="text-xs lg:text-sm">{t.export === '导出简历' ? '导出' : t.export}</span>
           <ChevronDown size={12} className="hidden lg:block" />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" aria-label={t.export} className="w-52">

@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useMemo } from 'react';
+import { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { createPortal } from 'react-dom';
 import { useOverlayDialog } from '@/hooks/useOverlayDialog';
@@ -243,11 +243,16 @@ export function AssistantWidget({
     catch { addToast(lang === 'zh' ? '复制失败，请手动选择文字复制。' : 'Could not copy. Select and copy the text manually.', 'error'); }
   };
 
-  const handleOpen = () => {
+  const handleOpen = useCallback(() => {
     everOpened.current = true;
     setShowLauncher(false);
     setIsOpen(true);
-  };
+  }, []);
+
+  useEffect(() => {
+    window.addEventListener('open-resume-assistant', handleOpen);
+    return () => window.removeEventListener('open-resume-assistant', handleOpen);
+  }, [handleOpen]);
 
   const handleClose = () => {
     setIsOpen(false);
@@ -386,7 +391,7 @@ export function AssistantWidget({
           type="button"
           aria-label={t.assistantOpen}
           onClick={handleOpen}
-          className="app-primary pointer-events-auto ml-auto inline-flex h-14 w-14 items-center justify-center rounded-full transition-colors"
+          className="app-primary pointer-events-auto ml-auto inline-flex h-14 w-14 items-center justify-center rounded-full transition-colors max-lg:hidden"
         >
           <Bot size={22} />
         </motion.button>

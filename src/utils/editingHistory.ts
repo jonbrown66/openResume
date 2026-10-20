@@ -19,7 +19,7 @@ export function restoreEditorSelection(selection: EditorSelection | undefined, r
   if (!selection || !root) return;
   const element = selection.key === 'markdown' ? root.querySelector('[data-code-editor]') : document.getElementById(selection.key);
   if (!(element instanceof HTMLTextAreaElement || element instanceof HTMLInputElement)) return;
-  if (!root.contains(element)) return;
+  if (!root.contains(element) || element.closest('[hidden]')) return;
   element.focus({ preventScroll: true });
   if (selection.start !== null && selection.end !== null) element.setSelectionRange(selection.start, selection.end, selection.direction ?? undefined);
 }
