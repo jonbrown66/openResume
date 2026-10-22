@@ -75,6 +75,17 @@
 .app-ui :where(label > span:first-child,[data-slot=label]),.ui-label { color: var(--ui-text-secondary); font-size: 13px; font-weight: 500; letter-spacing: normal; text-transform: none; line-height: 1.5; }
 .app-ui :where(button[data-slot=select-trigger]) { min-block-size: var(--ui-field-size); background: var(--app-surface); border-color: var(--app-border); }
 .app-ui [aria-pressed=true]:not([data-color-swatch]) { background: var(--ui-selected-bg); color: var(--ui-selected-ink); font-weight: 600; }
+.app-ui button.ui-segment-button[aria-pressed] { background: transparent; font-weight: 600; }
+@media (hover: hover) and (pointer: fine) {
+  .app-ui button.ui-segment-button[aria-pressed=false]:hover { background: var(--ui-hover-bg); }
+  .app-ui button.ui-segment-button[aria-pressed=true]:hover { background: transparent; }
+}
+.ui-segment-indicator {
+  transform: translateX(0);
+  transition: transform 240ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  will-change: transform;
+}
+.ui-editor-modes[data-mode=blocks] > .ui-editor-mode-indicator { transform: translateX(calc(100% + 0.125rem)); }
 .app-ui .app-primary { color: var(--primary-foreground); background: var(--app-accent); box-shadow: none; font-weight: 600; }
 .app-ui .app-secondary { background: var(--app-surface-muted); color: var(--secondary-foreground); border-color: var(--app-border); box-shadow: none; }
 .app-ui .app-control { color: var(--secondary-foreground); background: transparent; }

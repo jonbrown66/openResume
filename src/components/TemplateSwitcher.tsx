@@ -1,5 +1,4 @@
 import { memo, useState, type ReactNode } from 'react';
-import { motion } from 'framer-motion';
 import type { ResumeTemplate, TranslationSet } from '@/config/ui';
 import { resumeTemplates } from '@/config/ui';
 import { CssEditorModal } from './CssEditorModal';
@@ -37,25 +36,21 @@ export const TemplateSwitcher = memo(function TemplateSwitcher({
       >
         <div className="flex w-[calc(100vw-1rem)] max-w-[calc(100vw-1rem)] flex-col items-stretch gap-0.5 rounded-[var(--ui-radius-panel)] border border-[var(--app-border)] bg-[var(--app-surface)] p-0.5 sm:w-auto sm:flex-row sm:items-center sm:justify-start">
           <div className="flex min-w-0 items-center justify-center gap-0.5 sm:justify-start">
-          <div className="flex min-w-0 flex-1 items-center gap-0.5 overflow-x-auto sm:flex-none sm:overflow-visible">
-          {resumeTemplates.map((item) => (
+          <div className="relative isolate grid min-w-0 flex-1 grid-cols-4 gap-0.5 overflow-x-auto sm:flex-none sm:overflow-visible">
+          <span aria-hidden="true" className="ui-segment-indicator pointer-events-none col-start-1 row-start-1 rounded-[var(--ui-radius-control)] bg-[var(--ui-selected-bg)]"
+            style={{ transform: `translateX(calc(${resumeTemplates.indexOf(template)} * (100% + 0.125rem)))` }} />
+          {resumeTemplates.map((item, index) => (
             <button
               key={item}
               onClick={() => onChange(item)}
               aria-pressed={template === item}
-              className={`relative min-h-10 shrink-0 rounded-[var(--ui-radius-control)] px-2.5 py-2 text-xs font-semibold capitalize transition-colors duration-200 whitespace-nowrap sm:min-h-8 sm:px-4 z-10 ${
+              style={{ gridColumnStart: index + 1 }}
+              className={`ui-segment-button relative row-start-1 min-h-10 shrink-0 rounded-[var(--ui-radius-control)] px-2.5 py-2 text-xs font-semibold capitalize transition-colors duration-200 whitespace-nowrap sm:min-h-8 sm:px-4 z-10 ${
                 template === item
                   ? 'text-[var(--ui-selected-ink)]'
                   : 'app-control'
               }`}
             >
-              {template === item && (
-                <motion.div
-                  layoutId="activeTemplateTab"
-                  className="absolute inset-0 rounded-[var(--ui-radius-control)] bg-[var(--ui-selected-bg)] z-[-1]"
-                  transition={{ type: 'spring', stiffness: 380, damping: 30 }}
-                />
-              )}
               <span className="relative z-10">{t[item]}</span>
             </button>
           ))}

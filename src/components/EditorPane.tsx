@@ -89,43 +89,30 @@ export const EditorPane = memo(function EditorPane({
           </motion.div>
         ) : null}
       <div className="min-w-0 print:hidden">
-        <div className="relative inline-flex max-w-[calc(100vw-1rem)] items-center gap-0.5 rounded-[var(--ui-radius-panel)] border border-[var(--app-border)] bg-[var(--app-surface)] p-0.5">
+        <div data-mode={editorMode} className="ui-editor-modes relative isolate inline-grid max-w-[calc(100vw-1rem)] grid-cols-2 gap-0.5 rounded-[var(--ui-radius-panel)] border border-[var(--app-border)] bg-[var(--app-surface)] p-0.5">
+          <span aria-hidden="true" className="ui-segment-indicator ui-editor-mode-indicator pointer-events-none col-start-1 row-start-1 rounded-[var(--ui-radius-control)] bg-[var(--ui-selected-bg)]" />
           <button
             type="button"
             onClick={() => onEditorModeChange('markdown')}
             aria-pressed={editorMode === 'markdown'}
-            className={`relative min-h-10 shrink-0 whitespace-nowrap rounded-[var(--ui-radius-control)] px-3 py-2 text-xs font-semibold transition-colors duration-200 sm:min-h-8 sm:px-4 z-10 ${
+            className={`ui-segment-button relative col-start-1 row-start-1 min-h-10 shrink-0 whitespace-nowrap rounded-[var(--ui-radius-control)] px-3 py-2 text-xs font-semibold transition-colors duration-200 sm:min-h-8 sm:px-4 z-10 ${
               editorMode === 'markdown'
                 ? 'text-[var(--ui-selected-ink)]'
                 : 'app-control'
             }`}
           >
-            {editorMode === 'markdown' && (
-              <motion.div
-                layoutId="activeEditorTab"
-                className="absolute inset-0 rounded-[var(--ui-radius-control)] bg-[var(--ui-selected-bg)] z-[-1]"
-                transition={{ type: 'spring', stiffness: 380, damping: 30 }}
-              />
-            )}
             <span className="relative z-10">{t.markdownMode}</span>
           </button>
           <button
             type="button"
             onClick={() => onEditorModeChange('blocks')}
             aria-pressed={editorMode === 'blocks'}
-            className={`relative min-h-10 shrink-0 whitespace-nowrap rounded-[var(--ui-radius-control)] px-3 py-2 text-xs font-semibold transition-colors duration-200 sm:min-h-8 sm:px-4 z-10 ${
+            className={`ui-segment-button relative col-start-2 row-start-1 min-h-10 shrink-0 whitespace-nowrap rounded-[var(--ui-radius-control)] px-3 py-2 text-xs font-semibold transition-colors duration-200 sm:min-h-8 sm:px-4 z-10 ${
               editorMode === 'blocks'
                 ? 'text-[var(--ui-selected-ink)]'
                 : 'app-control'
             }`}
           >
-            {editorMode === 'blocks' && (
-              <motion.div
-                layoutId="activeEditorTab"
-                className="absolute inset-0 rounded-[var(--ui-radius-control)] bg-[var(--ui-selected-bg)] z-[-1]"
-                transition={{ type: 'spring', stiffness: 380, damping: 30 }}
-              />
-            )}
             <span className="relative z-10">{lang === 'zh' ? '区块' : t.blockMode}</span>
           </button>
         </div>
