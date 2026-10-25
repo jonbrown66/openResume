@@ -81,9 +81,13 @@ export function AssistantWidget({
   const everOpened = useRef(initiallyOpen);
   useEffect(() => {
     if (!showLauncher || !everOpened.current) return;
-    const frame = requestAnimationFrame(() => document.getElementById('assistant-launcher')?.focus());
+    const frame = requestAnimationFrame(() => {
+      const launcher = Array.from(document.querySelectorAll<HTMLButtonElement>(`button[aria-label="${t.assistantOpen}"]`))
+        .find(button => button.getClientRects().length > 0);
+      launcher?.focus({ preventScroll: true });
+    });
     return () => cancelAnimationFrame(frame);
-  }, [showLauncher]);
+  }, [showLauncher, t.assistantOpen]);
   const requestVersion = useRef(0);
   const controllerRef = useRef<AbortController | null>(null);
   const lastAttempt = useRef<{ text: string; history: Array<{ role: 'assistant' | 'user'; content: string }> } | null>(null);

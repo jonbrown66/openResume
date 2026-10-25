@@ -111,11 +111,11 @@ export const BlockEditor = memo(function BlockEditor({ draft, lang, translations
   return <div ref={rootRef} className="space-y-3 px-3 pbs-2 pbe-2 text-sm text-[var(--secondary-foreground)] sm:px-4 sm:pbe-4">
     <div className="flex items-center justify-between gap-2 border-b border-[var(--app-border)] pb-2.5 pt-0.5">
       <span className="text-xs font-semibold uppercase tracking-wider text-[var(--ui-text-secondary)]">{zh ? '简历章节' : 'Sections'}</span>
-      <div className="w-32 shrink-0">
+      <div className="shrink-0">
       <Select value={null} items={Object.entries(sectionNames[lang]).map(([value, label]) => ({ value, label }))}
         onValueChange={value => { if (value) addSection(value as ResumeSectionType); }}>
-        <SelectTrigger id={sectionPickerId} aria-label={zh ? '添加章节' : 'Add section'} data-size="sm" className="h-8 text-xs font-medium"><SelectValue placeholder={zh ? '＋ 添加章节' : '+ Add section'} /></SelectTrigger>
-        <SelectContent>{Object.entries(sectionNames[lang]).map(([type, label]) => <SelectItem key={type} value={type}>{label}</SelectItem>)}</SelectContent>
+        <SelectTrigger id={sectionPickerId} aria-label={zh ? '添加章节' : 'Add section'} data-size="sm" className="h-8 w-auto text-xs font-medium"><SelectValue className="flex-none overflow-visible text-clip whitespace-nowrap" placeholder={zh ? '＋ 添加章节' : '+ Add section'} /></SelectTrigger>
+        <SelectContent style={{ minWidth: 200 }}>{Object.entries(sectionNames[lang]).map(([type, label]) => <SelectItem key={type} value={type}>{label}</SelectItem>)}</SelectContent>
       </Select>
       </div>
     </div>

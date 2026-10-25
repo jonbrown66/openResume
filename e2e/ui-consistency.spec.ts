@@ -138,10 +138,9 @@ test('settings and font Select options are above their panels and clickable', as
 });
 
 test('assistant sheet owns focus, permits settings Select and returns to launcher', async ({ page }) => {
-  await page.setViewportSize({ width: 390, height: 844 });
   await page.getByRole('button', { name: 'Open AI assistant' }).click();
   const dialog = page.getByRole('dialog', { name: 'Resume Assistant' });
-  await expect(dialog).toHaveAttribute('aria-modal', 'true');
+  await expect(dialog).toHaveAttribute('aria-modal', String(page.viewportSize()!.width < 640));
   await expect.poll(() => dialog.evaluate(element => element.contains(document.activeElement))).toBe(true);
   await dialog.getByRole('button', { name: 'Configure', exact: true }).click();
   await dialog.getByRole('combobox', { name: 'AI Provider', exact: true }).click();
@@ -150,6 +149,34 @@ test('assistant sheet owns focus, permits settings Select and returns to launche
   await page.keyboard.press('Escape');
   await expect(dialog).toBeHidden();
   await expect(page.getByRole('button', { name: 'Open AI assistant' })).toBeFocused();
+});
+
+test('add section label stays complete and its options remain reachable', async ({ page }, testInfo) => {
+  await page.getByRole('button', { name: 'Blocks', exact: true }).click();
+  for (const width of [320, 390, 810, 1024, 1280, 1440]) {
+    await page.setViewportSize({ width, height: 700 });
+    const picker = page.getByRole('combobox', { name: 'Add section', exact: true });
+    await expect(picker).toBeVisible();
+    const layout = await picker.evaluate(button => {
+      const label = button.querySelector<HTMLElement>('[data-slot=select-value]')!;
+      const bounds = button.getBoundingClientRect();
+      const text = label.getBoundingClientRect();
+      return { clipped: label.scrollWidth > label.clientWidth,
+        inside: bounds.left >= 0 && bounds.right <= innerWidth && text.left >= bounds.left && text.right <= bounds.right };
+    });
+    expect(layout).toEqual({ clipped: false, inside: true });
+    await picker.click();
+    await expect(page.getByRole('listbox')).toBeVisible();
+    for (const option of await page.getByRole('option').all()) {
+      expect(await option.evaluate(element => {
+        const text = element.querySelector<HTMLElement>('.ui-select-item-text')!;
+        return text.scrollWidth <= text.clientWidth;
+      }), 'Section names must remain readable in the menu').toBe(true);
+    }
+    await page.screenshot({ path: testInfo.outputPath(`add-section-${width}.png`) });
+    await page.keyboard.press('Escape');
+    await expect(picker).toBeFocused();
+  }
 });
 
 test('style controls have names and touch-sized targets', async ({ page }) => {
@@ -215,6 +242,7 @@ test('style sliders keep their label and unit aligned on a narrow panel', async 
 
 test('export menu supports arrows and retains its trigger dimensions during download', async ({ page }) => {
   const trigger = page.getByRole('button', { name: 'Export', exact: true });
+  await expect(trigger).toBeEnabled();
   const before = await trigger.boundingBox();
   await trigger.focus(); await page.keyboard.press('ArrowDown');
   await expect(page.getByRole('menuitem', { name: 'Export PDF', exact: true })).toBeFocused();
