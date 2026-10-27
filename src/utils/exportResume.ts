@@ -16,6 +16,16 @@ function coversGlyphs(range: string, codePoints: number[]) {
     return codePoints.some(point => point >= lower && point <= upper);
   });
 }
+// Rules that only make sense for the on-screen app: they hide the workbench and
+// un-scroll its ancestors so the preview becomes the printed page.
+const APP_PRINT_RULES = [
+  /\bbody\s*\*\s*\{[^}]*visibility\s*:\s*hidden[^}]*\}/gi,
+  /\bbody\s*:not\(:has\(\.resume-canvas-screen-preview\)\)[^{]*\{[^}]*\}/gi,
+  /\bbody\s*:has\(\.resume-canvas-screen-preview\)\s*\{[^}]*\}/gi,
+];
+function stripAppPrintRules(css: string) {
+  return APP_PRINT_RULES.reduce((text, pattern) => text.replace(pattern, ''), css);
+}
 async function collectExportStyles(fontFamily = 'Geist', text = '') {
   const families = exportFontFamilies(fontFamily, text);
   const codePoints = Array.from(new Set(Array.from(text, character => character.codePointAt(0)!)));
@@ -41,7 +51,8 @@ async function collectExportStyles(fontFamily = 'Geist', text = '') {
           }
           return css;
         }
-        return rule.cssText.startsWith('@import') ? '' : rule.cssText;
+        const css = rule.cssText.startsWith('@import') ? '' : rule.cssText;
+        return stripAppPrintRules(css);
       }));
       const cssText = rules.filter(Boolean).join('\n');
 
@@ -125,6 +136,8 @@ function cloneSinglePageForHtmlExport(canvasElement: HTMLDivElement) {
   template.style.width = '100%';
   template.style.height = 'auto';
   template.style.minHeight = '0';
+  // Editing placeholders describe the app, not the resume.
+  template.querySelectorAll('[data-resume-placeholder]').forEach(node => node.remove());
 
   paper.appendChild(template);
   return paper;
@@ -185,6 +198,8 @@ function buildPdfDocumentForExport(canvasElement: HTMLDivElement) {
     const pageIndicator = card.querySelector('.z-40');
     if (pageIndicator) pageIndicator.remove();
   });
+  // Editing placeholders describe the app, not the resume.
+  clone.querySelectorAll('[data-resume-placeholder]').forEach(node => node.remove());
 
   // 3. 为克隆容器设置 PDF 专用类名
   clone.classList.add('resume-pdf-document');
@@ -479,6 +494,27 @@ export async function exportToHtml(
   }
 }
 
+class WordImageError extends Error {}
+async function embedWordImage(source: string): Promise<string> {
+  if (/^data:image\/(png|jpeg);base64,/i.test(source)) return source;
+  try {
+    const response = await fetch(source, { signal: AbortSignal.timeout(15000) });
+    if (!response.ok) throw new Error('Image could not be loaded');
+    const blob = await response.blob();
+    if (['image/png', 'image/jpeg'].includes(blob.type)) return await blobDataUrl(blob);
+    const bitmap = await createImageBitmap(blob);
+    try {
+      const canvas = document.createElement('canvas');
+      canvas.width = bitmap.width; canvas.height = bitmap.height;
+      const context = canvas.getContext('2d');
+      if (!context) throw new Error('Image could not be converted');
+      context.drawImage(bitmap, 0, 0);
+      return canvas.toDataURL('image/png');
+    } finally { bitmap.close(); }
+  } catch {
+    throw new WordImageError('头像无法嵌入 Word，请重新上传图片后再导出。Avatar could not be embedded; upload it again before exporting.');
+  }
+}
 export async function exportToWord(
   canvasElement: HTMLDivElement,
   draft: ResumeDraft,
@@ -486,12 +522,14 @@ export async function exportToWord(
   template?: string
 ): Promise<void> {
   try {
+    const image = draft.frontmatter.image ? await embedWordImage(draft.frontmatter.image) : undefined;
+    const exportDraft = image ? { ...draft, frontmatter: { ...draft.frontmatter, image } } : draft;
     const response = await fetch(`${API_BASE}/export/docx`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       signal: AbortSignal.timeout(65000),
       body: JSON.stringify({
-        draft,
+        draft: exportDraft,
         template,
         theme,
         filename: draft.frontmatter.name || 'resume',
@@ -513,6 +551,7 @@ export async function exportToWord(
     URL.revokeObjectURL(url);
   } catch (error) {
     console.error('Word export failed:', error);
+    if (error instanceof WordImageError) throw error;
     throw new Error('Word export failed. Please try again.');
   }
 }

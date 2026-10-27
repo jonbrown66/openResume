@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { exportToHtml, exportToPdf } from '@/utils/exportResume';
+import { exportToHtml, exportToPdf, exportToWord } from '@/utils/exportResume';
 import { defaultMarkdownEn } from '@/constants';
 import { parseMarkdownToResumeDraft } from '@/utils/resumeDocument';
 
@@ -11,6 +11,31 @@ describe('exportResume', () => {
   afterEach(() => {
     vi.restoreAllMocks();
     document.body.innerHTML = '';
+  });
+
+  it('embeds a remote avatar before sending a Word export without changing the draft', async () => {
+    const draft = parseMarkdownToResumeDraft(defaultMarkdownEn);
+    draft.frontmatter.image = 'https://example.invalid/avatar.png';
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce({ ok: true, blob: async () => new Blob(['avatar'], { type: 'image/png' }) })
+      .mockResolvedValueOnce({ ok: true, blob: async () => new Blob(['docx']) });
+    vi.stubGlobal('fetch', fetchMock);
+    vi.stubGlobal('URL', { createObjectURL: vi.fn(() => 'blob:word'), revokeObjectURL: vi.fn() });
+    vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
+    await exportToWord(document.createElement('div'), draft);
+    expect(fetchMock.mock.calls[0][0]).toBe('https://example.invalid/avatar.png');
+    expect(fetchMock.mock.calls[1][0]).toBe('/api/export/docx');
+    expect(JSON.parse(fetchMock.mock.calls[1][1].body).draft.frontmatter.image).toMatch(/^data:image\/png;base64,/);
+    expect(draft.frontmatter.image).toBe('https://example.invalid/avatar.png');
+  });
+
+  it('reports a failed avatar load instead of downloading a Word file without it', async () => {
+    const draft = parseMarkdownToResumeDraft(defaultMarkdownEn);
+    draft.frontmatter.image = 'https://example.invalid/missing.png';
+    const fetchMock = vi.fn().mockResolvedValue({ ok: false });
+    vi.stubGlobal('fetch', fetchMock);
+    await expect(exportToWord(document.createElement('div'), draft)).rejects.toThrow('Avatar could not be embedded');
+    expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
   it('exports unscaled html with inlined styles for visual parity', async () => {

@@ -16,33 +16,33 @@ export function MobileViewToggle({ activeView, translations: t, onChange }: Mobi
         type="button"
         onClick={() => onChange('editor')}
         aria-pressed={activeView === 'editor'}
-        className={`flex-1 py-3 sm:py-4 text-xs sm:text-sm font-semibold flex items-center justify-center gap-2 transition-colors ${
+        className={`flex flex-1 items-center justify-center gap-1.5 py-3 text-xs font-semibold transition-colors sm:gap-2 sm:py-4 sm:text-sm ${
           activeView === 'editor'
             ? 'text-[var(--ui-selected-ink)] bg-[var(--ui-selected-bg)]'
             : 'app-control text-[var(--muted-foreground)]'
         }`}
       >
-        <Edit2 size={16} /> {t.edit}
+        <Edit2 size={16} className="shrink-0" /> <span className="whitespace-nowrap">{t.edit}</span>
       </motion.button>
       <motion.button
         type="button"
         onClick={() => onChange('preview')}
         aria-pressed={activeView === 'preview'}
-        className={`flex-1 py-3 sm:py-4 text-xs sm:text-sm font-semibold flex items-center justify-center gap-2 transition-colors ${
+        className={`flex flex-1 items-center justify-center gap-1.5 py-3 text-xs font-semibold transition-colors sm:gap-2 sm:py-4 sm:text-sm ${
           activeView === 'preview'
             ? 'text-[var(--ui-selected-ink)] bg-[var(--ui-selected-bg)]'
             : 'app-control text-[var(--muted-foreground)]'
         }`}
       >
-        <Eye size={16} /> {t.preview}
+        <Eye size={16} className="shrink-0" /> <span className="whitespace-nowrap">{t.preview}</span>
       </motion.button>
       <button
         type="button"
         aria-label={t.assistantOpen}
         onClick={() => window.dispatchEvent(new Event('open-resume-assistant'))}
-        className="app-control flex flex-1 items-center justify-center gap-2 py-3 text-xs font-semibold text-[var(--muted-foreground)] transition-colors sm:py-4 sm:text-sm"
+        className="app-control flex min-w-0 flex-1 items-center justify-center gap-1 px-0.5 py-3 text-xs font-semibold text-[var(--muted-foreground)] transition-colors sm:gap-2 sm:px-0 sm:py-4 sm:text-sm"
       >
-        <Bot size={16} /> {t.assistantTitle}
+        <Bot size={16} className="shrink-0" /> <span className="whitespace-nowrap">{t.assistantTab}</span>
       </button>
     </nav>
   );

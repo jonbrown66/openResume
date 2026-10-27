@@ -36,6 +36,9 @@ export const ResumeCanvas = memo(function ResumeCanvas({ canvasRef, children, sc
       clearTimeout(timer);
       const token = ++generation;
       if (!fontsReady || disposed) return;
+      // The measure node is print:hidden, so switching media types collapses it to
+      // zero height. Re-measuring then would slice every page down to 1px.
+      if (!node.offsetWidth || !node.offsetHeight) return;
       timer = setTimeout(() => {
         frame = requestAnimationFrame(async () => {
           if (disposed || generation !== token) return;

@@ -10,7 +10,7 @@
   background: var(--resume-paper);
   color: var(--resume-ink);
   font-family: var(--font-family, "Source Han Serif SC", "Noto Serif SC", Georgia, serif);
-  overflow-wrap: break-word;
+  overflow-wrap: anywhere;
   word-break: normal;
 }
 
@@ -212,7 +212,12 @@
 ----------------------------------------- */
 .resume-header {
   flex-shrink: 0;
+  min-width: 0;
   color: var(--resume-ink);
+}
+
+.resume-header-main {
+  min-width: 0;
 }
 
 .resume-header h1 {
@@ -387,7 +392,7 @@
 .template-minimal .resume-header-minimal .resume-contact {
   margin-top: 0.35rem;
   font-size: 0.76rem;
-  color: #94a3b8;
+  color: var(--resume-muted);
   letter-spacing: 0.02em;
 }
 

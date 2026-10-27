@@ -45,7 +45,7 @@ export const ProjectSelector = memo(function ProjectSelector({ projects, current
     <button ref={triggerRef} type="button" data-testid="project-selector" aria-label={`${labels.choose}: ${currentProject?.name ?? ''}`}
       aria-expanded={isOpen} aria-controls="project-list" onClick={() => setIsOpen(value => !value)}
       onKeyDown={event => { if (event.key === 'ArrowDown') { event.preventDefault(); setIsOpen(true); } }}
-      className="app-secondary flex min-h-10 max-w-[min(132px,30vw)] items-center gap-2 rounded-lg border px-3 text-sm sm:max-w-[180px] sm:min-h-8">
+      className="app-secondary flex min-h-10 max-w-[min(132px,30vw)] items-center gap-2 rounded-lg border px-3 text-sm sm:max-w-[180px] sm:min-h-8" title={currentProject?.name}>
       <span className="truncate font-medium">{currentProject?.name ?? labels.choose}</span><ChevronDown size={14} className="shrink-0" />
     </button>
     {createPortal(<AnimatePresence>{isOpen && <motion.div ref={menuRef} id="project-list" role="group" tabIndex={-1} aria-label={labels.choose}
@@ -67,7 +67,7 @@ export const ProjectSelector = memo(function ProjectSelector({ projects, current
           <button className={action} aria-label={labels.save} onClick={() => rename(project.id)}><Check size={16} /></button>
         </> : <button type="button" data-project-switch aria-pressed={project.id === currentProject?.id}
           className="app-control ui-menu-item ui-project-choice"
-          onClick={() => { onSwitch(project.id); close(); }}><span className="ui-project-marker">{project.id === currentProject?.id && <Check />}</span><span className="truncate">{project.name}</span></button>}
+          onClick={() => { onSwitch(project.id); close(); }}><span className="ui-project-marker">{project.id === currentProject?.id && <Check />}</span><span className="min-w-0 break-words text-start" title={project.name}>{project.name}</span></button>}
         {deleteId === project.id ? <>
           <button className={action} aria-label={labels.confirm} onClick={() => { onDelete(project.id); setDeleteId(null); addToast(labels.deleted, 'success'); }}><Check size={16} /></button>
           <button className={action} aria-label={labels.cancel} onClick={() => setDeleteId(null)}><X size={16} /></button>

@@ -13,18 +13,41 @@
   body * {
     visibility: hidden;
   }
+  /* Hidden siblings still occupy layout space and push the resume onto later pages. */
+  body :not(:has(.resume-canvas-screen-preview)):not(.resume-canvas-screen-preview):not(.resume-canvas-screen-preview *) {
+    display: none !important;
+  }
+  /* Every ancestor of the canvas keeps the app's scrolling/layout constraints,
+     which parks the absolutely positioned canvas outside the printed page. */
+  body :has(.resume-canvas-screen-preview) {
+    position: static !important;
+    display: block !important;
+    overflow: visible !important;
+    contain: none !important;
+    width: auto !important;
+    height: auto !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    background: none !important;
+    box-shadow: none !important;
+    transform: none !important;
+  }
+  /* Placeholder copy keeps the editor's layout but must never reach paper. */
+  [data-resume-placeholder] {
+    display: none !important;
+  }
   .resume-canvas-screen-preview, .resume-canvas-screen-preview * {
     visibility: visible !important;
   }
   .resume-canvas-screen-preview {
-    position: absolute !important;
-    left: 0 !important;
-    top: 0 !important;
+    position: static !important;
     width: 210mm !important;
     height: auto !important;
+    margin: 0 auto !important;
     box-shadow: none !important;
     border: none !important;
-    margin: 0 !important;
     padding: 0 !important;
     transform: none !important;
   }

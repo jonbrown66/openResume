@@ -47,6 +47,12 @@ interface ResumeRendererProps {
   inheritColors?: boolean;
 }
 
+// Shown only while editing an unnamed resume; printing and exporting drop it.
+function NamePlaceholder({ name }: { name: string }) {
+  if (name) return <>{name}</>;
+  return <span data-resume-placeholder="true">NAME</span>;
+}
+
 const CustomCssInjector = memo(({ css, id }: { css: string; id: string }) => {
   if (!css) return null;
   const protectedStyles = `
@@ -167,7 +173,7 @@ const HeaderClassic = memo(({ frontmatter }: { frontmatter: ResumeDraft['frontma
         </div>
       )}
       <div className="resume-header-main">
-        <h1>{frontmatter.name || 'NAME'}</h1>
+        <h1><NamePlaceholder name={frontmatter.name} /></h1>
         {frontmatter.title && <p className="resume-kicker">{frontmatter.title}</p>}
         {frontmatter.contact && (
           <p className="resume-contact">
@@ -186,7 +192,7 @@ const HeaderStandard = memo(({ frontmatter }: { frontmatter: ResumeDraft['frontm
     <div className={`resume-header resume-header-standard ${hasImage ? 'has-avatar' : 'no-avatar'}`}>
       <div className="resume-header-main">
         <div className="resume-name-row">
-          <h1>{frontmatter.name || 'NAME'}</h1>
+          <h1><NamePlaceholder name={frontmatter.name} /></h1>
           {frontmatter.title && <span className="resume-kicker-badge">{frontmatter.title}</span>}
         </div>
         {frontmatter.contact && (
@@ -212,7 +218,7 @@ const HeaderMinimal = memo(({ frontmatter }: { frontmatter: ResumeDraft['frontma
       )}
       <div className="resume-header-main">
         <div className={`resume-minimal-title-group${frontmatter.name ? ' has-name' : ''}`}>
-          <h1>{frontmatter.name || 'NAME'}</h1>
+          <h1><NamePlaceholder name={frontmatter.name} /></h1>
           {frontmatter.title && <span className="resume-minimal-role">{frontmatter.title}</span>}
         </div>
         {frontmatter.contact && (
@@ -312,7 +318,7 @@ const SidebarTemplate = memo(({ draft, style, fontFamily }: { draft: ResumeDraft
         {/* 右侧主内容区 */}
         <main className="sidebar-main p-[var(--page-margin)]">
           <header className="sidebar-main-header">
-            <h1>{draft.frontmatter.name || 'NAME'}</h1>
+            <h1><NamePlaceholder name={draft.frontmatter.name} /></h1>
             {draft.frontmatter.title && (
               <p className="resume-kicker">{draft.frontmatter.title}</p>
             )}

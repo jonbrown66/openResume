@@ -274,6 +274,78 @@ test('UI radii, highlights and surfaces stay coherent in both themes', async ({ 
   await page.screenshot({ path: testInfo.outputPath('workbench-mobile.png') });
 });
 
+test('long unbroken resume text wraps inside the paper instead of being clipped', async ({ page }, testInfo) => {
+  const token = 'W'.repeat(70);
+  await page.getByRole('textbox', { name: 'Resume Markdown' }).fill(
+    `---\nname: ${token}\ntitle: Senior Engineer\ncontact: https://example.com/${'a'.repeat(110)}\n---\n\n## Skills\n\n- ${'X'.repeat(110)}\n`);
+  const preview = page.getByRole('button', { name: 'Preview', exact: true });
+  if (await preview.isVisible()) await preview.click();
+  for (const template of ['Classic', 'Minimal', 'Standard', 'Sidebar']) {
+    await page.getByRole('button', { name: template, exact: true }).click();
+    await expect.poll(() => page.locator('.resume-paper-page-card').first().evaluate(card => {
+      const clipped: string[] = [];
+      card.querySelectorAll('*').forEach(element => {
+        if (element.scrollWidth > element.clientWidth + 1) clipped.push(element.tagName);
+      });
+      return clipped;
+    }), { message: `${template} must not clip long unbroken text` }).toEqual([]);
+  }
+  await page.screenshot({ path: testInfo.outputPath('long-token.png') });
+});
+
+test('mobile bottom navigation keeps every label on one line', async ({ page }, testInfo) => {
+  for (const width of [320, 390]) {
+    await page.setViewportSize({ width, height: 780 });
+    const nav = page.locator('nav.ui-edge-nav');
+    await expect(nav).toBeVisible();
+    expect(await nav.evaluate(element => Math.round(element.getBoundingClientRect().height)),
+      'Navigation must stay a single row').toBeLessThanOrEqual(56);
+    for (const label of await nav.locator('button > span').all()) {
+      expect(await label.evaluate(element => ({
+        clipped: element.scrollWidth > element.clientWidth,
+        inside: element.getBoundingClientRect().right <= innerWidth + 1,
+      }))).toEqual({ clipped: false, inside: true });
+    }
+    await page.screenshot({ path: testInfo.outputPath(`bottom-nav-${width}.png`), clip: { x: 0, y: 725, width, height: 55 } });
+  }
+});
+
+test('long resume names stay readable in the project menu', async ({ page }) => {
+  const longName = 'Senior Staff Platform Reliability Engineering Program Manager — International Growth & Payments';
+  await page.getByTestId('project-selector').click();
+  await page.getByRole('button', { name: /^Rename: / }).first().click();
+  const input = page.getByRole('textbox', { name: /^Rename: / });
+  await input.fill(longName); await input.press('Enter');
+  await page.keyboard.press('Escape');
+  await page.getByTestId('project-selector').click();
+  const item = page.getByRole('group', { name: /Choose resume/ }).locator('[data-project-switch] span').last();
+  expect(await item.evaluate(element => ({
+    clipped: element.scrollWidth > element.clientWidth + 1,
+    title: element.getAttribute('title'),
+    inside: element.getBoundingClientRect().right <= innerWidth + 1,
+  }))).toEqual({ clipped: false, title: longName, inside: true });
+  expect(await item.innerText()).toBe(longName);
+});
+
+test('unnamed resumes keep the editing placeholder but never print or export it', async ({ page }) => {
+  await page.getByRole('textbox', { name: 'Resume Markdown' }).fill('---\nname: \ntitle: Engineer\n---\n\n## Skills\n\n- React\n');
+  const heading = page.locator('.resume-paper-page-card h1').first();
+  await expect(heading).toHaveText('NAME');
+
+  await page.emulateMedia({ media: 'print' });
+  await expect.poll(() => page.locator('[data-resume-placeholder]').first().evaluate(element => getComputedStyle(element).display))
+    .toBe('none');
+  await page.emulateMedia({ media: 'screen' });
+
+  await page.getByRole('button', { name: 'Export', exact: true }).click();
+  const download = page.waitForEvent('download');
+  await page.getByRole('menuitem', { name: 'Export HTML', exact: true }).click();
+  const { readFile } = await import('node:fs/promises');
+  const html = await readFile((await (await download).path())!, 'utf8');
+  expect(html).not.toMatch(/data-resume-placeholder="true"/);
+  expect(html).not.toMatch(/>NAME</);
+});
+
 test('narrow CSS dialog keeps actions visible and traps keyboard focus', async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 568 });
   await page.getByRole('button', { name: 'Preview', exact: true }).click();
@@ -293,6 +365,47 @@ test('narrow CSS dialog keeps actions visible and traps keyboard focus', async (
   await page.keyboard.press('Escape');
   await expect(dialog).toBeHidden();
   await expect(trigger).toBeFocused();
+});
+
+test('printing the app shows the resume instead of a blank page', async ({ page }, testInfo) => {
+  const canvas = page.locator('.resume-canvas-screen-preview');
+  await expect(canvas).toHaveAttribute('data-pagination-ready', 'true');
+  await page.emulateMedia({ media: 'print' });
+  await expect.poll(() => canvas.evaluate(element => {
+    const box = element.getBoundingClientRect();
+    return { centered: Math.abs(box.left - (innerWidth - box.width) / 2) <= 1, pageWidth: Math.round(box.width) };
+  }), { message: 'Canvas must be laid out inside the printable area' }).toEqual({ centered: true, pageWidth: Math.round(210 * 96 / 25.4) });
+  await expect.poll(() => page.locator('.resume-paper-page-card').first().evaluate(card => {
+    const heading = card.querySelector('h1');
+    const cardBox = card.getBoundingClientRect();
+    const box = heading?.getBoundingClientRect();
+    return Boolean(box && box.width > 0 && box.top >= cardBox.top && box.bottom <= cardBox.bottom
+      && getComputedStyle(heading!).visibility === 'visible');
+  }), { message: 'Resume heading must be laid out and painted inside the first printed page' }).toBe(true);
+  await page.screenshot({ path: testInfo.outputPath('printed-app.png'), fullPage: false });
+  await page.emulateMedia({ media: 'screen' });
+});
+
+test('exported HTML stays printable instead of inheriting the app print-hide rules', async ({ page }, testInfo) => {
+  await page.getByRole('button', { name: 'Export', exact: true }).click();
+  const download = page.waitForEvent('download');
+  await page.getByRole('menuitem', { name: 'Export HTML', exact: true }).click();
+  const { readFile } = await import('node:fs/promises');
+  const html = await readFile((await (await download).path())!, 'utf8');
+  expect(html).not.toMatch(/body\s*\*\s*\{[^}]*visibility\s*:\s*hidden/i);
+
+  const documentPath = testInfo.outputPath('exported.html');
+  await import('node:fs/promises').then(fs => fs.writeFile(documentPath, html, 'utf8'));
+  const exported = await page.context().newPage();
+  await exported.goto('file:///' + documentPath.replace(/\\/g, '/'), { waitUntil: 'load' });
+  await exported.emulateMedia({ media: 'print' });
+  await expect.poll(() => exported.evaluate(() => {
+    const heading = document.querySelector('.resume-paper h1');
+    if (!heading) return 'missing heading';
+    return getComputedStyle(heading).visibility as string;
+  }), { message: 'Resume content must stay visible when the exported file is printed' }).toBe('visible');
+  await exported.screenshot({ path: testInfo.outputPath('exported-print.png') });
+  await exported.close();
 });
 
 test('immediate HTML export includes the latest deferred preview content', async ({ page }) => {

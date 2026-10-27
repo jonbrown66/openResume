@@ -98,6 +98,7 @@ export const enTranslations = {
   assistantClose: 'Close AI assistant',
   assistantBackToChat: 'Back to chat',
   assistantTitle: 'Resume Assistant',
+  assistantTab: 'Assistant',
   assistantDescription: '',
   assistantSingleIntro: 'I am your resume editing assistant. How can I help you?',
   assistantChatMode: 'Ask Anything',

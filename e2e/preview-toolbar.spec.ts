@@ -16,6 +16,24 @@ for (const language of ['zh', 'en'] as const) {
       await page.setViewportSize({ width, height: 900 });
       if (await preview.isVisible()) await preview.click();
       await expect(toolbar).toBeVisible();
+      // Let the responsive layout settle before measuring, or the clone check can see a stale width.
+      await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+      const fitsOnOneRow = await toolbar.evaluate(bar => {
+        const style = getComputedStyle(bar);
+        const parent = bar.parentElement!;
+        const parentStyle = getComputedStyle(parent);
+        const available = parent.clientWidth - parseFloat(parentStyle.paddingLeft) - parseFloat(parentStyle.paddingRight);
+        const children = [...bar.children].filter(child => child.getBoundingClientRect().width > 0);
+        const gap = parseFloat(style.columnGap) || 0;
+        const padding = parseFloat(style.paddingLeft) + parseFloat(style.paddingRight);
+        const needed = children.reduce((sum, child) => sum + child.getBoundingClientRect().width, 0)
+          + gap * Math.max(children.length - 1, 0) + padding;
+        return needed <= available;
+      });
+      expect(await toolbar.evaluate(bar => {
+        const rows = new Set([...bar.querySelectorAll('button')].map(button => Math.round(button.getBoundingClientRect().top)));
+        return rows.size;
+      }), `Toolbar rows at ${width}px`).toBe(fitsOnOneRow ? 1 : 2);
       await expect.poll(() => toolbar.evaluate(bar => {
         const bounds = bar.getBoundingClientRect();
         const pane = bar.parentElement!.parentElement!.getBoundingClientRect();

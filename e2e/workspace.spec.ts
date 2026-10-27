@@ -33,15 +33,20 @@ test('block edits persist immediately and survive reload', async ({ page }) => {
 });
 
 test('typing titles keeps focus, all section fields remain editable', async ({ page }) => {
+  await page.getByRole('textbox', { name: 'Resume Markdown' }).fill(
+    resume('Audit A').replace('## Experience\n\n', '## Experience\n\nOriginal section introduction.\n\n'));
   await page.getByRole('button', { name: 'Blocks', exact: true }).click();
   const title = page.getByRole('textbox', { name: 'Section name', exact: true }).first();
   await title.fill(''); await title.pressSequentially('Project XYZ');
   await expect(title).toHaveValue('Project XYZ'); await expect(title).toBeFocused();
-  await page.getByText('Section introduction (optional)', { exact: true }).click();
-  await page.getByRole('textbox', { name: 'Section introduction', exact: true }).fill('Leading section content');
-  await page.getByRole('textbox', { name: 'Organization (optional)', exact: true }).fill('Visible organization');
+  const introduction = page.getByRole('textbox', { name: 'Section introduction', exact: true });
+  await expect(introduction).toHaveValue('Original section introduction.');
+  await introduction.fill('Leading section content');
+  await page.getByRole('textbox', { name: 'Company', exact: true }).fill('Visible organization');
   await page.getByRole('button', { name: 'Markdown', exact: true }).click();
-  await expect(page.getByRole('textbox', { name: 'Resume Markdown' })).toHaveValue(/Leading section content/);
+  const markdown = page.getByRole('textbox', { name: 'Resume Markdown' });
+  await expect(markdown).toHaveValue(/Visible organization/);
+  await expect(markdown).toHaveValue(/Leading section content/);
 });
 
 test('switching projects isolates undo and preserves the last edit', async ({ page }) => {
@@ -111,7 +116,7 @@ test('narrow-screen actions remain reachable and enlarged canvas can pan', async
       const style = getComputedStyle(element);
       return { radius: style.borderRadius, shadow: style.boxShadow, topBorder: style.borderTopWidth };
     }));
-    expect(styles).toEqual(Array.from({ length: 2 }, () => ({ radius: '0px', shadow: 'none', topBorder: '0px' })));
+    expect(styles).toEqual(Array.from({ length: 3 }, () => ({ radius: '0px', shadow: 'none', topBorder: '0px' })));
   };
   await checkNavigation();
   const tab = await page.getByRole('button', { name: 'Markdown', exact: true }).boundingBox();

@@ -32,8 +32,8 @@ export const TemplateSwitcher = memo(function TemplateSwitcher({
   return (
     <>
       <div className="@container shrink-0 px-2 pt-2.5 pb-3 print:hidden sm:px-6 sm:pt-[13px] sm:pb-4 lg:px-8 lg:pb-6 xl:px-10">
-        <div data-testid="preview-toolbar" className="mx-auto flex w-fit max-w-full flex-col items-stretch gap-0.5 rounded-[var(--ui-radius-panel)] border border-[var(--app-border)] bg-[var(--app-surface)] p-0.5 @min-[640px]:flex-row @min-[640px]:items-center">
-          <div className="flex min-w-0 shrink-0 items-center gap-0.5">
+        <div data-testid="preview-toolbar" className="mx-auto flex w-fit max-w-full flex-wrap items-center justify-center gap-x-0.5 gap-y-1 rounded-[var(--ui-radius-panel)] border border-[var(--app-border)] bg-[var(--app-surface)] p-0.5">
+          <div className="flex min-w-0 flex-nowrap items-center gap-0.5">
             <div className="relative isolate grid min-w-0 flex-1 grid-cols-4 gap-0.5">
               <span aria-hidden="true" className="ui-segment-indicator pointer-events-none col-start-1 row-start-1 rounded-[var(--ui-radius-control)] bg-[var(--ui-selected-bg)]"
                 style={{ transform: `translateX(calc(${resumeTemplates.indexOf(template)} * (100% + 0.125rem)))` }} />
@@ -65,7 +65,6 @@ export const TemplateSwitcher = memo(function TemplateSwitcher({
               <span className="hidden @min-[400px]:inline">{lang === 'zh' ? '自定义' : 'Custom'}</span>
             </button>
           </div>
-          {scaleControls && <div className="mx-0.5 hidden h-4 w-px shrink-0 bg-[var(--app-border)] @min-[640px]:block" />}
           {scaleControls && <div className="flex shrink-0 items-center justify-center">{scaleControls}</div>}
         </div>
       </div>
