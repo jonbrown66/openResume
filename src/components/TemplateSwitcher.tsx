@@ -33,7 +33,7 @@ export const TemplateSwitcher = memo(function TemplateSwitcher({
     <>
       <div className="@container shrink-0 px-3 py-3 print:hidden sm:px-6 lg:px-5 lg:py-2.5">
         <div data-testid="preview-toolbar" className="flex w-full flex-wrap items-center justify-between gap-2">
-          <div className="flex min-w-0 max-w-full grow shrink-0 flex-nowrap items-center gap-0.5 rounded-[var(--ui-radius-panel)] border border-[var(--app-border)] bg-[var(--app-surface)] p-0.5">
+          <div className="flex min-w-0 max-w-full grow shrink-0 sm:grow-0 flex-nowrap items-center gap-0.5 rounded-[var(--ui-radius-panel)] border border-[var(--app-border)] bg-[var(--app-surface)] p-0.5">
             <div className="relative isolate grid min-w-0 flex-1 grid-cols-4 gap-0.5">
               <span aria-hidden="true" className="ui-segment-indicator pointer-events-none col-start-1 row-start-1 rounded-[var(--ui-radius-control)] bg-[var(--ui-selected-bg)]"
                 style={{ transform: `translateX(calc(${resumeTemplates.indexOf(template)} * (100% + 0.125rem)))` }} />

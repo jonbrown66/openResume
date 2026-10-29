@@ -18,6 +18,8 @@ for (const language of ['zh', 'en'] as const) {
       await expect(toolbar).toBeVisible();
       // Let the responsive layout settle before measuring, or the clone check can see a stale width.
       await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+      expect(await toolbar.evaluate(bar => getComputedStyle(bar.firstElementChild!).flexGrow),
+        `Template group should only stretch on phones at ${width}px`).toBe(width < 640 ? '1' : '0');
       const fitsOnOneRow = await toolbar.evaluate(bar => {
         const style = getComputedStyle(bar);
         const parent = bar.parentElement!;
