@@ -39,9 +39,9 @@ test('style input, panel dismissal and zoom limits stay usable', async ({ page }
   const more = page.getByRole('button', { name: 'More Actions' });
   if (await more.isVisible()) {
     await more.click();
-    await page.getByRole('menuitem', { name: 'Style', exact: true }).click();
-  } else await page.getByRole('button', { name: 'Style', exact: true }).click();
-  const panel = page.getByRole('dialog', { name: 'Style Editor' });
+    await page.getByRole('menuitem', { name: 'Resume style', exact: true }).click();
+  } else await page.getByRole('button', { name: 'Resume style', exact: true }).click();
+  const panel = page.getByRole('dialog', { name: 'Resume style' });
   const number = panel.getByRole('spinbutton', { name: 'Font Size (pt)', exact: true });
   await number.fill('');
   await number.pressSequentially('14');
@@ -56,7 +56,7 @@ test('style input, panel dismissal and zoom limits stay usable', async ({ page }
   await page.screenshot({ path: testInfo.outputPath('style-input.png') });
   await number.press('Escape');
   await expect(panel).toBeHidden();
-  await expect(await more.isVisible() ? more : page.getByRole('button', { name: 'Style', exact: true })).toBeFocused();
+  await expect(await more.isVisible() ? more : page.getByRole('button', { name: 'Resume style', exact: true })).toBeFocused();
 
   const zoomIn = page.getByRole('button', { name: 'Zoom in', exact: true });
   const zoomOut = page.getByRole('button', { name: 'Zoom out', exact: true });
@@ -64,7 +64,7 @@ test('style input, panel dismissal and zoom limits stay usable', async ({ page }
   await expect(zoomIn).toBeDisabled();
   for (let i = 0; i < 20 && await zoomOut.isEnabled(); i++) await zoomOut.click();
   await expect(zoomOut).toBeDisabled();
-  await page.getByRole('button', { name: 'Fit canvas' }).click();
+  await zoomIn.click();
   await expect(zoomIn).toBeEnabled();
   await expect(zoomOut).toBeEnabled();
   await expect(page.locator('.resume-canvas-screen-preview')).toHaveAttribute('data-pagination-ready', 'true');
@@ -75,10 +75,10 @@ test('reduced motion panels release focus on dismissal', async ({ page }) => {
   // The preference must be active before Framer Motion initializes.
   await page.reload();
   const more = page.getByRole('button', { name: 'More Actions' });
-  const trigger = await more.isVisible() ? more : page.getByRole('button', { name: 'Style', exact: true });
+  const trigger = await more.isVisible() ? more : page.getByRole('button', { name: 'Resume style', exact: true });
   await trigger.click();
-  if (await more.isVisible()) await page.getByRole('menuitem', { name: 'Style', exact: true }).click();
-  const panel = page.getByRole('dialog', { name: 'Style Editor' });
+  if (await more.isVisible()) await page.getByRole('menuitem', { name: 'Resume style', exact: true }).click();
+  const panel = page.getByRole('dialog', { name: 'Resume style' });
   await expect(panel.getByRole('spinbutton', { name: 'Font Size (pt)', exact: true })).toBeVisible();
   await expect(panel).toHaveCSS('opacity', '1');
   await expect(panel).toHaveCSS('transform', 'none');

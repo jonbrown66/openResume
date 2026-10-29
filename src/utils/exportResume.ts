@@ -91,6 +91,8 @@ function cloneCanvasForExport(canvasElement: HTMLDivElement) {
   // 清除内层 scale wrapper 的 transform
   const scaleWrapper = clone.querySelector('.origin-top-left') as HTMLElement | null;
   if (scaleWrapper) {
+    scaleWrapper.removeAttribute('aria-hidden');
+    scaleWrapper.removeAttribute('inert');
     scaleWrapper.style.transform = 'none';
     scaleWrapper.style.transition = 'none';
     scaleWrapper.style.width = '210mm';

@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, memo } from 'react';
-import { FileText, FileType, FileCode, Loader2, Check, Printer, ChevronDown } from 'lucide-react';
+import { FileText, FileType, FileCode, Loader2, Check, FileOutput, ChevronDown } from 'lucide-react';
 import type { TranslationSet } from '@/config/ui';
 import type { ResumeDraft } from '@/types/resume';
 import type { ResumeThemeConfig } from '@/types/theme';
@@ -18,11 +18,17 @@ export interface ExportMenuProps {
 }
 
 type ExportState = 'idle' | 'exporting' | 'success';
+type ExportFormat = 'pdf' | 'word' | 'html';
 
 export const ExportMenu = memo(function ExportMenu({ markdown, canvasRef, draft, translations: t, theme, template }: ExportMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [exportState, setExportState] = useState<ExportState>('idle');
-  const [exportFormat, setExportFormat] = useState('');
+  const [exportFormat, setExportFormat] = useState<ExportFormat>('pdf');
+  const messages = {
+    pdf: { loading: t.exportingPdf, success: t.exportPdfSuccess, failure: t.exportPdfFailed },
+    word: { loading: t.exportingWord, success: t.exportWordSuccess, failure: t.exportWordFailed },
+    html: { loading: t.exportingHtml, success: t.exportHtmlSuccess, failure: t.exportHtmlFailed },
+  };
   const successTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { addToast } = useToast();
 
@@ -30,13 +36,13 @@ export const ExportMenu = memo(function ExportMenu({ markdown, canvasRef, draft,
     if (successTimeoutRef.current) clearTimeout(successTimeoutRef.current);
   }, []);
 
-  const handleExport = async (format: 'pdf' | 'word' | 'html') => {
+  const handleExport = async (format: ExportFormat) => {
     if (!canvasRef.current || exportState === 'exporting') {
       if (!canvasRef.current) addToast(t.exportNoPreview, 'warning');
       return;
     }
     setExportState('exporting');
-    setExportFormat(format.toUpperCase());
+    setExportFormat(format);
     setIsOpen(false);
     try {
       // Read the latest text even when the preview is processing an earlier revision.
@@ -44,12 +50,13 @@ export const ExportMenu = memo(function ExportMenu({ markdown, canvasRef, draft,
       const exporters = { pdf: exportToPdf, word: exportToWord, html: exportToHtml };
       await exporters[format](canvasRef.current, exportDraft, theme, template);
       setExportState('success');
-      addToast(t.exportSuccess, 'success');
+      addToast(messages[format].success, 'success');
       if (successTimeoutRef.current) clearTimeout(successTimeoutRef.current);
       successTimeoutRef.current = setTimeout(() => setExportState('idle'), 2000);
     } catch (error) {
       setExportState('idle');
-      addToast(error instanceof Error ? `${t.exportFailed}: ${error.message}` : t.exportFailed, 'error');
+      const failureMessage = messages[format].failure;
+      addToast(error instanceof Error ? `${failureMessage}: ${error.message}` : failureMessage, 'error');
     }
   };
 
@@ -58,7 +65,7 @@ export const ExportMenu = memo(function ExportMenu({ markdown, canvasRef, draft,
     { format: 'word' as const, label: t.exportWord, icon: FileText },
     { format: 'html' as const, label: t.exportHtml, icon: FileCode },
   ];
-  const Icon = exportState === 'exporting' ? Loader2 : exportState === 'success' ? Check : Printer;
+  const Icon = exportState === 'exporting' ? Loader2 : exportState === 'success' ? Check : FileOutput;
 
   return (
     <div className="relative" data-export-state={exportState}>
@@ -79,7 +86,7 @@ export const ExportMenu = memo(function ExportMenu({ markdown, canvasRef, draft,
         </DropdownMenuContent>
       </DropdownMenu>
       <span className="sr-only" aria-live="polite">
-        {exportState === 'exporting' ? t.exporting : exportState === 'success' ? `${exportFormat} ${t.exportSuccess}` : ''}
+        {exportState === 'exporting' ? messages[exportFormat].loading : exportState === 'success' ? messages[exportFormat].success : ''}
       </span>
     </div>
   );

@@ -13,16 +13,23 @@ export function getEntrySummary(entry: { organization: string; heading: string; 
   return [entry.organization, entry.heading, entry.meta].map(value => value.trim()).filter(Boolean).join(' · ') || fallback;
 }
 
+export function normalizeSkillLines(value: string) {
+  let inCode = false;
+  return value.split('\n').map(line => {
+    const text = line.trim();
+    if (/^(?:```|~~~)/.test(text)) { inCode = !inCode; return line; }
+    if (inCode || !text || /^\s/.test(line)) return line;
+    if (/^(?:[-*+]\s|\d+[.)]\s|#{1,6}\s|>|\||<|!\[)/.test(text)) return line;
+    return `- ${text}`;
+  }).join('\n');
+}
+
 export function inferResumeSectionType(title: string): ResumeSectionType {
   if (/教育|学历|education/i.test(title)) return 'education';
   if (/项目|project/i.test(title)) return 'project';
   if (/技能|能力|skill/i.test(title)) return 'skill';
   if (/工作|经历|work|experience/i.test(title)) return 'experience';
   return 'custom';
-}
-
-export function asBulletList(value: string) {
-  return value.split('\n').map(line => !line.trim() || /^\s*(?:[-*+]\s|\d+[.)]\s)/.test(line) ? line : `- ${line.trim()}`).join('\n');
 }
 
 export const sectionNames = {

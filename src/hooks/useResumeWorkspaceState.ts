@@ -47,7 +47,7 @@ export function useResumeWorkspaceState({ currentProject, updateProject }: Optio
   const previewContainerRef = useRef<HTMLDivElement>(null);
   const resumeRef = useRef<HTMLDivElement>(null);
   const pendingSelection = useRef<{ projectId: string | undefined; selection?: EditorSelection } | null>(null);
-  const { scale, zoomPercent, resetZoom, updateZoom } = useCanvasScale(previewContainerRef);
+  const { scale, zoomPercent, updateZoom } = useCanvasScale(previewContainerRef);
   const commit = useCallback((next: typeof state) => {
     latest.current = next;
     setState(next);
@@ -142,6 +142,6 @@ export function useResumeWorkspaceState({ currentProject, updateProject }: Optio
     resumeTheme: visible.theme, updateTheme, resetTheme, updateCustomCss, handleAssistantApply,
     handleImportComplete, handleFormatMarkdown, activeDraft: visible.draft,
     previewPending: visible.markdown !== visible.draftMarkdown || visible.composing,
-    editorContainerRef, previewContainerRef, resumeRef, scale, zoomPercent, resetZoom, updateZoom,
+    editorContainerRef, previewContainerRef, resumeRef, scale, zoomPercent, updateZoom,
     canUndo: visible.undo.length > 0, canRedo: visible.redo.length > 0, onUndo, onRedo };
 }

@@ -30,7 +30,7 @@ test('undo restores Markdown focus and the replaced selection', async ({ page })
 });
 
 test('field edits and structural deletion have independent undo steps', async ({ page }) => {
-  await page.getByRole('button', { name: 'Blocks', exact: true }).click();
+  await page.getByRole('button', { name: 'Form', exact: true }).click();
   const name = page.getByRole('textbox', { name: 'Name', exact: true });
   const title = page.getByRole('textbox', { name: 'Title', exact: true });
   await name.fill('New name');

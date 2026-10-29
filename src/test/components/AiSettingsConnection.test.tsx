@@ -56,7 +56,7 @@ describe('AiSettings connection test', () => {
       />,
     );
 
-    fireEvent.click(screen.getByRole('button', { name: 'Test Connection' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Test connection' }));
 
     await waitFor(() => {
       expect(addToast).toHaveBeenCalledWith(
@@ -90,7 +90,7 @@ describe('AiSettings connection test', () => {
       />,
     );
 
-    fireEvent.click(screen.getByRole('button', { name: 'Test Connection' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Test connection' }));
 
     await waitFor(() => {
       expect(testAiProviderConnection).toHaveBeenCalledWith(settings.providers.openai);

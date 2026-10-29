@@ -34,18 +34,18 @@ function renderEditorPane(overrides?: Partial<React.ComponentProps<typeof Editor
 describe('EditorPane', () => {
   it('shows a markdown format button and calls the formatter callback', () => {
     const props = renderEditorPane();
-    const formatButton = screen.getByRole('button', { name: '格式整理' });
+    const formatButton = screen.getByRole('button', { name: '格式化 Markdown' });
 
     fireEvent.click(formatButton);
 
     expect(props.onFormatMarkdown).toHaveBeenCalledTimes(1);
     expect(formatButton.className).toContain('rounded-[var(--ui-radius-control)]');
-    expect(formatButton).not.toHaveTextContent('格式整理');
+    expect(formatButton).not.toHaveTextContent('格式化 Markdown');
   });
 
   it('hides the markdown format button in block mode', () => {
     renderEditorPane({ editorMode: 'blocks' });
 
-    expect(screen.queryByRole('button', { name: '格式整理' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: '格式化 Markdown' })).not.toBeInTheDocument();
   });
 });

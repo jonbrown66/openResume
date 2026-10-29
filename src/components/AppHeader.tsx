@@ -100,22 +100,15 @@ export const AppHeader = memo(function AppHeader({
   const themeLabel = theme === 'system' ? t.themeAuto : theme === 'dark' ? t.themeDark : t.themeLight;
 
   return (
-    <header className="app-header relative flex shrink-0 flex-wrap items-center gap-2 border-b border-[var(--app-border)] bg-[var(--app-surface)] px-3 py-2 transition-colors duration-200 2xl:grid 2xl:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] sm:px-6 sm:py-2.5 print:hidden z-50">
-      <div className="hidden min-w-0 items-center 2xl:flex">
-        <div className="flex items-center gap-2 mr-2">
-          <span className="w-3 h-3 rounded-lg bg-red-400 dark:bg-red-500" />
-          <span className="w-3 h-3 rounded-lg bg-amber-400 dark:bg-amber-500" />
-          <span className="w-3 h-3 rounded-lg bg-green-400 dark:bg-green-500" />
-        </div>
-      </div>
-      <div className="flex shrink-0 items-center gap-1.5 justify-self-center sm:gap-3" aria-label="OpenResume">
+    <header className="app-header relative flex shrink-0 flex-wrap items-center gap-2 border-b border-[var(--app-border)] bg-[var(--app-surface)] px-3 py-2 transition-colors duration-200 lg:flex-nowrap sm:px-6 sm:py-2.5 print:hidden z-50">
+      <div className="hidden shrink-0 items-center gap-1.5 justify-self-center sm:flex sm:gap-3" aria-label="OpenResume">
         <LogoIcon />
         <span className="hidden text-xs font-semibold tracking-wider text-zinc-500 dark:text-zinc-400 sm:inline sm:text-sm sm:tracking-wide">OpenResume</span>
       </div>
-      <div className="col-start-3 ms-auto flex min-w-0 flex-wrap items-center justify-end gap-1 sm:gap-2 relative">
-        {projectSelector}
-        {saveStatus && <span role="status" className="text-right text-[11px] leading-tight text-[var(--ui-text-secondary)] max-sm:w-full max-sm:order-last max-sm:pt-1 sm:text-xs">
-          {saveStatus === 'saving' ? (lang === 'zh' ? '正在保存到此浏览器…' : 'Saving to this browser…') : (lang === 'zh' ? '已保存到此浏览器' : 'Saved to this browser')}
+      <div className="relative flex w-full min-w-0 flex-wrap items-center justify-end gap-1 sm:ms-auto sm:w-auto sm:gap-2 lg:flex-nowrap">
+        <div className="me-auto min-w-0 sm:me-0">{projectSelector}</div>
+        {saveStatus && <span role="status" title={lang === 'zh' ? '简历保存在当前浏览器中，不会自动同步到其他设备。' : 'Your resume is saved in this browser and does not sync automatically to other devices.'} className="text-right text-[11px] leading-tight text-[var(--ui-text-secondary)] max-sm:w-full max-sm:order-last max-sm:pt-1 sm:text-xs">
+          {saveStatus === 'saving' ? (lang === 'zh' ? '正在保存…' : 'Saving…') : (lang === 'zh' ? '已保存' : 'Saved')}
         </span>}
         <button type="button" ref={styleButtonRef} onClick={() => openStyle(false)}
           className="app-control hidden items-center justify-center rounded-lg p-2 lg:flex" title={t.style} aria-label={t.style}>

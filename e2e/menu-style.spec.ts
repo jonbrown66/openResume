@@ -5,8 +5,8 @@ async function openSettings(page: Page) {
   const more = page.getByRole('button', { name: 'More Actions' });
   if (await more.isVisible()) {
     await more.click();
-    await page.getByRole('menuitem', { name: 'API Settings', exact: true }).click();
-  } else await page.getByRole('button', { name: 'API Settings', exact: true }).click();
+    await page.getByRole('menuitem', { name: 'AI Settings', exact: true }).click();
+  } else await page.getByRole('button', { name: 'AI Settings', exact: true }).click();
   return page.getByRole('dialog', { name: 'Settings', exact: true });
 }
 
@@ -62,7 +62,7 @@ test('secondary menus share inset geometry, labels, selection and dark surfaces'
   const more = page.getByRole('button', { name: 'More Actions' });
   if (await more.isVisible()) {
     await more.click();
-    await checkMenuGeometry(page.getByRole('menu', { name: 'More Actions' }), page.getByRole('menuitem', { name: 'Style', exact: true }));
+    await checkMenuGeometry(page.getByRole('menu', { name: 'More Actions' }), page.getByRole('menuitem', { name: 'Resume style', exact: true }));
     await page.screenshot({ path: testInfo.outputPath('more.png') });
     await page.getByRole('menuitem', { name: 'Light', exact: true }).click();
   } else await page.getByRole('button', { name: 'Light', exact: true }).click();

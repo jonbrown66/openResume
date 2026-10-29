@@ -23,6 +23,11 @@ describe('ResumeRenderer', () => {
     expect(container.querySelector('ul')).toHaveClass('skills-list-detailed');
   });
 
+  it('renders plain skill lines as a list without requiring Markdown bullets', () => {
+    const { container } = render(<ResumeRenderer markdown={'---\nname: 测试用户\n---\n\n## 技能\n\nReact\nTypeScript'} theme={DEFAULT_THEME_CONFIG} />);
+    expect(container.querySelectorAll('ul li')).toHaveLength(2);
+  });
+
   it('localizes the sidebar contact heading from resume content', () => {
     const { rerender } = render(<ResumeRenderer markdown={defaultMarkdownZh} template="sidebar" theme={DEFAULT_THEME_CONFIG} />);
     expect(screen.getByRole('heading', { name: '联系方式' })).toBeInTheDocument();

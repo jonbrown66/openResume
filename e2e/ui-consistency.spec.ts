@@ -11,19 +11,20 @@ async function settings(page: Page) {
   const more = page.getByRole('button', { name: 'More Actions' });
   if (await more.isVisible()) {
     await more.click();
-    await page.getByRole('menuitem', { name: 'API Settings', exact: true }).click();
-  } else await page.getByRole('button', { name: 'API Settings', exact: true }).click();
+    await page.getByRole('menuitem', { name: 'AI Settings', exact: true }).click();
+  } else await page.getByRole('button', { name: 'AI Settings', exact: true }).click();
   return page.getByRole('dialog', { name: 'Settings', exact: true });
 }
 
-test('markdown editor fills the pane without rounded focus borders or nested scrolling', async ({ page }) => {
+test('markdown editor fills the pane with a visible focus outline and no nested scrolling', async ({ page }) => {
   const editor = page.getByRole('textbox', { name: 'Resume Markdown', exact: true });
   await editor.click();
   const layout = await editor.evaluate(element => {
     const input = element as HTMLTextAreaElement;
     const container = input.parentElement!;
     const style = getComputedStyle(input);
-    return { radius: style.borderRadius, outline: style.outlineColor, border: style.borderWidth,
+    return { radius: style.borderRadius, outline: style.outlineColor,
+      focusColor: style.getPropertyValue('--ui-focus').trim(), outlineStyle: style.outlineStyle, outlineWidth: style.outlineWidth, border: style.borderWidth,
       paddingTop: parseFloat(getComputedStyle(container).paddingTop),
       outerOverflow: container.scrollHeight - container.clientHeight,
       heightGap: Math.abs(input.getBoundingClientRect().height - container.clientHeight),
@@ -31,7 +32,9 @@ test('markdown editor fills the pane without rounded focus borders or nested scr
   });
   expect(layout.radius).toBe('0px');
   expect(layout.border).toBe('0px');
-  expect(layout.outline).toBe('rgba(0, 0, 0, 0)');
+  expect(layout.outline).toBe(layout.focusColor);
+  expect(layout.outlineStyle).toBe('solid');
+  expect(layout.outlineWidth).toBe('2px');
   expect(layout.paddingTop).toBe(0);
   expect(layout.outerOverflow).toBeLessThanOrEqual(1);
   expect(layout.heightGap).toBeLessThanOrEqual(1);
@@ -71,7 +74,7 @@ test('short-screen settings scroll, stay above tools and restore keyboard focus'
   await expect(dialog).toHaveAttribute('aria-modal', 'true');
   await expect.poll(() => dialog.evaluate(element => element.contains(document.activeElement))).toBe(true);
   await expect.poll(() => page.locator('main').evaluate(element => (element as HTMLElement).inert)).toBe(true);
-  const connection = dialog.getByRole('button', { name: 'Test Connection', exact: true });
+  const connection = dialog.getByRole('button', { name: 'Test connection', exact: true });
   // A catalog response can add model guidance after the first scroll.
   // Recheck reachability after that layout change without relaxing the geometry.
   await expect.poll(async () => {
@@ -117,9 +120,9 @@ test('settings and font Select options are above their panels and clickable', as
   await page.keyboard.press('Escape');
   const more = page.getByRole('button', { name: 'More Actions' });
   if (await more.isVisible()) {
-    await more.click(); await page.getByRole('menuitem', { name: 'Style', exact: true }).click();
-  } else await page.getByRole('button', { name: 'Style', exact: true }).click();
-  await page.getByRole('dialog', { name: 'Style Editor' }).getByRole('combobox').click();
+    await more.click(); await page.getByRole('menuitem', { name: 'Resume style', exact: true }).click();
+  } else await page.getByRole('button', { name: 'Resume style', exact: true }).click();
+  await page.getByRole('dialog', { name: 'Resume style' }).getByRole('combobox').click();
   const font = page.getByRole('option').first();
   await font.scrollIntoViewIfNeeded();
   await expect.poll(() => font.evaluate(element => {
@@ -142,7 +145,19 @@ test('assistant sheet owns focus, permits settings Select and returns to launche
   const dialog = page.getByRole('dialog', { name: 'Resume Assistant' });
   await expect(dialog).toHaveAttribute('aria-modal', String(page.viewportSize()!.width < 640));
   await expect.poll(() => dialog.evaluate(element => element.contains(document.activeElement))).toBe(true);
-  await dialog.getByRole('button', { name: 'Configure', exact: true }).click();
+  if (page.viewportSize()!.width < 640) {
+    for (const viewport of [{ width: 320, height: 568 }, { width: 390, height: 844 }]) {
+      await page.setViewportSize(viewport);
+      const bounds = await dialog.boundingBox();
+      expect(bounds!.x).toBeGreaterThanOrEqual(12);
+      expect(bounds!.y).toBeGreaterThanOrEqual(12);
+      expect(bounds!.x + bounds!.width).toBeLessThanOrEqual(viewport.width - 12);
+      expect(bounds!.y + bounds!.height).toBeLessThanOrEqual(viewport.height - 60);
+      await expect(dialog.getByRole('button', { name: 'Configure AI', exact: true })).toBeInViewport();
+      expect(await dialog.evaluate(element => parseFloat(getComputedStyle(element).borderRadius))).toBeGreaterThan(0);
+    }
+  }
+  await dialog.getByRole('button', { name: 'Configure AI', exact: true }).click();
   await dialog.getByRole('combobox', { name: 'AI Provider', exact: true }).click();
   await page.keyboard.press('Escape');
   await expect(dialog).toBeVisible();
@@ -152,7 +167,7 @@ test('assistant sheet owns focus, permits settings Select and returns to launche
 });
 
 test('add section label stays complete and its options remain reachable', async ({ page }, testInfo) => {
-  await page.getByRole('button', { name: 'Blocks', exact: true }).click();
+  await page.getByRole('button', { name: 'Form', exact: true }).click();
   for (const width of [320, 390, 810, 1024, 1280, 1440]) {
     await page.setViewportSize({ width, height: 700 });
     const picker = page.getByRole('combobox', { name: 'Add section', exact: true });
@@ -182,8 +197,8 @@ test('add section label stays complete and its options remain reachable', async 
 test('style controls have names and touch-sized targets', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.getByRole('button', { name: 'More Actions' }).click();
-  await page.getByRole('menuitem', { name: 'Style', exact: true }).click();
-  const dialog = page.getByRole('dialog', { name: 'Style Editor' });
+  await page.getByRole('menuitem', { name: 'Resume style', exact: true }).click();
+  const dialog = page.getByRole('dialog', { name: 'Resume style' });
   await expect(dialog).toBeVisible();
   const swatch = dialog.locator('[data-color-swatch]').first();
   await expect(swatch).toHaveAttribute('aria-label', /#[0-9a-f]{6}/);
@@ -199,9 +214,9 @@ test('style sliders keep their label and unit aligned on a narrow panel', async 
   if (testInfo.project.name === 'mobile') await page.setViewportSize({ width: 320, height: 568 });
   const more = page.getByRole('button', { name: 'More Actions' });
   if (await more.isVisible()) {
-    await more.click(); await page.getByRole('menuitem', { name: 'Style', exact: true }).click();
-  } else await page.getByRole('button', { name: 'Style', exact: true }).click();
-  const dialog = page.getByRole('dialog', { name: 'Style Editor' });
+    await more.click(); await page.getByRole('menuitem', { name: 'Resume style', exact: true }).click();
+  } else await page.getByRole('button', { name: 'Resume style', exact: true }).click();
+  const dialog = page.getByRole('dialog', { name: 'Resume style' });
   await expect(dialog.getByText('Secondary Color', { exact: true })).toHaveCount(0);
   await expect(dialog.getByText('Accent Color', { exact: true })).toBeVisible();
   await expect(dialog.getByText('Primary Color', { exact: true })).toHaveCount(0);
@@ -227,7 +242,7 @@ test('style sliders keep their label and unit aligned on a narrow panel', async 
   });
   expect(geometry).toMatchObject({ labelBeside: true, unitInside: true, inside: true, appearance: 'none' });
   expect(geometry.gap).toBeGreaterThanOrEqual(12);
-  const reset = dialog.getByRole('button', { name: 'Reset to Default', exact: true });
+  const reset = dialog.getByRole('button', { name: 'Reset style', exact: true });
   await expect(reset).toBeInViewport();
   expect(await number.evaluate(element => {
     const footer = element.closest('[role=dialog]')!.querySelector('.ui-panel-footer')!;
@@ -294,12 +309,22 @@ test('long unbroken resume text wraps inside the paper instead of being clipped'
 });
 
 test('mobile bottom navigation keeps every label on one line', async ({ page }, testInfo) => {
-  for (const width of [320, 390]) {
+  for (const width of [320, 390, 768]) {
     await page.setViewportSize({ width, height: 780 });
     const nav = page.locator('nav.ui-edge-nav');
+    const launcher = page.getByRole('button', { name: 'Open AI assistant', exact: true });
     await expect(nav).toBeVisible();
+    await expect(nav.getByRole('button')).toHaveCount(2);
+    await expect(launcher).toBeVisible();
+    const navBox = await nav.boundingBox();
+    const launcherBox = await launcher.boundingBox();
+    expect(launcherBox!.y + launcherBox!.height).toBeLessThanOrEqual(navBox!.y);
+    expect(await launcher.evaluate(element => {
+      const rect = element.getBoundingClientRect();
+      return element.contains(document.elementFromPoint(rect.x + rect.width / 2, rect.y + rect.height / 2));
+    })).toBe(true);
     expect(await nav.evaluate(element => Math.round(element.getBoundingClientRect().height)),
-      'Navigation must stay a single row').toBeLessThanOrEqual(56);
+      'Navigation must stay a single row').toBeLessThanOrEqual(width < 640 ? 56 : 64);
     for (const label of await nav.locator('button > span').all()) {
       expect(await label.evaluate(element => ({
         clipped: element.scrollWidth > element.clientWidth,
@@ -353,7 +378,7 @@ test('narrow CSS dialog keeps actions visible and traps keyboard focus', async (
   await trigger.click();
   const dialog = page.getByRole('dialog', { name: 'Custom CSS', exact: true });
   await expect(dialog).toBeFocused();
-  const save = dialog.getByRole('button', { name: 'Save', exact: true });
+  const save = dialog.getByRole('button', { name: 'Apply styles', exact: true });
   await page.keyboard.press('Shift+Tab');
   await expect(save).toBeFocused();
   await page.keyboard.press('Tab');

@@ -38,11 +38,11 @@ test('measure cold and repeated component openings', async ({ page }, testInfo) 
       if (component === 'CSS' && await page.getByRole('button', { name: 'Preview', exact: true }).isVisible()) await page.getByRole('button', { name: 'Preview', exact: true }).click();
       if (component === 'Blocks' && await page.getByRole('button', { name: 'Edit', exact: true }).isVisible()) await page.getByRole('button', { name: 'Edit', exact: true }).click();
       if (['Settings', 'Style'].includes(component) && await more.isVisible()) await more.click();
-      const trigger = component === 'Settings' ? page.getByRole('button', { name: 'API Settings', exact: true }).or(page.getByRole('menuitem', { name: 'API Settings', exact: true }))
-        : component === 'Style' ? page.getByRole('button', { name: 'Style', exact: true }).or(page.getByRole('menuitem', { name: 'Style', exact: true }))
-        : page.getByRole('button', { name: component === 'Assistant' ? 'Open AI assistant' : component === 'CSS' ? 'Custom CSS' : component === 'Blocks' ? 'Blocks' : 'Export', exact: true });
+      const trigger = component === 'Settings' ? page.getByRole('button', { name: 'AI Settings', exact: true }).or(page.getByRole('menuitem', { name: 'AI Settings', exact: true }))
+        : component === 'Style' ? page.getByRole('button', { name: 'Resume style', exact: true }).or(page.getByRole('menuitem', { name: 'Resume style', exact: true }))
+        : page.getByRole('button', { name: component === 'Assistant' ? 'Open AI assistant' : component === 'CSS' ? 'Custom CSS' : component === 'Blocks' ? 'Form' : 'Export', exact: true });
       const selector = component === 'Settings' ? '[role=dialog][aria-label=Settings] [role=combobox]'
-        : component === 'Style' ? '[role=dialog][aria-label="Style Editor"] input[type=range]'
+        : component === 'Style' ? '[role=dialog][aria-label="Resume style"] input[type=range]'
         : component === 'Assistant' ? '[role=dialog][aria-label="Resume Assistant"] textarea'
         : component === 'CSS' ? '[role=dialog][aria-label="Custom CSS"] textarea'
         : component === 'Blocks' ? '[aria-label="Basic information"] input' : '[role=menu] [role=menuitem]';

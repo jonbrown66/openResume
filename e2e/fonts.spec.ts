@@ -16,9 +16,9 @@ async function seed(page: Page, fontFamily = 'Geist', waitForFonts = true) {
 }
 async function style(page: Page) {
   const more = page.getByRole('button', { name: 'More Actions', exact: true });
-  if (await more.isVisible()) { await more.click(); await page.getByRole('menuitem', { name: 'Style', exact: true }).click(); }
-  else await page.getByRole('button', { name: 'Style', exact: true }).click();
-  return page.getByRole('dialog', { name: 'Style Editor' });
+  if (await more.isVisible()) { await more.click(); await page.getByRole('menuitem', { name: 'Resume style', exact: true }).click(); }
+  else await page.getByRole('button', { name: 'Resume style', exact: true }).click();
+  return page.getByRole('dialog', { name: 'Resume style' });
 }
 
 test('style defaults match the requested values and Minimal headings keep their hierarchy', async ({ page }) => {
@@ -34,7 +34,7 @@ test('style defaults match the requested values and Minimal headings keep their 
   await expect(page.getByRole('option', { name: /Unavailable|不可用/ })).toHaveCount(0);
   await page.keyboard.press('Escape');
   await panel.getByRole('spinbutton', { name: 'Font Size (pt)', exact: true }).fill('13');
-  await panel.getByRole('button', { name: 'Reset to Default', exact: true }).click();
+  await panel.getByRole('button', { name: 'Reset style', exact: true }).click();
   await expect(panel.getByRole('spinbutton', { name: 'Font Size (pt)', exact: true })).toHaveValue('11');
   await page.keyboard.press('Escape');
   const preview = page.getByRole('button', { name: 'Preview', exact: true });

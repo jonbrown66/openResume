@@ -88,6 +88,8 @@ describe('exportResume', () => {
 
     const scaleWrapper = document.createElement('div');
     scaleWrapper.className = 'origin-top-left';
+    scaleWrapper.setAttribute('aria-hidden', 'true');
+    scaleWrapper.setAttribute('inert', '');
 
     // 创建一个页卡片
     const card = document.createElement('div');
@@ -130,6 +132,11 @@ describe('exportResume', () => {
 
     expect(requestBody.html).toContain('data-export-mode="pdf"');
     expect(requestBody.html).toContain('resume-pdf-document');
+    const exported = new DOMParser().parseFromString(requestBody.html, 'text/html');
+    const exportedWrapper = exported.querySelector('.origin-top-left')!;
+    expect(exportedWrapper.hasAttribute('aria-hidden')).toBe(false);
+    expect(exportedWrapper.hasAttribute('inert')).toBe(false);
+    expect(scaleWrapper).toHaveAttribute('aria-hidden', 'true');
     expect(requestBody.html).toContain('resume-pdf-page');
     expect(requestBody.html).toContain('resume-paper-page-card');
     expect(requestBody.html).toContain('@page { size: A4 portrait; margin: 0 !important; }');

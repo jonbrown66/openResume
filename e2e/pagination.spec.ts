@@ -19,7 +19,10 @@ async function assertCompleteLines(page: Page, sourceLines?: Array<[string, numb
       const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
       while (walker.nextNode()) {
         const node = walker.currentNode;
-        if (!node.textContent?.trim() || node.parentElement?.closest('style,script,[aria-hidden="true"]:not(.resume-measure)')) continue;
+        if (!node.textContent?.trim() || node.parentElement?.closest('style,script')) continue;
+        // Projection ancestors are hidden from AT, but their visible lines still need checking.
+        const hiddenBlock = node.parentElement?.closest('[aria-hidden="true"]');
+        if (hiddenBlock && hiddenBlock !== root && root.contains(hiddenBlock)) continue;
         if (getComputedStyle(node.parentElement!).visibility === 'hidden') continue;
         const range = document.createRange(); range.selectNodeContents(node);
         Array.from(range.getClientRects()).forEach((rect, index) => {
@@ -67,9 +70,9 @@ for (const fontFamily of ['Geist', 'Noto Serif SC']) {
       if (await preview.isVisible()) await preview.click();
       await assertCompleteLines(page);
       const more = page.getByRole('button', { name: 'More Actions', exact: true });
-      if (await more.isVisible()) { await more.click(); await page.getByRole('menuitem', { name: 'Style', exact: true }).click(); }
-      else await page.getByRole('button', { name: 'Style', exact: true }).click();
-      const panel = page.getByRole('dialog', { name: 'Style Editor' });
+      if (await more.isVisible()) { await more.click(); await page.getByRole('menuitem', { name: 'Resume style', exact: true }).click(); }
+      else await page.getByRole('button', { name: 'Resume style', exact: true }).click();
+      const panel = page.getByRole('dialog', { name: 'Resume style' });
       await panel.getByRole('spinbutton', { name: 'Line Height (value)', exact: true }).fill('1.8');
       await panel.getByRole('spinbutton', { name: 'Line Height (value)', exact: true }).press('Enter');
       await assertCompleteLines(page);
@@ -118,9 +121,9 @@ for (const template of ['classic', 'minimal', 'standard', 'sidebar']) {
     if (await preview.isVisible()) await preview.click();
     await assertCompleteLines(page);
     const more = page.getByRole('button', { name: 'More Actions', exact: true });
-    if (await more.isVisible()) { await more.click(); await page.getByRole('menuitem', { name: 'Style', exact: true }).click(); }
-    else await page.getByRole('button', { name: 'Style', exact: true }).click();
-    const panel = page.getByRole('dialog', { name: 'Style Editor' });
+    if (await more.isVisible()) { await more.click(); await page.getByRole('menuitem', { name: 'Resume style', exact: true }).click(); }
+    else await page.getByRole('button', { name: 'Resume style', exact: true }).click();
+    const panel = page.getByRole('dialog', { name: 'Resume style' });
     for (const [label, value] of [['Font Size (pt)', '12.5'], ['Line Height (value)', '1.65'], ['Page Margin (mm)', '17'], ['Section Spacing (px)', '27']]) {
       await panel.getByRole('spinbutton', { name: label, exact: true }).fill(value);
       await panel.getByRole('spinbutton', { name: label, exact: true }).press('Enter');

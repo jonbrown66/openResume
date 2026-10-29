@@ -21,7 +21,6 @@ interface PreviewPaneProps {
   lang: 'en' | 'zh';
   onTemplateChange: (template: ResumeTemplate) => void;
   onZoomChange: (delta: number) => void;
-  onZoomReset: () => void;
   onCustomCssChange: (css: string) => void;
   onCustomCssReset: () => void;
   currentFont: string;
@@ -40,7 +39,6 @@ export const PreviewPane = memo(function PreviewPane({
   lang,
   onTemplateChange,
   onZoomChange,
-  onZoomReset,
   onCustomCssChange,
   onCustomCssReset,
   currentFont,
@@ -65,8 +63,7 @@ export const PreviewPane = memo(function PreviewPane({
     zoom: zoomPercent,
     actualScale: scale,
     onZoomChange,
-    onReset: onZoomReset,
-  }), [lang, zoomPercent, scale, onZoomChange, onZoomReset]);
+  }), [lang, zoomPercent, scale, onZoomChange]);
 
   const canvasProps = useMemo(() => ({
     canvasRef: resumeRef,
@@ -97,7 +94,7 @@ export const PreviewPane = memo(function PreviewPane({
 
       <TemplateSwitcher {...templateSwitcherProps} scaleControls={<CanvasScaleControls {...canvasScaleProps} />} />
 
-      <div ref={containerRef} data-testid="preview-scroll" className="flex min-h-0 flex-1 items-start justify-start overflow-auto px-3 pb-24 custom-scrollbar [contain:layout_paint_style] sm:px-6 sm:pb-12 lg:px-8 xl:px-10">
+      <div ref={containerRef} data-testid="preview-scroll" className="flex min-h-0 flex-1 items-start justify-start overflow-auto px-3 pb-6 custom-scrollbar [contain:layout_paint_style] sm:px-6 sm:pb-12 lg:px-6 2xl:px-8">
         <ResumeCanvas {...canvasProps}>
           {renderedResume}
         </ResumeCanvas>

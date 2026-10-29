@@ -34,7 +34,7 @@ describe('AppHeader', () => {
     await waitFor(() => expect(screen.getByRole('button', { name: '更多操作' })).toBeEnabled());
     fireEvent.click(screen.getByRole('button', { name: '更多操作' }));
     expect(screen.getByRole('menu', { name: '更多操作' })).toBeInTheDocument();
-    for (const name of ['样式', '跟随系统', '切换语言', 'API 设置', '打开 GitHub 项目']) {
+    for (const name of ['简历样式', '跟随系统', '切换语言', 'AI 设置', '打开 GitHub 项目']) {
       expect(screen.getByRole('menuitem', { name })).toBeInTheDocument();
     }
   });
@@ -53,7 +53,7 @@ describe('AppHeader', () => {
 
   it('keeps API settings open when interacting with a portaled select', () => {
     render(<ToastProvider>{header('en')}</ToastProvider>);
-    fireEvent.click(screen.getByRole('button', { name: 'API Settings' }));
+    fireEvent.click(screen.getByRole('button', { name: 'AI Settings' }));
     expect(screen.getByRole('heading', { name: 'Settings' })).toBeInTheDocument();
     const selectContent = document.createElement('div');
     selectContent.setAttribute('data-slot', 'select-content');

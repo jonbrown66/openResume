@@ -22,8 +22,8 @@ async function enter(page: Page, apiKey = 'catalog-test-only-key-a') {
 }
 async function openSettings(page: Page) {
   const more = page.getByRole('button', { name: 'More Actions', exact: true });
-  if (await more.isVisible()) { await more.click(); await page.getByRole('menuitem', { name: 'API Settings', exact: true }).click(); }
-  else await page.getByRole('button', { name: 'API Settings', exact: true }).click();
+  if (await more.isVisible()) { await more.click(); await page.getByRole('menuitem', { name: 'AI Settings', exact: true }).click(); }
+  else await page.getByRole('button', { name: 'AI Settings', exact: true }).click();
   return page.getByRole('dialog', { name: 'Settings', exact: true });
 }
 async function expectModel(page: Page, id: string) {

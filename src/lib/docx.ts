@@ -5,6 +5,7 @@ import remarkGfm from 'remark-gfm';
 import type { ResumeDraft } from '@/types/resume';
 import type { ResumeThemeConfig } from '@/types/theme';
 import { fontNativeName, isBuiltinFont, resolveFont } from '@/lib/resumeFonts';
+import { getResumeSectionType, normalizeSkillLines } from '@/utils/resumeSections';
 
 interface Node { type: string; value?: string; url?: string; depth?: number; ordered?: boolean; start?: number; children?: Node[] }
 type Numbering = INumberingOptions['config'][number][];
@@ -66,7 +67,8 @@ function sectionBlocks(draft: ResumeDraft, theme: ResumeThemeConfig, numbering: 
   const blocks: Block[] = [];
   if (draft.summary) blocks.push(heading(draft.summaryTitle || (/[\u4e00-\u9fff]/.test(draft.summary) ? '个人简介' : 'PROFESSIONAL SUMMARY')), ...markdownBlocks(draft.summary, 0, numbering));
   for (const section of draft.sections) {
-    blocks.push(heading(section.title), ...markdownBlocks(section.content, 0, numbering));
+    const isSkill = getResumeSectionType(section) === 'skill';
+    blocks.push(heading(section.title), ...markdownBlocks(isSkill ? normalizeSkillLines(section.content) : section.content, 0, numbering));
     for (const entry of section.entries) {
       if (entry.heading || entry.organization || entry.meta) {
         const paragraph = new Paragraph({ heading: HeadingLevel.HEADING_2, keepNext: true, spacing: { before: 160, after: 80 }, children: [

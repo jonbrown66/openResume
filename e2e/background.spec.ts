@@ -7,9 +7,9 @@ import { readZipText } from '../src/test/helpers/zip';
 
 async function openStyle(page: Page) {
   const more = page.getByRole('button', { name: 'More Actions', exact: true });
-  if (await more.isVisible()) { await more.click(); await page.getByRole('menuitem', { name: 'Style', exact: true }).click(); }
-  else await page.getByRole('button', { name: 'Style', exact: true }).click();
-  return page.getByRole('dialog', { name: 'Style Editor' });
+  if (await more.isVisible()) { await more.click(); await page.getByRole('menuitem', { name: 'Resume style', exact: true }).click(); }
+  else await page.getByRole('button', { name: 'Resume style', exact: true }).click();
+  return page.getByRole('dialog', { name: 'Resume style' });
 }
 
 test('paper background persists across templates and survives exports and reset', async ({ page, context }, testInfo) => {
@@ -36,7 +36,7 @@ test('paper background persists across templates and survives exports and reset'
   await page.reload();
   panel = await openStyle(page);
   await expect(panel.getByLabel('Resume Background', { exact: true })).toHaveValue('#faf9f3');
-  await panel.getByRole('button', { name: 'Reset to Default', exact: true }).click();
+  await panel.getByRole('button', { name: 'Reset style', exact: true }).click();
   await expect(panel.getByLabel('Resume Background', { exact: true })).toHaveValue('#ffffff');
   await panel.getByRole('button', { name: 'Resume Background: #eff6ff', exact: true }).click();
   await page.keyboard.press('Escape');

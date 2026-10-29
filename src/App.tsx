@@ -78,7 +78,6 @@ export default function App() {
     resumeRef,
     scale,
     zoomPercent,
-    resetZoom,
     updateZoom,
     canUndo,
     canRedo,
@@ -175,7 +174,7 @@ export default function App() {
         preview={<PreviewPane containerRef={previewContainerRef} draft={activeDraft} pending={previewPending}
           resumeRef={resumeRef} scale={scale} template={template} theme={resumeTheme} translations={t}
           zoomPercent={zoomPercent} lang={lang} onTemplateChange={setTemplate} onZoomChange={updateZoom}
-          onZoomReset={resetZoom} onCustomCssChange={updateCustomCss} onCustomCssReset={resetCustomCss}
+          onCustomCssChange={updateCustomCss} onCustomCssReset={resetCustomCss}
           currentFont={resumeTheme.fontFamily} />}
         assistant={<WorkspaceAssistant lang={lang} markdown={markdown} projectId={currentProject?.id ?? 'default-project'}
           settings={settings} translations={t} onApplyMarkdown={handleAssistantApply}

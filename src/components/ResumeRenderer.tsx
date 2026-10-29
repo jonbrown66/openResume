@@ -5,6 +5,7 @@ import rehypeSanitize from 'rehype-sanitize';
 import remarkGfm from 'remark-gfm';
 import type { ResumeDraft, ResumeEntry, ResumeSection } from '../types/resume';
 import { parseMarkdownToResumeDraft } from '../utils/resumeDocument';
+import { getResumeSectionType, normalizeSkillLines } from '../utils/resumeSections';
 import type { ResumeThemeConfig } from '../types/theme';
 import { fontFamily } from '@/lib/resumeFonts';
 
@@ -81,10 +82,6 @@ function getSummaryTitle(draft: ResumeDraft): string {
   return 'PROFESSIONAL SUMMARY';
 }
 
-function isSkillsSection(title: string): boolean {
-  return /skill|技能|能力/i.test(title);
-}
-
 type MarkdownNode = { value?: string; children?: MarkdownNode[] };
 
 function markdownText(node: MarkdownNode): string {
@@ -150,11 +147,11 @@ const EntryItem = memo(({ entry }: { entry: ResumeEntry }) => (
 EntryItem.displayName = 'EntryItem';
 
 const SectionItem = memo(({ section, index }: { section: ResumeSection; index: number }) => {
-  const skills = isSkillsSection(section.title);
+  const skills = getResumeSectionType(section) === 'skill';
   return (
     <div key={`${section.title}-${index}`}>
       <h2>{section.title}</h2>
-      {section.content && <MarkdownRenderer content={section.content} isSkills={skills} />}
+      {section.content && <MarkdownRenderer content={skills ? normalizeSkillLines(section.content) : section.content} isSkills={skills} />}
       {section.entries.map((entry, entryIndex) => (
         <EntryItem key={`${section.title}-${entryIndex}`} entry={entry} />
       ))}
@@ -292,7 +289,8 @@ const SidebarTemplate = memo(({ draft, style, fontFamily }: { draft: ResumeDraft
               <h2 className="sidebar-heading">{section.title}</h2>
               {section.content && (
                 <div className="sidebar-block-content">
-                  <MarkdownRenderer content={section.content} isSkills={isSkillsSection(section.title)} />
+                  <MarkdownRenderer content={getResumeSectionType(section) === 'skill' ? normalizeSkillLines(section.content) : section.content}
+                    isSkills={getResumeSectionType(section) === 'skill'} />
                 </div>
               )}
               {section.entries.map((entry, entryIdx) => (

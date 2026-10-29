@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Bot, Edit2, Eye } from 'lucide-react';
+import { Edit2, Eye } from 'lucide-react';
 
 import type { ActiveView, TranslationSet } from '../config/ui';
 
@@ -36,14 +36,6 @@ export function MobileViewToggle({ activeView, translations: t, onChange }: Mobi
       >
         <Eye size={16} className="shrink-0" /> <span className="whitespace-nowrap">{t.preview}</span>
       </motion.button>
-      <button
-        type="button"
-        aria-label={t.assistantOpen}
-        onClick={() => window.dispatchEvent(new Event('open-resume-assistant'))}
-        className="app-control flex min-w-0 flex-1 items-center justify-center gap-1 px-0.5 py-3 text-xs font-semibold text-[var(--muted-foreground)] transition-colors sm:gap-2 sm:px-0 sm:py-4 sm:text-sm"
-      >
-        <Bot size={16} className="shrink-0" /> <span className="whitespace-nowrap">{t.assistantTab}</span>
-      </button>
     </nav>
   );
 }

@@ -11,7 +11,7 @@ export interface ResumeThemeConfig {
 }
 
 export const DEFAULT_THEME_CONFIG: ResumeThemeConfig = {
-  primaryColor: '#d48516',
+  primaryColor: '#a8620c',
   secondaryColor: '#404040',
   backgroundColor: '#ffffff',
   fontFamily: 'Geist',

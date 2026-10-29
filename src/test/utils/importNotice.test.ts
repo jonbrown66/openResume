@@ -15,7 +15,7 @@ describe('resolveImportNoticeMessage', () => {
         importNoticeDetail: '',
         translations: translations.en,
       }),
-    ).toBe('AI formatting failed for the selected model. Imported auto-parsed content instead.');
+    ).toBe('Import complete using local parsing. AI formatting failed.');
   });
 
   it('appends the provider error detail when AI formatting fallback contains extra detail', () => {
@@ -27,7 +27,7 @@ describe('resolveImportNoticeMessage', () => {
         translations: translations.en,
       }),
     ).toBe(
-      'AI formatting failed for the selected model. Imported auto-parsed content instead. Model "demo" not found',
+      'Import complete using local parsing. AI formatting failed. Model "demo" not found',
     );
   });
 });

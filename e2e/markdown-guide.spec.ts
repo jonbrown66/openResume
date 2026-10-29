@@ -1,7 +1,7 @@
 import { test, expect } from './fixtures';
 
 for (const lang of ['zh', 'en'] as const) {
-  test(`${lang} Markdown guide copies a usable example without editing the resume and offers block mode`, async ({ page }) => {
+  test(`${lang} Markdown guide copies a usable example without editing the resume and offers form mode`, async ({ page }) => {
     await page.addInitScript(({ lang }) => {
       localStorage.setItem('myresume-settings-v1', JSON.stringify({ language: lang, theme: 'light' }));
       Object.defineProperty(navigator, 'clipboard', { configurable: true, value: {
@@ -12,9 +12,17 @@ for (const lang of ['zh', 'en'] as const) {
     await page.goto('/');
     const editor = page.getByRole('textbox', { name: lang === 'zh' ? '简历 Markdown' : 'Resume Markdown', exact: true });
     const original = await editor.inputValue();
-    const trigger = page.getByRole('button', { name: lang === 'zh' ? 'Markdown 写法与样式' : 'Markdown guide', exact: true });
-    await trigger.click();
-    const dialog = page.getByRole('dialog', { name: lang === 'zh' ? 'Markdown 写法与样式' : 'Markdown guide', exact: true });
+    const helpLabel = lang === 'zh' ? 'Markdown 帮助' : 'Markdown help';
+    const mobileTools = page.getByRole('button', { name: lang === 'zh' ? '编辑工具' : 'Editor tools', exact: true });
+    const desktopHelp = page.getByRole('button', { name: helpLabel, exact: true });
+    const openHelp = async () => {
+      if (await mobileTools.isVisible()) {
+        await mobileTools.click();
+        await page.getByRole('menuitem', { name: helpLabel, exact: true }).click();
+      } else await desktopHelp.click();
+    };
+    await openHelp();
+    const dialog = page.getByRole('dialog', { name: lang === 'zh' ? 'Markdown 帮助' : 'Markdown help', exact: true });
     await expect(dialog.getByRole('table')).toBeVisible();
     await expect(dialog.getByText(lang === 'zh' ? '公司或学校名称' : 'Company or school', { exact: true })).toBeVisible();
     expect(await dialog.evaluate(element => element.scrollWidth <= element.clientWidth)).toBe(true);
@@ -26,12 +34,12 @@ for (const lang of ['zh', 'en'] as const) {
     await expect(editor).toHaveValue(original);
     await page.keyboard.press('Escape');
     await expect(dialog).toBeHidden();
-    await expect(trigger).toBeFocused();
+    await expect(await mobileTools.isVisible() ? mobileTools : desktopHelp).toBeFocused();
     await expect(editor).toHaveValue(original);
     // The short, narrow view must keep the footer usable and toolbar buttons separate.
     await page.setViewportSize({ width: 320, height: 568 });
-    await trigger.click();
-    const useBlocks = dialog.getByRole('button', { name: lang === 'zh' ? '改用区块填写' : 'Use block editor', exact: true });
+    await openHelp();
+    const useBlocks = dialog.getByRole('button', { name: lang === 'zh' ? '改用表单填写' : 'Use form editor', exact: true });
     await expect(useBlocks).toBeInViewport();
     await page.screenshot({ path: test.info().outputPath('markdown-guide.png') });
     await useBlocks.click();
@@ -39,7 +47,7 @@ for (const lang of ['zh', 'en'] as const) {
     await expect(editor).toBeHidden();
     await page.getByRole('button', { name: 'Markdown', exact: true }).click();
     await expect(editor).toHaveValue(original);
-    const helpBox = await trigger.boundingBox();
+    const helpBox = await mobileTools.boundingBox();
     const tabBox = await page.getByRole('button', { name: 'Markdown', exact: true }).boundingBox();
     expect(helpBox!.y >= tabBox!.y + tabBox!.height || helpBox!.x >= tabBox!.x + tabBox!.width).toBe(true);
   });

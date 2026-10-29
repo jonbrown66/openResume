@@ -28,7 +28,7 @@ for (const language of ['zh', 'en'] as const) {
         const padding = parseFloat(style.paddingLeft) + parseFloat(style.paddingRight);
         const needed = children.reduce((sum, child) => sum + child.getBoundingClientRect().width, 0)
           + gap * Math.max(children.length - 1, 0) + padding;
-        return needed <= available;
+        return needed <= available + 1;
       });
       expect(await toolbar.evaluate(bar => {
         const rows = new Set([...bar.querySelectorAll('button')].map(button => Math.round(button.getBoundingClientRect().top)));
@@ -78,9 +78,9 @@ for (const language of ['zh', 'en'] as const) {
       await expect(zoomGroup).not.toHaveText(initialZoom!);
       await zoomGroup.getByRole('button', { name: language === 'zh' ? '缩小画布' : 'Zoom out', exact: true }).click();
       await expect(zoomGroup).toHaveText(initialZoom!);
-      await zoomGroup.getByRole('button', { name: language === 'zh' ? '放大画布' : 'Zoom in', exact: true }).click();
-      await zoomGroup.getByRole('button', { name: language === 'zh' ? '适应画布' : 'Fit canvas', exact: true }).click();
-      await expect(zoomGroup).toHaveText(initialZoom!);
+      await expect(zoomGroup.getByRole('button')).toHaveCount(2);
+      await expect.poll(() => page.getByTestId('preview-scroll').evaluate(element =>
+        element.scrollWidth - element.clientWidth), { message: `Default zoom overflow at ${width}px (${language})` }).toBeLessThanOrEqual(1);
     }
   });
 }

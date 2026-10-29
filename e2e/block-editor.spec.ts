@@ -45,14 +45,14 @@ test.beforeEach(async ({ page }) => {
   await page.route('**/api/models/catalog?**', route => route.fulfill({ status: 503, json: {} }));
   await page.goto('/');
   await page.getByRole('textbox', { name: '简历 Markdown', exact: true }).fill(sample);
-  await page.getByRole('button', { name: '区块', exact: true }).click();
+  await page.getByRole('button', { name: '表单', exact: true }).click();
 });
 
-test('beginner section fields and list action map clearly to Markdown and survive reload', async ({ page }) => {
+test('beginner section fields map clearly to Markdown and survive reload', async ({ page }) => {
   const toolbarTop = (await page.getByRole('button', { name: 'Markdown', exact: true }).boundingBox())!.y;
   const education = page.getByRole('region', { name: '教育经历', exact: true });
   await expect(education.getByLabel('学校', { exact: true })).toHaveValue('示例大学');
-  await expect(education.getByLabel('专业 / 学历', { exact: true })).toHaveValue('计算机科学 / 本科');
+  await expect(education.getByLabel('专业或学历', { exact: true })).toHaveValue('计算机科学 / 本科');
   const project = page.getByRole('region', { name: '项目经历', exact: true });
   await expect(project.getByLabel('项目名称', { exact: true })).toHaveValue('简历项目');
   const skills = page.getByRole('region', { name: '技能', exact: true });
@@ -60,14 +60,16 @@ test('beginner section fields and list action map clearly to Markdown and surviv
   await expect(skills.getByLabel('时间', { exact: true })).toHaveCount(0);
   await skills.getByLabel('技能清单', { exact: true }).fill('React\nTypeScript');
   expect((await page.getByRole('button', { name: 'Markdown', exact: true }).boundingBox())!.y).toBeCloseTo(toolbarTop, 0);
-  await skills.getByRole('button', { name: '技能清单：转为列表', exact: true }).click();
-  await expect(skills.getByLabel('技能清单', { exact: true })).toHaveValue('- React\n- TypeScript');
+  await expect(skills.getByLabel('技能清单', { exact: true })).toHaveValue('React\nTypeScript');
+  const skillList = page.locator('.resume-content ul').last();
+  await expect(skillList.locator('li')).toHaveCount(2);
+  await expect(skillList).toContainText('React');
   await page.getByRole('button', { name: 'Markdown', exact: true }).click();
   const markdown = page.getByRole('textbox', { name: '简历 Markdown', exact: true });
-  await expect(markdown).toHaveValue(/## 技能\n<!-- resume-section-type: skill -->\n\n- React\n- TypeScript/);
+  await expect(markdown).toHaveValue(/## 技能\n<!-- resume-section-type: skill -->\n\nReact\nTypeScript/);
   await page.reload();
-  await page.getByRole('button', { name: '区块', exact: true }).click();
-  await expect(skills.getByLabel('技能清单', { exact: true })).toHaveValue('- React\n- TypeScript');
+  await page.getByRole('button', { name: '表单', exact: true }).click();
+  await expect(skills.getByLabel('技能清单', { exact: true })).toHaveValue('React\nTypeScript');
 });
 
 test('unfinished entries retain company and date fields, and section ordering and deletion support undo', async ({ page }) => {
@@ -83,7 +85,7 @@ test('unfinished entries retain company and date fields, and section ordering an
   await expect(markdown).toHaveValue(/\*\*只填公司的经历\*\*/);
   await markdown.press('Control+End'); await markdown.press('Enter');
   await page.reload();
-  await page.getByRole('button', { name: '区块', exact: true }).click();
+  await page.getByRole('button', { name: '表单', exact: true }).click();
   await expect(work.locator('fieldset')).toHaveCount(2);
   await expect(work.getByLabel('公司', { exact: true }).first()).toHaveValue('只填公司的经历');
   await expect(work.getByLabel('时间', { exact: true }).nth(1)).toHaveValue('2024 | Remote');
@@ -91,7 +93,7 @@ test('unfinished entries retain company and date fields, and section ordering an
   await page.getByRole('button', { name: 'Markdown', exact: true }).click();
   const ordered = await markdown.inputValue();
   expect(ordered.indexOf('## 工作经历')).toBeLessThan(ordered.indexOf('## 技能'));
-  await page.getByRole('button', { name: '区块', exact: true }).click();
+  await page.getByRole('button', { name: '表单', exact: true }).click();
   await actOnSection(page, '工作经历', '删除');
   await expect(work).toHaveCount(0);
   await page.getByRole('button', { name: '撤销', exact: true }).click();
@@ -113,7 +115,7 @@ test('folding, simple list sections, inline recovery and renamed forms survive M
   await expect(renamed.getByLabel('学校', { exact: true })).toHaveValue('示例大学');
   const skills = page.getByRole('region', { name: '技能', exact: true });
   await expect(skills.getByLabel('技能清单', { exact: true })).toHaveValue('- React\n- TypeScript');
-  await expect(skills.getByRole('button', { name: '添加分组', exact: true })).toHaveCount(0);
+  await expect(skills.getByRole('button', { name: '添加条目', exact: true })).toHaveCount(0);
   await expect(skills.getByRole('button', { name: '新经历', exact: true })).toHaveCount(0);
   const project = page.getByRole('region', { name: '项目经历', exact: true });
   await actOnEntry(page, '项目经历', 0, '删除');
@@ -129,7 +131,7 @@ test('folding, simple list sections, inline recovery and renamed forms survive M
   await page.getByRole('button', { name: 'Markdown', exact: true }).click();
   await expect(page.getByRole('textbox', { name: '简历 Markdown', exact: true })).toHaveValue(/## 我的成长\n<!-- resume-section-type: education -->/);
   await page.reload();
-  await page.getByRole('button', { name: '区块', exact: true }).click();
+  await page.getByRole('button', { name: '表单', exact: true }).click();
   await expect(renamed.getByLabel('学校', { exact: true })).toHaveValue('示例大学');
   await expect(project.locator('fieldset')).toHaveCount(1);
   await expect(page.locator('.resume-measure')).toContainText('示例大学');
@@ -180,7 +182,7 @@ test('month picker applies a range, validates order and supports Present without
   await expect(time).toHaveValue('2023.06 - 至今');
   await page.getByRole('button', { name: 'Markdown', exact: true }).click();
   await expect(page.getByRole('textbox', { name: '简历 Markdown', exact: true })).toHaveValue(/2023\.06 - 至今/);
-  await page.getByRole('button', { name: '区块', exact: true }).click();
+  await page.getByRole('button', { name: '表单', exact: true }).click();
   await time.fill('预计 2027 年毕业');
   await entry.getByRole('button', { name: '选择日期', exact: true }).click();
   await expect(picker.getByText('当前为自定义时间，应用日期后将替换。', { exact: true })).toBeVisible();
@@ -197,7 +199,7 @@ test('month picker applies a range, validates order and supports Present without
   await summary.click();
   await actOnSection(page, '项目经历', '删除');
   await page.getByRole('button', { name: 'Markdown', exact: true }).click();
-  await page.getByRole('button', { name: '区块', exact: true }).click();
+  await page.getByRole('button', { name: '表单', exact: true }).click();
   await expect(summary).toHaveAttribute('aria-expanded', 'false');
   await expect(page.getByRole('button', { name: '撤销删除', exact: true })).toBeVisible();
   await page.getByRole('button', { name: '撤销删除', exact: true }).click();
@@ -207,7 +209,7 @@ test('month picker applies a range, validates order and supports Present without
 
 test('import defaults to a named new resume, with explicit replacement and compact browser save feedback', async ({ page }, testInfo) => {
   await page.setViewportSize({ width: 320, height: 568 });
-  await expect(page.getByRole('status').filter({ hasText: '已保存到此浏览器' })).toBeVisible();
+  await expect(page.getByRole('status').filter({ hasText: /^已保存$/ })).toBeVisible();
   await page.getByRole('button', { name: '导入文件', exact: true }).click();
   await expect(page.getByRole('radio', { name: '导入为新简历（默认）' })).toBeChecked();
   await expect(page.getByRole('radio', { name: /替换当前简历/ })).not.toBeChecked();
@@ -245,14 +247,14 @@ test('Markdown selection and independent editor scroll survive mode switches', a
   await page.mouse.wheel(0, 300);
   await expect.poll(() => editor.evaluate(node => node.scrollTop)).toBeGreaterThan(0);
   const scroll = await editor.evaluate(node => node.scrollTop);
-  await page.getByRole('button', { name: '区块', exact: true }).click();
+  await page.getByRole('button', { name: '表单', exact: true }).click();
   const skills = page.getByRole('region', { name: '技能', exact: true });
   await skills.scrollIntoViewIfNeeded();
   const blockScroll = await skills.evaluate(node => node.parentElement?.parentElement?.scrollTop);
   await page.getByRole('button', { name: 'Markdown', exact: true }).click();
   expect(await editor.evaluate(node => ({ start: (node as HTMLTextAreaElement).selectionStart, end: (node as HTMLTextAreaElement).selectionEnd }))).toEqual(selection);
   expect(await editor.evaluate(node => node.scrollTop)).toBe(scroll);
-  await page.getByRole('button', { name: '区块', exact: true }).click();
+  await page.getByRole('button', { name: '表单', exact: true }).click();
   expect(await skills.evaluate(node => node.parentElement?.parentElement?.scrollTop)).toBe(blockScroll);
   await page.screenshot({ path: testInfo.outputPath('independent-scroll.png') });
 });

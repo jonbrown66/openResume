@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useId, useRef, useState, type PropsWithChildren, type RefObject } from 'react';
+import { memo, useCallback, useEffect, useId, useLayoutEffect, useRef, useState, type PropsWithChildren, type RefObject } from 'react';
 import { createPortal } from 'react-dom';
 import { pageWidthPx, pageHeightPx } from '@/constants';
 import { ensureResumeFonts, fontFamily } from '@/lib/resumeFonts';
@@ -8,7 +8,13 @@ interface Props extends PropsWithChildren { canvasRef?: RefObject<HTMLDivElement
 // A fresh dangerouslySetInnerHTML prop can replace the entire subtree even when
 // only the surrounding page colors changed. Keep measured HTML mounted.
 const PageProjection = memo(function PageProjection({ html, sourceOffset }: { html: string; sourceOffset: number }) {
-  return <div style={{ position: 'absolute', insetBlockStart: -sourceOffset, insetInlineStart: 0, width: pageWidthPx }}
+  const projectionRef = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    // Keep pointer links and text selection; keyboard navigation uses the semantic copy.
+    projectionRef.current?.querySelectorAll<HTMLElement>('a[href], area[href], button, input, select, textarea, iframe, summary, [tabindex], [contenteditable], audio[controls], video[controls]')
+      .forEach(element => { element.tabIndex = -1; });
+  }, [html]);
+  return <div ref={projectionRef} style={{ position: 'absolute', insetBlockStart: -sourceOffset, insetInlineStart: 0, width: pageWidthPx }}
     dangerouslySetInnerHTML={{ __html: html }} />;
 });
 export const ResumeCanvas = memo(function ResumeCanvas({ canvasRef, children, scale, theme, template, pending = false, lang = 'zh' }: Props) {
@@ -90,6 +96,8 @@ export const ResumeCanvas = memo(function ResumeCanvas({ canvasRef, children, sc
     '--page-margin': theme ? `${theme.pageMargin}mm` : undefined,
   } as React.CSSProperties;
   return <>
+    {/* Keep one continuous reading order outside the canvas cloned for export/print. */}
+    <div className="sr-only print:hidden">{children}</div>
     {typeof document !== 'undefined' && createPortal(<div ref={measureRef} data-resume-measure-id={measureId} aria-hidden="true" inert className="resume-measure absolute pointer-events-none opacity-0 print:hidden"
       style={{ ...variables, width: pageWidthPx, height: 'auto', insetInlineStart: -9999, insetBlockStart: -9999 }}>
       {children}
@@ -100,7 +108,7 @@ export const ResumeCanvas = memo(function ResumeCanvas({ canvasRef, children, sc
         {lang === 'zh' ? '字体加载失败，当前为回退预览。请在样式中选择内置字体，或重试加载。' : 'Font loading failed. Showing a fallback preview. Choose a built-in font in Style or retry.'}
         <button type="button" className="app-secondary min-h-11 rounded-lg px-2 underline active:opacity-80" onClick={() => setFontRetry(value => value + 1)}>{lang === 'zh' ? '重试加载' : 'Retry font loading'}</button>
       </div>}
-      <div className="origin-top-left" style={{ width: pageWidthPx, transform: `scale(${scale})` }}>
+      <div aria-hidden="true" className="origin-top-left" style={{ width: pageWidthPx, transform: `scale(${scale})` }}>
         {Array.from({ length: pageCount }, (_, index) => {
           const page = pages[index];
           return <div key={index} className={`resume-paper-page-card template-${template || 'classic'} resume-template relative overflow-hidden rounded-sm shadow-lg`}

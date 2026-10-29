@@ -63,7 +63,7 @@ describe('AssistantWidget', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Open AI assistant' }));
 
     expect(screen.getByRole('heading', { name: 'Resume Assistant' })).toBeInTheDocument();
-    expect(screen.getByText('I am your resume editing assistant. How can I help you?')).toBeInTheDocument();
+    expect(screen.getByText('What would you like to change?')).toBeInTheDocument();
     expect(
       screen.queryByText(
         'Tell AI how you want the resume revised. It will generate a candidate version, show a diff, and wait for confirmation before applying it.',
@@ -80,7 +80,7 @@ describe('AssistantWidget', () => {
     ).toBeInTheDocument();
   });
 
-  it('uses a responsive bottom sheet layout for the assistant panel', () => {
+  it('uses a responsive floating layout for the assistant panel', () => {
     render(
       <AssistantWidget
         lang="en"
@@ -337,9 +337,9 @@ contact: jane@example.com
     fireEvent.click(screen.getByRole('button', { name: 'Open AI assistant' }));
 
     expect(screen.queryByText('Anthropic · claude-opus-4-8')).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Settings.*The current AI provider is not fully configured/ })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Settings · Configure AI to start editing your resume/ })).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Configure' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Configure AI' }));
 
     expect(screen.getByRole('heading', { name: 'Settings' })).toBeInTheDocument();
     expect(screen.getByText('AI Provider')).toBeInTheDocument();
@@ -458,7 +458,7 @@ contact: jane@example.com
     );
 
     expect(screen.queryByText('Revise project A summary.')).not.toBeInTheDocument();
-    expect(screen.getByText('I am your resume editing assistant. How can I help you?')).toBeInTheDocument();
+    expect(screen.getByText('What would you like to change?')).toBeInTheDocument();
   });
 
   it('hides diff preview and apply button when the AI response has no markdown changes (advice-only mode)', async () => {

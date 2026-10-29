@@ -7,7 +7,7 @@ function getContainerWidth(element: HTMLDivElement) {
   const style = window.getComputedStyle(element);
   const paddingLeft = parseFloat(style.paddingLeft) || 0;
   const paddingRight = parseFloat(style.paddingRight) || 0;
-  return Math.max(300, element.clientWidth - paddingLeft - paddingRight);
+  return Math.max(1, element.clientWidth - paddingLeft - paddingRight);
 }
 
 function getInitialZoom(): number {
@@ -53,7 +53,6 @@ export function useCanvasScale(containerRef: RefObject<HTMLDivElement | null>) {
 
   const scale = useMemo(() => fitScale * (zoomPercent / 100), [fitScale, zoomPercent]);
 
-  const resetZoom = useCallback(() => setZoomPercent(100), []);
   const updateZoom = useCallback((delta: number) => {
     setZoomPercent((current) => Math.max(60, Math.min(250, current + delta)));
   }, []);
@@ -62,7 +61,6 @@ export function useCanvasScale(containerRef: RefObject<HTMLDivElement | null>) {
     scale,
     fitScale,
     zoomPercent,
-    resetZoom,
     updateZoom,
   };
 }

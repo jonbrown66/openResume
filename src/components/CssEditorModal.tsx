@@ -208,7 +208,7 @@ export function CssEditorModal({
 
               <div className="mt-2 flex items-center justify-between text-xs text-zinc-500 dark:text-zinc-400">
                 <span>
-                  {lang === 'zh' ? '⌘/Ctrl + S 保存 | Tab 缩进' : '⌘/Ctrl + S to save | Tab to indent'}
+                  {lang === 'zh' ? '⌘/Ctrl + S 应用样式 | Tab 缩进' : '⌘/Ctrl + S to apply styles | Tab to indent'}
                 </span>
                 <span>{css.length} chars</span>
               </div>
@@ -237,7 +237,7 @@ export function CssEditorModal({
                 )}
               >
                 <RotateCcw className="w-4 h-4" />
-                {t.resetToDefault}
+                {t.resetCss}
               </button>
 
               <div className="ml-auto flex items-center gap-2">
@@ -262,7 +262,7 @@ export function CssEditorModal({
                   )}
                 >
                   <Save className="w-4 h-4" />
-                  {t.save}
+                  {t.applyStyles}
                 </button>
               </div>
             </div>

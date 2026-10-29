@@ -21,7 +21,7 @@ for (const language of ['zh', 'en']) {
       await expect(editor).toBeVisible();
       await expect(page.locator('html')).toHaveAttribute('lang', language === 'en' ? 'en' : 'zh-CN');
       await expect(page.locator('html')).toHaveAttribute('data-theme', theme === 'light' ? 'light' : 'dark');
-      await page.getByRole('button', { name: language === 'zh' ? '区块' : 'Blocks', exact: true }).click();
+      await page.getByRole('button', { name: language === 'zh' ? '表单' : 'Form', exact: true }).click();
       await expect(page.getByRole('textbox', { name: language === 'zh' ? '姓名' : 'Name', exact: true })).toBeVisible();
       expect(errors).toEqual([]);
     });

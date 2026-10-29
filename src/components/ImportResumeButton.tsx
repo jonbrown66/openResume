@@ -1,5 +1,5 @@
 import { useRef, useState, type ChangeEvent, type RefObject } from 'react';
-import { Loader2, Upload } from 'lucide-react';
+import { Loader2, FileInput } from 'lucide-react';
 import { AnchoredPanel } from './ui/AnchoredPanel';
 import type { TranslationSet } from '@/config/ui';
 
@@ -26,8 +26,8 @@ export function ImportResumeButton({ fileInputRef, onFileChange, onImportClick, 
     <input type="file" ref={fileInputRef} onChange={onFileChange} accept=".txt,.md,.pdf,.docx" className="hidden" />
     <button type="button" ref={triggerRef} onClick={() => setOpen(true)} aria-expanded={open} aria-haspopup="dialog" disabled={isImporting} aria-label={t.import}
       className="app-secondary flex min-h-10 min-w-10 shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-lg border p-2 disabled:cursor-not-allowed lg:min-h-0 lg:px-4 lg:py-2">
-      {isImporting ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
-      <span className="text-xs lg:text-sm">{isImporting ? label : (lang === 'zh' ? '导入' : 'Import')}</span>
+      {isImporting ? <Loader2 size={16} className="animate-spin" /> : <FileInput size={16} />}
+      <span className="hidden text-xs sm:inline lg:text-sm">{isImporting ? label : (lang === 'zh' ? '导入' : 'Import')}</span>
     </button>
     <span role="status" className="sr-only">{isImporting ? label : ''}</span>
     {open && <AnchoredPanel title={t.import} closeLabel={lang === 'zh' ? '关闭' : 'Close'} triggerRef={triggerRef} onClose={() => setOpen(false)}>

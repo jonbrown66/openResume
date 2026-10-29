@@ -281,7 +281,7 @@ export function AssistantWidget({
 
   return createPortal(
     <>
-      <div className="app-ui ui-floating-tools pointer-events-none fixed inset-x-2 bottom-[calc(5.25rem+env(safe-area-inset-bottom))] z-[70] flex justify-end print:hidden sm:inset-x-auto sm:bottom-6 sm:right-6">
+      <div className="app-ui ui-floating-tools pointer-events-none fixed inset-x-2 bottom-[calc(5.25rem+env(safe-area-inset-bottom))] z-[70] flex justify-end print:hidden sm:inset-x-auto sm:right-6 lg:bottom-6">
       {isOpen && compact && <div className="ui-backdrop ui-assistant-backdrop" onClick={handleClose} />}
       <AnimatePresence
         initial={false}
@@ -395,7 +395,7 @@ export function AssistantWidget({
           type="button"
           aria-label={t.assistantOpen}
           onClick={handleOpen}
-          className="app-primary pointer-events-auto ml-auto inline-flex h-14 w-14 items-center justify-center rounded-full transition-colors max-lg:hidden"
+          className="app-primary pointer-events-auto ml-auto inline-flex h-14 w-14 items-center justify-center rounded-full transition-colors"
         >
           <Bot size={22} />
         </motion.button>

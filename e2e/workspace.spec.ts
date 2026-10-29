@@ -24,7 +24,7 @@ async function preview(page: Page) {
 test.beforeEach(async ({ page }) => seed(page));
 
 test('block edits persist immediately and survive reload', async ({ page }) => {
-  await page.getByRole('button', { name: 'Blocks', exact: true }).click();
+  await page.getByRole('button', { name: 'Form', exact: true }).click();
   await page.getByRole('textbox', { name: 'Name', exact: true }).fill('Block saved');
   await page.getByRole('textbox', { name: 'Title', exact: true }).fill('Updated role');
   await page.reload();
@@ -35,7 +35,7 @@ test('block edits persist immediately and survive reload', async ({ page }) => {
 test('typing titles keeps focus, all section fields remain editable', async ({ page }) => {
   await page.getByRole('textbox', { name: 'Resume Markdown' }).fill(
     resume('Audit A').replace('## Experience\n\n', '## Experience\n\nOriginal section introduction.\n\n'));
-  await page.getByRole('button', { name: 'Blocks', exact: true }).click();
+  await page.getByRole('button', { name: 'Form', exact: true }).click();
   const title = page.getByRole('textbox', { name: 'Section name', exact: true }).first();
   await title.fill(''); await title.pressSequentially('Project XYZ');
   await expect(title).toHaveValue('Project XYZ'); await expect(title).toBeFocused();
@@ -116,7 +116,7 @@ test('narrow-screen actions remain reachable and enlarged canvas can pan', async
       const style = getComputedStyle(element);
       return { radius: style.borderRadius, shadow: style.boxShadow, topBorder: style.borderTopWidth };
     }));
-    expect(styles).toEqual(Array.from({ length: 3 }, () => ({ radius: '0px', shadow: 'none', topBorder: '0px' })));
+    expect(styles).toEqual(Array.from({ length: 2 }, () => ({ radius: '0px', shadow: 'none', topBorder: '0px' })));
   };
   await checkNavigation();
   const tab = await page.getByRole('button', { name: 'Markdown', exact: true }).boundingBox();

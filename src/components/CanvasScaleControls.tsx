@@ -1,15 +1,14 @@
 import { memo } from 'react';
-import { Minus, Plus, ScanText } from 'lucide-react';
+import { Minus, Plus } from 'lucide-react';
 
 interface CanvasScaleControlsProps {
   lang?: 'zh' | 'en';
   zoom: number;
   actualScale?: number;
-  onReset: () => void;
   onZoomChange: (delta: number) => void;
 }
 
-export const CanvasScaleControls = memo(function CanvasScaleControls({ zoom, actualScale, onReset, onZoomChange, lang = 'zh' }: CanvasScaleControlsProps) {
+export const CanvasScaleControls = memo(function CanvasScaleControls({ zoom, actualScale, onZoomChange, lang = 'zh' }: CanvasScaleControlsProps) {
   const label = lang === 'zh' ? '画布缩放' : 'Canvas zoom';
   return (
     <div role="group" aria-label={label} className="flex shrink-0 items-center gap-0.5">
@@ -33,14 +32,6 @@ export const CanvasScaleControls = memo(function CanvasScaleControls({ zoom, act
         className="app-control flex min-h-10 min-w-10 items-center justify-center rounded-[var(--ui-radius-control)] p-1.5 transition-colors disabled:opacity-35 disabled:cursor-not-allowed sm:min-h-8 sm:min-w-8"
       >
         <Plus size={14} />
-      </button>
-      <button
-        type="button"
-        aria-label={lang === 'zh' ? '适应画布' : 'Fit canvas'}
-        onClick={onReset}
-        className="app-control flex min-h-10 min-w-10 items-center justify-center rounded-[var(--ui-radius-control)] p-1.5 transition-colors sm:min-h-8 sm:min-w-8"
-      >
-        <ScanText size={14} />
       </button>
     </div>
   );
