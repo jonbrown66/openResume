@@ -279,6 +279,9 @@ body:has([role=dialog][aria-modal=true]) .ui-edge-nav { visibility: hidden; }
 .ui-dropdown-popup { min-inline-size: 192px; }
 .ui-submenu-popup { inline-size: max-content; min-inline-size: 176px; }
 .ui-select-list { display: grid; gap: 2px; }
+.ui-model-popup { display: flex; flex-direction: column; overflow: hidden; }
+.ui-model-list { min-block-size: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; }
+.ui-model-list:empty { display: none; }
 .app-ui.ui-menu .ui-menu-item {
   position: relative;
   display: flex;

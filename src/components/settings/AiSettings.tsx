@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Cpu, Eye, EyeOff, Sparkles, Wand2, Globe, RefreshCw } from 'lucide-react';
+import { Check, ChevronDown, Cpu, Eye, EyeOff, Search, Sparkles, Wand2, Globe, RefreshCw } from 'lucide-react';
+import { Combobox } from '@base-ui/react/combobox';
 import type { AppSettings, ApiProviderId } from '@/config/settings';
 import { translations } from '@/config/ui';
 import {
@@ -63,6 +64,7 @@ export function AiSettings({ settings, onUpdateProvider, onSetActiveProvider }: 
   const [testingProviderId, setTestingProviderId] = useState<ApiProviderId | null>(null);
   const [customModelModes, setCustomModelModes] = useState<Partial<Record<ApiProviderId, boolean>>>({});
   const [modelMenu, setModelMenu] = useState<string[] | null>(null);
+  const [modelSearch, setModelSearch] = useState('');
   const currentProviderId = settings.activeProvider;
   const currentProvider = settings.providers[currentProviderId];
   const t = translations[settings.language];
@@ -210,25 +212,58 @@ export function AiSettings({ settings, onUpdateProvider, onSetActiveProvider }: 
             <RefreshCw size={14} aria-hidden="true" />{zh ? '刷新模型' : 'Refresh models'}
           </Button>
         </div>
-        <Select
-          items={[...modelOptions.map(model => ({ value: model, label: model })), { value: CUSTOM_MODEL_VALUE, label: t.aiModelCustomOption }]}
+        <Combobox.Root
+          key={currentProviderId}
+          items={[...modelOptions, CUSTOM_MODEL_VALUE]}
           value={selectedModelValue}
           onValueChange={handleModelChange}
-          onOpenChange={open => { if (open) setModelMenu(availableModels); }}
-          onOpenChangeComplete={open => { if (!open) setModelMenu(null); }}
+          inputValue={modelSearch}
+          onInputValueChange={setModelSearch}
+          itemToStringLabel={model => model === CUSTOM_MODEL_VALUE ? t.aiModelCustomOption : model}
+          filter={(model, query) => model === CUSTOM_MODEL_VALUE || model.toLowerCase().includes(query.trim().toLowerCase())}
+          autoHighlight
+          onOpenChange={open => {
+            if (open) {
+              setModelMenu(availableModels);
+              setModelSearch('');
+            }
+          }}
+          onOpenChangeComplete={open => { if (!open) { setModelMenu(null); setModelSearch(''); } }}
         >
-          <SelectTrigger aria-label={t.aiModel} className="w-full h-12 rounded-lg border-[var(--app-border)] bg-[var(--app-surface)]/70 px-4 focus:ring-1 focus:ring-[var(--app-accent)]/35">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent className="rounded-lg border-[var(--app-border)] bg-[var(--app-surface)]">
-            {modelOptions.map(m => (
-              <SelectItem key={m} value={m} title={m}>{m}</SelectItem>
-            ))}
-            <SelectItem value={CUSTOM_MODEL_VALUE} className="rounded-lg">
-              {t.aiModelCustomOption}
-            </SelectItem>
-          </SelectContent>
-        </Select>
+          <Combobox.Trigger aria-label={t.aiModel} className="ui-select-trigger flex w-full min-w-0 h-12 items-center justify-between gap-2 rounded-lg border border-[var(--app-border)] bg-[var(--app-surface)]/70 px-4 text-sm focus:ring-1 focus:ring-[var(--app-accent)]/35">
+            <span className="ui-select-value min-w-0 flex-1 truncate text-start">
+              {isCustomModel ? t.aiModelCustomOption : currentProvider.model}
+            </span>
+            <ChevronDown size={16} className="shrink-0 text-muted-foreground" aria-hidden="true" />
+          </Combobox.Trigger>
+          <Combobox.Portal>
+            <Combobox.Positioner sideOffset={8} align="start" collisionPadding={12} className="isolate z-[240]">
+              <Combobox.Popup className="app-ui ui-select-overlay ui-menu ui-select-popup ui-model-popup">
+                <div className="relative m-1 mb-2 shrink-0">
+                  <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
+                  <Combobox.Input
+                    aria-label={zh ? '搜索模型' : 'Search models'}
+                    placeholder={zh ? '搜索模型…' : 'Search models…'}
+                    className="h-11 w-full rounded-lg border border-[var(--app-border)] bg-[var(--app-surface)] pl-9 pr-3 text-sm outline-none focus:ring-1 focus:ring-[var(--app-accent)]/35"
+                  />
+                </div>
+                {modelSearch.trim() && !modelOptions.some(model => model.toLowerCase().includes(modelSearch.trim().toLowerCase())) && (
+                  <p role="status" className="px-3 py-2 text-xs text-muted-foreground">
+                    {zh ? '未找到匹配模型，可手动填写。' : 'No matching models. Enter a custom model.'}
+                  </p>
+                )}
+                <Combobox.List className="ui-select-list ui-model-list">
+                  {(model: string) => (
+                    <Combobox.Item key={model} value={model} title={model === CUSTOM_MODEL_VALUE ? undefined : model} className="ui-menu-item ui-select-item">
+                      <span className="ui-select-item-text">{model === CUSTOM_MODEL_VALUE ? t.aiModelCustomOption : model}</span>
+                      <Combobox.ItemIndicator className="ui-menu-check"><Check size={16} /></Combobox.ItemIndicator>
+                    </Combobox.Item>
+                  )}
+                </Combobox.List>
+              </Combobox.Popup>
+            </Combobox.Positioner>
+          </Combobox.Portal>
+        </Combobox.Root>
         {catalogStatus && <p role="status" className="text-xs leading-relaxed text-muted-foreground">{catalogStatus}</p>}
         {catalog.models && currentProvider.model && !catalog.models.includes(currentProvider.model) && <p className="text-xs leading-relaxed text-muted-foreground">
           {zh ? '当前模型未出现在最新列表中，已保留。可选择新模型或测试连接。' : 'Current model is not in the latest list and has been kept. Choose another model or test the connection.'}
