@@ -31,3 +31,7 @@ promo-video/*.webm
 # E2E artifacts
 /test-results/
 /playwright-report/
+
+# Project-local agent skills (third-party, installed with the skills CLI)
+/.zcode/
+/skills-lock.json
