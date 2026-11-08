@@ -89,9 +89,7 @@ export const PreviewPane = memo(function PreviewPane({
   const renderedResume = useMemo(() => <ResumeRenderer {...rendererProps} />, [rendererProps]);
 
   return (
-    <div className="group/preview relative flex h-full min-w-0 flex-1 flex-col bg-[var(--app-bg)] transition-colors duration-200 print:flex print:w-full">
-      <div className="absolute inset-0 z-20 opacity-0 group-hover/preview:opacity-100 transition-opacity duration-200 print:hidden pointer-events-none" />
-
+    <div className="relative flex h-full min-w-0 flex-1 flex-col bg-[var(--app-bg)] transition-colors duration-200 print:flex print:w-full">
       <TemplateSwitcher {...templateSwitcherProps} scaleControls={<CanvasScaleControls {...canvasScaleProps} />} />
 
       <div ref={containerRef} data-testid="preview-scroll" className="flex min-h-0 flex-1 items-start justify-start overflow-auto px-3 pb-6 custom-scrollbar [contain:layout_paint_style] sm:px-6 sm:pb-12 lg:px-6 2xl:px-8">

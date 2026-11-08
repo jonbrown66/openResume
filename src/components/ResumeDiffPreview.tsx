@@ -56,7 +56,7 @@ function renderLines(lines: VisibleLine[], previousIndex: () => number) {
     return (
       <Fragment key={`${line.type}-${index}`}>
         {gap >= 0 && index - gap > 1 && (
-          <div className="px-2 py-0.5 text-center text-[11px] text-zinc-400">
+          <div className="px-2 py-0.5 text-center text-xs text-zinc-500 dark:text-zinc-400">
             ···
           </div>
         )}
@@ -79,7 +79,7 @@ export function ResumeDiffPreview({ diff, translations: t, compact = false }: Re
   const zh = t.assistantBefore === '修改前';
   return (
     <div className="mt-3 rounded-2xl border border-zinc-200/80 bg-white/70 p-3 dark:border-zinc-800/80 dark:bg-zinc-950/40">
-      <div className="mb-3 text-xs font-semibold uppercase tracking-[0.16em] text-zinc-400 dark:text-zinc-500">
+      <div className="mb-3 text-xs font-semibold uppercase tracking-[0.16em] text-zinc-500 dark:text-zinc-400">
         {t.assistantDiffTitle}
       </div>
       {compact && <div className="mbe-3 flex flex-wrap items-center justify-between gap-2 text-xs">

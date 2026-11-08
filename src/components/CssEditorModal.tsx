@@ -192,7 +192,7 @@ export function CssEditorModal({
             <div className="flex-1 overflow-y-auto px-4 py-4 min-h-0 sm:px-6" ref={containerRef}>
               <div className="relative rounded-xl border border-[var(--app-border)] bg-[var(--app-surface-muted)] overflow-hidden">
                 <pre
-                  className="absolute inset-0 p-4 text-[13px] leading-6 font-mono whitespace-pre-wrap overflow-auto pointer-events-none text-zinc-900 dark:text-zinc-100"
+                  className="absolute inset-0 p-4 text-[13px] leading-6 font-mono whitespace-pre-wrap overflow-auto pointer-events-none text-zinc-900 dark:text-zinc-100 max-sm:text-base"
                   dangerouslySetInnerHTML={{ __html: highlightCss(css) }}
                 />
                 <textarea data-code-editor
@@ -202,7 +202,7 @@ export function CssEditorModal({
                   onKeyDown={handleKeyDown}
                   onScroll={handleScroll}
                   spellCheck={false}
-                  className="block w-full h-[400px] p-4 resize-none text-[13px] leading-6 font-mono bg-transparent text-transparent caret-zinc-900 dark:caret-zinc-100 border-0 focus:outline-none whitespace-pre-wrap overflow-auto"
+                  className="block w-full h-[400px] p-4 resize-none text-[13px] leading-6 font-mono bg-transparent text-transparent caret-zinc-900 dark:caret-zinc-100 border-0 focus:outline-none whitespace-pre-wrap overflow-auto max-sm:text-base"
                 />
               </div>
 

@@ -183,7 +183,7 @@ export const EditorPane = memo(function EditorPane({
           <textarea
             data-code-editor
             aria-label={lang === 'zh' ? '简历 Markdown' : 'Resume Markdown'}
-            className="block h-full min-h-0 w-full resize-none overflow-y-auto bg-transparent px-4 pbs-3 pbe-6 font-mono text-[13px] leading-[1.75] text-zinc-800 selection:bg-zinc-200 dark:text-zinc-200 dark:selection:bg-zinc-700 sm:px-6 sm:pbe-4 custom-scrollbar"
+            className="block h-full min-h-0 w-full resize-none overflow-y-auto bg-transparent px-4 pbs-3 pbe-6 font-mono text-base leading-[1.6] text-zinc-800 selection:bg-zinc-200 dark:text-zinc-200 dark:selection:bg-zinc-700 sm:px-6 sm:pbe-4 sm:text-[13px] sm:leading-[1.75] custom-scrollbar"
             value={displayMarkdown}
             onBeforeInput={event => { beforeSelection.current = readEditorSelection(event.currentTarget); }}
             onCompositionStart={event => {

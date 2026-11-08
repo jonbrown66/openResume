@@ -34,3 +34,12 @@ html, body {
     scroll-behavior: auto !important;
   }
 }
+
+/* A theme swap changes every color at once; without this the whole shell fades
+   through intermediate greys for the length of the longest transition. */
+html.theme-switching,
+html.theme-switching *,
+html.theme-switching *::before,
+html.theme-switching *::after {
+  transition: none !important;
+}

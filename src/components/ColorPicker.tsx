@@ -1,6 +1,6 @@
 import { memo } from 'react';
 import { motion } from 'framer-motion';
-import { cn } from '@/lib/utils';
+import { useDragScroll } from '@/hooks/useDragScroll';
 
 interface ColorPickerProps {
   label: string;
@@ -15,11 +15,12 @@ export const ColorPicker = memo(function ColorPicker({
   presets,
   onChange,
 }: ColorPickerProps) {
+  const list = useDragScroll<HTMLDivElement>();
   return (
     <div className="ui-color-picker">
       <span className="ui-label">{label}</span>
       <motion.div
-        className="relative w-11 h-11 rounded-xl overflow-hidden border border-[var(--app-border)] cursor-pointer flex-shrink-0"
+        className="relative w-11 h-11 rounded-[var(--ui-radius-panel)] overflow-hidden border border-[var(--app-border)] cursor-pointer flex-shrink-0"
         transition={{ type: "spring", stiffness: 300, damping: 20 }}
       >
         <input
@@ -34,7 +35,17 @@ export const ColorPicker = memo(function ColorPicker({
           style={{ backgroundColor: value }}
         />
       </motion.div>
-      <div className="ui-swatch-list">
+      <div
+        ref={list.ref}
+        className="ui-swatch-list"
+        data-scrollable={list.scrollable || undefined}
+        data-dragging={list.dragging || undefined}
+        style={{
+          '--fade-start': list.atStart ? '0px' : '24px',
+          '--fade-end': list.atEnd ? '0px' : '24px',
+        } as React.CSSProperties}
+        {...list.handlers}
+      >
         {presets.map((color) => (
           <motion.button
             key={color}
@@ -43,7 +54,7 @@ export const ColorPicker = memo(function ColorPicker({
             aria-label={`${label}: ${color}`}
             aria-pressed={value.toLowerCase() === color.toLowerCase()}
             onClick={() => onChange(color)}
-            className={cn('ui-swatch')}
+            className="ui-swatch"
           ><span style={{ backgroundColor: color }} /></motion.button>
         ))}
       </div>

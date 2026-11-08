@@ -337,7 +337,7 @@ export function AssistantWidget({
                       placeholder={lang === 'zh' ? '粘贴岗位职责与任职要求；只用于当前简历对话。' : 'Paste responsibilities and requirements for this resume conversation.'}
                       rows={2} maxLength={ASSISTANT_JOB_DESCRIPTION_LIMIT}
                       className="mbs-2 max-h-24 min-h-12 w-full resize-y rounded-lg border border-[var(--app-border)] bg-[var(--app-surface)] p-2 text-xs leading-5" />
-                    <p className="mbs-1 text-end text-[10px] leading-4 text-[var(--muted-foreground)]">{jobDescription.length.toLocaleString()} / {ASSISTANT_JOB_DESCRIPTION_LIMIT.toLocaleString()}</p>
+                    <p className="mbs-1 text-end text-xs leading-4 text-[var(--muted-foreground)]">{jobDescription.length.toLocaleString()} / {ASSISTANT_JOB_DESCRIPTION_LIMIT.toLocaleString()}</p>
                   </details>
                 </div>}
                 <AssistantConversationList

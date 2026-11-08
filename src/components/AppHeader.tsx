@@ -107,7 +107,7 @@ export const AppHeader = memo(function AppHeader({
       </div>
       <div className="relative flex w-full min-w-0 flex-wrap items-center justify-end gap-1 sm:ms-auto sm:w-auto sm:gap-2 lg:flex-nowrap">
         <div className="me-auto min-w-0 sm:me-0">{projectSelector}</div>
-        {saveStatus && <span role="status" title={lang === 'zh' ? '简历保存在当前浏览器中，不会自动同步到其他设备。' : 'Your resume is saved in this browser and does not sync automatically to other devices.'} className="text-right text-[11px] leading-tight text-[var(--ui-text-secondary)] max-sm:w-full max-sm:order-last max-sm:pt-1 sm:text-xs">
+        {saveStatus && <span role="status" title={lang === 'zh' ? '简历保存在当前浏览器中，不会自动同步到其他设备。' : 'Your resume is saved in this browser and does not sync automatically to other devices.'} className="text-right text-xs leading-tight text-[var(--ui-text-secondary)] max-sm:order-last max-sm:w-full max-sm:pt-1">
           {saveStatus === 'saving' ? (lang === 'zh' ? '正在保存…' : 'Saving…') : (lang === 'zh' ? '已保存' : 'Saved')}
         </span>}
         <button type="button" ref={styleButtonRef} onClick={() => openStyle(false)}

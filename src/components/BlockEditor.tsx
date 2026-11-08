@@ -188,34 +188,37 @@ export const BlockEditor = memo(function BlockEditor({ draft, lang, translations
           value={section.content} multiline onChange={content => updateSection(sectionIndex, current => ({ ...current, content }))} />
           : section.content ? <Field label={zh ? '章节介绍' : 'Section introduction'} value={section.content} multiline
             onChange={content => updateSection(sectionIndex, current => ({ ...current, content }))} /> : null}
-        {section.entries.map((entry, entryIndex) => <div key={entry.id} className="space-y-2">{undoNotices(sectionId, entryIndex)}<fieldset data-block-id={entry.id} className={`min-w-0 space-y-2 ${entryIndex > 0 ? 'border-t border-[var(--app-border)] pt-2.5' : 'pt-0.5'}`}>
-          <legend className="sr-only">{section.title} {entryIndex + 1}</legend>
-          <div className="flex items-center gap-0.5 rounded-[var(--ui-radius-control)] p-0.5 transition-colors hover:bg-[var(--ui-hover-bg)]">
-            <button type="button" className="flex min-h-8 min-w-0 flex-1 items-center gap-1.5 px-1 text-left text-xs font-semibold text-[var(--foreground)] sm:text-[13px]" aria-expanded={!collapsed.has(entry.id!)} aria-controls={`${entry.id}-body`} onClick={() => toggle(entry.id!)}>
-              {collapsed.has(entry.id!) ? <ChevronRight size={13} aria-hidden="true" className="shrink-0 text-muted-foreground" /> : <ChevronDown size={13} aria-hidden="true" className="shrink-0 text-muted-foreground" />}<span className="truncate">{getEntrySummary(entry, zh ? '新条目' : 'New entry')}</span>
-            </button>
-            <DropdownMenu>
-              <DropdownMenuTrigger aria-label={zh ? `更多经历操作：${section.title}第${entryIndex + 1}条` : `More entry actions: ${section.title} ${entryIndex + 1}`}
-                className="app-control inline-flex min-h-10 min-w-10 shrink-0 items-center justify-center rounded-[var(--ui-radius-control)] text-muted-foreground sm:min-h-8 sm:min-w-8">
-                <MoreHorizontal size={16} aria-hidden="true" />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" finalFocus={restoreMenuFocus}>
-                <DropdownMenuItem disabled={entryIndex === 0} onClick={() => updateSection(sectionIndex, current => { const entries = [...current.entries]; [entries[entryIndex], entries[entryIndex - 1]] = [entries[entryIndex - 1], entries[entryIndex]]; return { ...current, entries }; })}><ArrowUp size={14} aria-hidden="true" />{zh ? '上移经历' : 'Move entry up'}</DropdownMenuItem>
-                <DropdownMenuItem disabled={entryIndex === section.entries.length - 1} onClick={() => updateSection(sectionIndex, current => { const entries = [...current.entries]; [entries[entryIndex], entries[entryIndex + 1]] = [entries[entryIndex + 1], entries[entryIndex]]; return { ...current, entries }; })}><ArrowDown size={14} aria-hidden="true" />{zh ? '下移经历' : 'Move entry down'}</DropdownMenuItem>
-                <DropdownMenuItem data-variant="destructive" onClick={() => remove(sectionIndex, entryIndex)}><Trash2 size={14} aria-hidden="true" />{zh ? '删除经历' : 'Delete entry'}</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-          <div id={`${entry.id}-body`} hidden={collapsed.has(entry.id!)} className="space-y-2.5 pb-1 ps-3">
-          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-            <Field label={headingLabel} value={entry.heading} onChange={heading => updateEntry(sectionIndex, entryIndex, { heading })} />
-            {!simple && <Field label={orgLabel} value={entry.organization} onChange={organization => updateEntry(sectionIndex, entryIndex, { organization })} />}
-          </div>
-          {(!simple || entry.meta) && <ResumeDateField label={t.entryMeta} value={entry.meta} lang={lang} onChange={meta => updateEntry(sectionIndex, entryIndex, { meta })} />}
-          <Field label={simple ? (zh ? '内容' : 'Content') : contentLabel} value={entry.content} multiline
-            onChange={content => updateEntry(sectionIndex, entryIndex, { content })} />
-          </div>
-        </fieldset></div>)}
+        {section.entries.map((entry, entryIndex) => {
+          const entrySummary = getEntrySummary(entry, zh ? '新条目' : 'New entry');
+          return <div key={entry.id} className="space-y-2">{undoNotices(sectionId, entryIndex)}<fieldset data-block-id={entry.id} className={`min-w-0 space-y-2 ${entryIndex > 0 ? 'border-t border-[var(--app-border)] pt-2.5' : 'pt-0.5'}`}>
+            <legend className="sr-only">{section.title} {entryIndex + 1}</legend>
+            <div className="flex items-center gap-0.5 rounded-[var(--ui-radius-control)] p-0.5 transition-colors hover:bg-[var(--ui-hover-bg)]">
+              <button type="button" className="flex min-h-8 min-w-0 flex-1 items-center gap-1.5 px-1 text-left text-xs font-semibold text-[var(--foreground)] sm:text-[13px]" aria-expanded={!collapsed.has(entry.id!)} aria-controls={`${entry.id}-body`} onClick={() => toggle(entry.id!)}>
+                {collapsed.has(entry.id!) ? <ChevronRight size={13} aria-hidden="true" className="shrink-0 text-muted-foreground" /> : <ChevronDown size={13} aria-hidden="true" className="shrink-0 text-muted-foreground" />}<span className="truncate" title={entrySummary}>{entrySummary}</span>
+              </button>
+              <DropdownMenu>
+                <DropdownMenuTrigger aria-label={zh ? `更多经历操作：${section.title}第${entryIndex + 1}条` : `More entry actions: ${section.title} ${entryIndex + 1}`}
+                  className="app-control inline-flex min-h-10 min-w-10 shrink-0 items-center justify-center rounded-[var(--ui-radius-control)] text-muted-foreground sm:min-h-8 sm:min-w-8">
+                  <MoreHorizontal size={16} aria-hidden="true" />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" finalFocus={restoreMenuFocus}>
+                  <DropdownMenuItem disabled={entryIndex === 0} onClick={() => updateSection(sectionIndex, current => { const entries = [...current.entries]; [entries[entryIndex], entries[entryIndex - 1]] = [entries[entryIndex - 1], entries[entryIndex]]; return { ...current, entries }; })}><ArrowUp size={14} aria-hidden="true" />{zh ? '上移经历' : 'Move entry up'}</DropdownMenuItem>
+                  <DropdownMenuItem disabled={entryIndex === section.entries.length - 1} onClick={() => updateSection(sectionIndex, current => { const entries = [...current.entries]; [entries[entryIndex], entries[entryIndex + 1]] = [entries[entryIndex + 1], entries[entryIndex]]; return { ...current, entries }; })}><ArrowDown size={14} aria-hidden="true" />{zh ? '下移经历' : 'Move entry down'}</DropdownMenuItem>
+                  <DropdownMenuItem data-variant="destructive" onClick={() => remove(sectionIndex, entryIndex)}><Trash2 size={14} aria-hidden="true" />{zh ? '删除经历' : 'Delete entry'}</DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+            <div id={`${entry.id}-body`} hidden={collapsed.has(entry.id!)} className="space-y-2.5 pb-1 ps-3">
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+              <Field label={headingLabel} value={entry.heading} onChange={heading => updateEntry(sectionIndex, entryIndex, { heading })} />
+              {!simple && <Field label={orgLabel} value={entry.organization} onChange={organization => updateEntry(sectionIndex, entryIndex, { organization })} />}
+            </div>
+            {(!simple || entry.meta) && <ResumeDateField label={t.entryMeta} value={entry.meta} lang={lang} onChange={meta => updateEntry(sectionIndex, entryIndex, { meta })} />}
+            <Field label={simple ? (zh ? '内容' : 'Content') : contentLabel} value={entry.content} multiline
+              onChange={content => updateEntry(sectionIndex, entryIndex, { content })} />
+            </div>
+          </fieldset></div>;
+        })}
         {undoNotices(sectionId, section.entries.length, true)}
         {!simple && <button type="button" className="app-control inline-flex min-h-9 w-full items-center justify-center gap-1.5 rounded-[var(--ui-radius-control)] border border-dashed border-[var(--app-border)] px-3 text-xs text-muted-foreground transition-colors hover:border-[var(--ui-focus)] hover:bg-[var(--ui-hover-bg)] hover:text-[var(--secondary-foreground)]"
           onClick={() => { const id = crypto.randomUUID(); updateSection(sectionIndex, current => ({ ...current, type, entries: [...current.entries, { id, heading: '', meta: '', organization: '', content: '' }] })); reveal(id, sectionId); }}>

@@ -21,7 +21,7 @@ export const CanvasScaleControls = memo(function CanvasScaleControls({ zoom, act
       >
         <Minus size={14} />
       </button>
-      <span className="min-w-9 text-center text-[11px] font-semibold tabular-nums text-[var(--secondary-foreground)]">
+      <span className="min-w-9 text-center text-xs font-semibold tabular-nums text-[var(--secondary-foreground)]">
         {actualScale === undefined ? zoom : Math.round(actualScale * 100)}%
       </span>
       <button

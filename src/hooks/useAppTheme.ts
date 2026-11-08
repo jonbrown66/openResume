@@ -26,6 +26,9 @@ export function useAppTheme(theme: AppTheme) {
   useEffect(() => {
     if (typeof document === 'undefined') return;
     const root = document.documentElement;
+    // Suppress transitions while the colors change, then flush the new values
+    // so removing the guard cannot start a fade on every surface at once.
+    root.classList.add('theme-switching');
     if (resolvedTheme === 'dark') {
       root.classList.add('dark');
       root.setAttribute('data-theme', 'dark');
@@ -35,6 +38,8 @@ export function useAppTheme(theme: AppTheme) {
       root.setAttribute('data-theme', 'light');
       root.style.colorScheme = 'light';
     }
+    void getComputedStyle(root).backgroundColor;
+    root.classList.remove('theme-switching');
   }, [resolvedTheme]);
 
   return { resolvedTheme, systemTheme };
